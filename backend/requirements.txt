@@ -1,0 +1,6 @@
+googlemaps
+requests
+python-dotenv
+pandas
+pytest
+fpdf2
