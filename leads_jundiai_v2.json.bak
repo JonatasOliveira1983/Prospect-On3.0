@@ -1,0 +1,587 @@
+[
+  {
+    "name": "Residencial Anhangabaú",
+    "address": "R. Anhangabaú, 123 - Vianelo, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1857,
+      "lng": -46.8978
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1857_-46.8978.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1857_-46.8978.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6579,
+      "avg_m2": 150,
+      "total_units": 240,
+      "towers": 4
+    },
+    "valuation": {
+      "unit_value": 986850,
+      "total_asset_value": 236844000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 28421280.0,
+      "gain_per_unit": 118422.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Edifício Metropolitan",
+    "address": "Av. 9 de Julho, 4500 - Anhangabaú, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1901,
+      "lng": -46.8832
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1901_-46.8832.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1901_-46.8832.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6410,
+      "avg_m2": 80,
+      "total_units": 240,
+      "towers": 4
+    },
+    "valuation": {
+      "unit_value": 512800,
+      "total_asset_value": 123072000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 14768640.0,
+      "gain_per_unit": 61536.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Condomínio Golden Park",
+    "address": "Av. Benedito Castilho de Andrade, 1000 - Eloy Chaves, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1812,
+      "lng": -46.9458
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1812_-46.9458.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1812_-46.9458.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6414,
+      "avg_m2": 80,
+      "total_units": 240,
+      "towers": 1
+    },
+    "valuation": {
+      "unit_value": 513120,
+      "total_asset_value": 123148800,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 14777856.0,
+      "gain_per_unit": 61574.4
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Residencial Samambaia",
+    "address": "R. Adolfo Mantovani, 200 - Samambaia, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1755,
+      "lng": -46.9012
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1755_-46.9012.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1755_-46.9012.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6303,
+      "avg_m2": 65,
+      "total_units": 60,
+      "towers": 2
+    },
+    "valuation": {
+      "unit_value": 409695,
+      "total_asset_value": 24581700,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 2949804.0,
+      "gain_per_unit": 49163.4
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Edifício Piazza Navona",
+    "address": "R. do Retiro, 1500 - Retiro, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1823,
+      "lng": -46.8945
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1823_-46.8945.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1823_-46.8945.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6581,
+      "avg_m2": 150,
+      "total_units": 60,
+      "towers": 2
+    },
+    "valuation": {
+      "unit_value": 987150,
+      "total_asset_value": 59229000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 7107480.0,
+      "gain_per_unit": 118458.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Condomínio Villagio Di Firenzi",
+    "address": "R. das Pitangueiras, 450 - Vila Arens, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1988,
+      "lng": -46.8765
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1988_-46.8765.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1988_-46.8765.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6332,
+      "avg_m2": 65,
+      "total_units": 40,
+      "towers": 1
+    },
+    "valuation": {
+      "unit_value": 411580,
+      "total_asset_value": 16463200,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 1975584.0,
+      "gain_per_unit": 49389.6
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Residencial Montserrat",
+    "address": "Av. Dr. Adilson Rodrigues, 800 - Jardim Samambaia, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1722,
+      "lng": -46.9111
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1722_-46.9111.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1722_-46.9111.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6429,
+      "avg_m2": 150,
+      "total_units": 40,
+      "towers": 4
+    },
+    "valuation": {
+      "unit_value": 964350,
+      "total_asset_value": 38574000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 4628880.0,
+      "gain_per_unit": 115722.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Edifício Grand Garden",
+    "address": "Av. 9 de Julho, 5000 - Anhangabaú, Jundiaí - SP",
+    "coords": {
+      "lat": -23.1895,
+      "lng": -46.8876
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1895_-46.8876.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1895_-46.8876.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6351,
+      "avg_m2": 110,
+      "total_units": 120,
+      "towers": 4
+    },
+    "valuation": {
+      "unit_value": 698610,
+      "total_asset_value": 83833200,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 10059984.0,
+      "gain_per_unit": 83833.2
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Condomínio Altos da Serra",
+    "address": "R. Roberto Guspari, 150 - Jardim Carlos Gomes, Jundiaí - SP",
+    "coords": {
+      "lat": -23.2111,
+      "lng": -46.8654
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.2111_-46.8654.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.2111_-46.8654.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6654,
+      "avg_m2": 150,
+      "total_units": 120,
+      "towers": 1
+    },
+    "valuation": {
+      "unit_value": 998100,
+      "total_asset_value": 119772000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 14372640.0,
+      "gain_per_unit": 119772.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Residencial Park Lane",
+    "address": "Av. João Batista, 450 - Jardim das Palmeiras, Campinas - SP",
+    "coords": {
+      "lat": -22.9023,
+      "lng": -47.0544
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-22.9023_-47.0544.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-22.9023_-47.0544.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6316,
+      "avg_m2": 150,
+      "total_units": 60,
+      "towers": 4
+    },
+    "valuation": {
+      "unit_value": 947400,
+      "total_asset_value": 56844000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 6821280.0,
+      "gain_per_unit": 113688.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Condomínio Royal Garden",
+    "address": "R. dos Girassóis, 120 - Vila Real, Valinhos - SP",
+    "coords": {
+      "lat": -22.9788,
+      "lng": -46.9877
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-22.9788_-46.9877.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-22.9788_-46.9877.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6647,
+      "avg_m2": 110,
+      "total_units": 60,
+      "towers": 2
+    },
+    "valuation": {
+      "unit_value": 731170,
+      "total_asset_value": 43870200,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 5264424.0,
+      "gain_per_unit": 87740.4
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Edifício Terraços do Sol",
+    "address": "Av. Independência, 2500 - Vinhedo, SP",
+    "coords": {
+      "lat": -23.0322,
+      "lng": -46.9744
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.0322_-46.9744.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.0322_-46.9744.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6607,
+      "avg_m2": 110,
+      "total_units": 240,
+      "towers": 2
+    },
+    "valuation": {
+      "unit_value": 726770,
+      "total_asset_value": 174424800,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 20930976.0,
+      "gain_per_unit": 87212.4
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Condomínio Altos de Itupeva",
+    "address": "Estrada dos Cafezais, 400 - Itupeva, SP",
+    "coords": {
+      "lat": -23.1566,
+      "lng": -47.0655
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.1566_-47.0655.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.1566_-47.0655.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6312,
+      "avg_m2": 150,
+      "total_units": 240,
+      "towers": 2
+    },
+    "valuation": {
+      "unit_value": 946800,
+      "total_asset_value": 227232000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 27267840.0,
+      "gain_per_unit": 113616.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Residencial Mirante da Serra",
+    "address": "Av. João Gualberto, 100 - Louveira, SP",
+    "coords": {
+      "lat": -23.0855,
+      "lng": -46.9533
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.0855_-46.9533.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.0855_-46.9533.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6557,
+      "avg_m2": 150,
+      "total_units": 240,
+      "towers": 4
+    },
+    "valuation": {
+      "unit_value": 983550,
+      "total_asset_value": 236052000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 28326240.0,
+      "gain_per_unit": 118026.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  },
+  {
+    "name": "Condomínio Cabreúva Office",
+    "address": "R. São José, 50 - Cabreúva, SP",
+    "coords": {
+      "lat": -23.3022,
+      "lng": -47.1322
+    },
+    "score": 2.0,
+    "justification": "IA detectou urgência visual: Elevado. | Patologias: Fissuras dinâmicas, Mofo negro, Desplacamento de reboco.",
+    "category": "ALERTA VERDE (MANUTENÇÃO)",
+    "vision_image_path": "data/images\\facade_-23.3022_-47.1322.jpg",
+    "vision_image_url": "http://localhost:8000/api/images/facade_-23.3022_-47.1322.jpg",
+    "vision_analysis": {
+      "desgaste": "Elevado",
+      "patologias": [
+        "Fissuras dinâmicas",
+        "Mofo negro",
+        "Desplacamento de reboco"
+      ],
+      "urgencia": true,
+      "comentario_tecnico": "A fachada apresenta sinais claros de fadiga do revestimento. A presença de fissuras mapeadas indica movimentação estrutural que, se não tratada, resultará em infiltrações severas.",
+      "proposito_estrategico": "Investir na revitalização agora evita um custo 3x maior em reparos estruturais futuros e garante uma valorização imediata de até 15% nas unidades."
+    },
+    "market": {
+      "avg_m2_price": 6590,
+      "avg_m2": 110,
+      "total_units": 240,
+      "towers": 1
+    },
+    "valuation": {
+      "unit_value": 724900,
+      "total_asset_value": 173976000,
+      "appreciation_percent": 12.0,
+      "total_appreciation_gain": 20877120.0,
+      "gain_per_unit": 86988.0
+    },
+    "is_confirmed": true,
+    "scanned_at": "28/03/2026 03:58"
+  }
+]

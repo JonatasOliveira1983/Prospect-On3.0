@@ -2,46 +2,51 @@ class LeadScorer:
     def __init__(self):
         pass
 
-    def calculate_score(self, lead_data):
+    def calculate_score(self, lead_data, vision_data=None):
         """
         Calcula o 'Score de Oportunidade Otto' (0 a 10).
-        lead_data: dict contendo 'idade_anos' e 'situacao_cadastral'.
+        lead_data: dict fiscal.
+        vision_data: dict da análise do Gemini.
         """
         base_score = 0
         idade = lead_data.get('idade_anos', 0)
         situacao = lead_data.get('situacao_cadastral', '').upper()
 
-        # Gatilho de Idade (Pintura)
+        # 1. Gatilho de Idade (Pintura)
         if idade >= 10:
-            base_score = 10  # Urgente
+            base_score = 10 
         elif idade >= 5:
-            base_score = 7   # Preventiva
+            base_score = 7
         elif idade > 0:
-            base_score = 3   # Nova construção
+            base_score = 3
         else:
-            base_score = 0   # Sem dados
+            base_score = 0 
+
+        # 2. Bônus de Visão (IA)
+        if vision_data:
+            if vision_data.get('urgencia'):
+                base_score = min(10, base_score + 2) # Aumentar prioridade se IA vê problemas
+            if vision_data.get('desgaste') == 'Crítico':
+                base_score = 10
 
         # Multiplicador de Situação Cadastral
         multiplier = 1.0
-        if "ATIVA" not in situacao:
-            multiplier = 0.0  # Empresa baixada ou irregular não é lead
+        if situacao and "ATIVA" not in situacao:
+            multiplier = 0.0
 
         final_score = base_score * multiplier
         
         # Metadata da decisão
-        justification = ""
-        if final_score == 10:
-            justification = "Prédio com 10+ anos. A pintura de proteção atingiu o limite de vida útil."
-        elif final_score == 7:
-            justification = "Prédio com 5-10 anos. Momento ideal para revitalização e evitar custos estruturais."
-        elif final_score == 0 and multiplier == 0:
-            justification = "Empresa Inativa ou Irregular no CNPJ."
-        else:
-            justification = "Prédio novo (menos de 5 anos)."
+        justification = []
+        if idade >= 10: justification.append(f"Prédio com {idade} anos (Histórico).")
+        if vision_data and vision_data.get('urgencia'):
+            justification.append(f"IA detectou urgência visual: {vision_data['desgaste']}.")
+            if vision_data.get('patologias'):
+                justification.append(f"Patologias: {', '.join(vision_data['patologias'])}.")
 
         return {
             'score': round(final_score, 1),
-            'justification': justification,
+            'justification': " | ".join(justification) if justification else "Sem dados suficientes.",
             'category': self._get_category(final_score)
         }
 

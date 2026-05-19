@@ -1,0 +1,228 @@
+import sqlite3
+import json
+import os
+from datetime import datetime
+from src.utils.logger import logger
+
+class Database:
+    def __init__(self, db_path="data/prospecton.db"):
+        self.db_path = db_path
+        os.makedirs(os.path.dirname(db_path), exist_ok=True)
+        self._create_tables()
+
+    def _get_connection(self):
+        return sqlite3.connect(self.db_path)
+
+    def _create_tables(self):
+        with self._get_connection() as conn:
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS leads (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    address TEXT,
+                    lat REAL,
+                    lng REAL,
+                    score REAL,
+                    justification TEXT,
+                    category TEXT,
+                    responsavel_nome TEXT,
+                    responsavel_contato TEXT,
+                    vision_image_path TEXT,
+                    vision_image_url TEXT,
+                    satellite_image_path TEXT,
+                    vision_analysis_json TEXT,
+                    market_json TEXT,
+                    valuation_json TEXT,
+                    financial_health_json TEXT,
+                    demand_json TEXT, 
+                    source TEXT,      
+                    urgency_score REAL, 
+                    is_confirmed BOOLEAN DEFAULT 0,
+                    email TEXT,
+                    social_url TEXT,
+                    booking_url TEXT,
+                    scanned_at TEXT,
+                    enriched_at TEXT,
+                    interaction_notes TEXT,
+                    return_date TEXT,
+                    email_sent_at TEXT
+                )
+            """)
+            
+            # Migração segura e silenciosa para bancos de dados que já existem
+            for col, col_type in [
+                ("interaction_notes", "TEXT"), 
+                ("return_date", "TEXT"), 
+                ("email_sent_at", "TEXT"),
+                ("is_favorite", "BOOLEAN DEFAULT 0"),
+                ("contact_status", "TEXT DEFAULT 'Aguardando Abordagem'")
+            ]:
+                try:
+                    conn.execute(f"ALTER TABLE leads ADD COLUMN {col} {col_type}")
+                except sqlite3.OperationalError:
+                    # A coluna já existe, ignorar
+                    pass
+
+            # Tabela de estatísticas de uso (IA)
+            conn.execute("""
+                CREATE TABLE IF NOT EXISTS usage_stats (
+                    service TEXT PRIMARY KEY,
+                    calls_today INTEGER DEFAULT 0,
+                    total_calls INTEGER DEFAULT 0,
+                    last_used TEXT
+                )
+            """)
+            conn.commit()
+
+    def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None):
+        try:
+            with self._get_connection() as conn:
+                if email_sent_at:
+                    conn.execute("""
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, email_sent_at, lead_id))
+                else:
+                    conn.execute("""
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, lead_id))
+                conn.commit()
+            logger.info(f"DB: Interação comercial salva para o lead {lead_id} | Status: {contact_status}")
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao salvar interação para o lead {lead_id}: {e}")
+            return False
+
+    def toggle_favorite(self, lead_id, is_favorite):
+        try:
+            with self._get_connection() as conn:
+                conn.execute("""
+                    UPDATE leads 
+                    SET is_favorite = ?
+                    WHERE id = ?
+                """, (1 if is_favorite else 0, lead_id))
+                conn.commit()
+            logger.info(f"DB: Favorito alterado para {is_favorite} no lead {lead_id}")
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao alternar favorito para o lead {lead_id}: {e}")
+            return False
+
+    def upsert_lead(self, lead_data):
+        """Insere ou atualiza um lead no banco de dados (v7.0 Sniper-Integrated)."""
+        try:
+            lead_id = lead_data.get('id') or lead_data['name'].lower().replace(" ", "_").replace("/", "-")
+            
+            vision_analysis = json.dumps(lead_data.get('vision_analysis') or {}, ensure_ascii=False)
+            market = json.dumps(lead_data.get('market') or {}, ensure_ascii=False)
+            valuation = json.dumps(lead_data.get('valuation') or {}, ensure_ascii=False)
+            financial = json.dumps(lead_data.get('financial_health') or {}, ensure_ascii=False)
+            demand = json.dumps(lead_data.get('demand') or {}, ensure_ascii=False)
+            
+            coords = lead_data.get('coords') or {}
+            lat = coords.get('lat') or lead_data.get('lat') or 0
+            lng = coords.get('lng') or lead_data.get('lng') or 0
+
+            vision_path = lead_data.get('vision_image_path')
+            satellite_path = lead_data.get('satellite_image_path')
+            
+            port = "8002"
+            if vision_path:
+                filename = os.path.basename(vision_path)
+                vision_url = f"http://localhost:{port}/api/images/{filename}"
+            else:
+                vision_url = lead_data.get('vision_image_url')
+
+            with self._get_connection() as conn:
+                conn.execute("""
+                    INSERT INTO leads (
+                        id, name, address, lat, lng, score, justification, category,
+                        responsavel_nome, responsavel_contato,
+                        vision_image_path, vision_image_url, satellite_image_path,
+                        vision_analysis_json, market_json, valuation_json, financial_health_json,
+                        demand_json, source, urgency_score,
+                        is_confirmed, email, social_url, booking_url, scanned_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(id) DO UPDATE SET
+                        name=excluded.name, address=excluded.address, lat=excluded.lat, lng=excluded.lng,
+                        score=excluded.score, justification=excluded.justification, category=excluded.category,
+                        responsavel_nome=excluded.responsavel_nome, responsavel_contato=excluded.responsavel_contato,
+                        vision_image_path=excluded.vision_image_path, vision_image_url=excluded.vision_image_url,
+                        satellite_image_path=excluded.satellite_image_path,
+                        vision_analysis_json=excluded.vision_analysis_json, market_json=excluded.market_json,
+                        valuation_json=excluded.valuation_json, financial_health_json=excluded.financial_health_json,
+                        demand_json=excluded.demand_json, source=excluded.source, urgency_score=excluded.urgency_score,
+                        is_confirmed=excluded.is_confirmed, email=excluded.email, social_url=excluded.social_url, 
+                        booking_url=excluded.booking_url, scanned_at=excluded.scanned_at
+                """, (
+                    lead_id, lead_data['name'], lead_data['address'], lat, lng,
+                    lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
+                    lead_data.get('responsavel_nome', ''), lead_data.get('responsavel_contato', ''),
+                    vision_path, vision_url, satellite_path, vision_analysis,
+                    market, valuation, financial,
+                    demand, lead_data.get('source', 'Radar'), lead_data.get('urgency_score', 0),
+                    lead_data.get('is_confirmed', False), lead_data.get('email', 'N/D'), 
+                    lead_data.get('social_url', 'N/D'), lead_data.get('booking_url', 'N/D'), lead_data.get('scanned_at')
+                ))
+                conn.commit()
+        except Exception as e:
+            logger.error(f"DB: Erro fatal no upsert_lead: {e}")
+
+    def get_all_leads(self):
+        try:
+            with self._get_connection() as conn:
+                conn.row_factory = sqlite3.Row
+                rows = conn.execute("SELECT * FROM leads ORDER BY score DESC, name ASC").fetchall()
+                
+                leads = []
+                for row in rows:
+                    lead = dict(row)
+                    try:
+                        lead['vision_analysis'] = json.loads(lead.pop('vision_analysis_json') or '{}')
+                        lead['market'] = json.loads(lead.pop('market_json') or '{}')
+                        lead['valuation'] = json.loads(lead.pop('valuation_json') or '{}')
+                        lead['financial_health'] = json.loads(lead.pop('financial_health_json') or '{}')
+                        lead['demand'] = json.loads(lead.pop('demand_json') or '{}')
+                        
+                        if not isinstance(lead['vision_analysis'], dict): lead['vision_analysis'] = {}
+                        if not isinstance(lead['market'], dict): lead['market'] = {}
+                        if not isinstance(lead['valuation'], dict): lead['valuation'] = {}
+                        if not isinstance(lead['financial_health'], dict): lead['financial_health'] = {}
+                        if not isinstance(lead['demand'], dict): lead['demand'] = {}
+                        
+                        lead['coords'] = {'lat': lead.pop('lat') or 0, 'lng': lead.pop('lng') or 0}
+                    except Exception as je:
+                        logger.warning(f"DB: Erro ao parsear JSON do lead {lead.get('name')}: {je}")
+                    
+                    leads.append(lead)
+                return leads
+        except Exception as e:
+            logger.error(f"DB: Erro ao buscar leads: {e}")
+            return []
+
+    def clear_all_leads(self):
+        try:
+            with self._get_connection() as conn:
+                conn.execute("DELETE FROM leads")
+                conn.commit()
+            logger.info("DB: Todos os leads foram removidos com sucesso.")
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao limpar leads: {e}")
+            return False
+
+    def import_from_json(self, json_path):
+        if not os.path.exists(json_path):
+            return
+        logger.info(f"📦 Migrando dados de {json_path} para o Banco de Dados...")
+        with open(json_path, 'r', encoding='utf-8') as f:
+            leads = json.load(f)
+            for l in leads:
+                self.upsert_lead(l)
+        logger.info(f"✅ Migração concluída: {len(leads)} leads importados.")
+
+if __name__ == "__main__":
+    db = Database()

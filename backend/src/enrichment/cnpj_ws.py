@@ -22,12 +22,23 @@ class CNPJEnricher:
                 data = response.json()
                 return self._process_data(data)
             else:
-                return {"error": f"API Error: {response.status_code}"}
+                return self._get_default_data(clean_cnpj, f"API Error: {response.status_code}")
         except Exception as e:
-            return {"error": str(e)}
+            return self._get_default_data(clean_cnpj, str(e))
+
+    def _get_default_data(self, cnpj, error_msg):
+        """Retorna dados de fallback seguros."""
+        return {
+            'cnpj': cnpj,
+            'nome_fantasia': "Condomínio (Dados não encontrados)",
+            'data_abertura': None,
+            'idade_anos': 10, # Valor padrão para não quebrar UI
+            'situacao_cadastral': "ERRO CONSULTA",
+            'error': error_msg
+        }
 
     def _process_data(self, data):
-        """Extrai apenas o que interessa: Idade e Status."""
+        """Extrai apenas o que interessa: Idade, Status e Responsáveis."""
         opening_date_str = data.get('data_inicio_atividade')
         age_years = 0
         if opening_date_str:
@@ -37,12 +48,26 @@ class CNPJEnricher:
             except ValueError:
                 pass
 
+        # Tentar obter o nome do síndico/administrador via QSA
+        qsa = data.get('qsa', [])
+        responsavel_nome = "A pesquisar (Não consta no QSA)"
+        if qsa:
+            # Em condomínios, o administrador ou síndico costuma aparecer aqui
+            responsavel_nome = qsa[0].get('nome_socio') or qsa[0].get('nome_fantasia')
+
+        # Contatos oficiais (geralmente do contador ou administração)
+        tel = data.get('ddd_telefone_1')
+        email = data.get('email', '')
+        contato = f"{tel} | {email}" if tel or email else "Sem contato no cadastro"
+
         return {
             'cnpj': data.get('cnpj'),
             'nome_fantasia': data.get('nome_fantasia') or data.get('razao_social'),
             'data_abertura': opening_date_str,
             'idade_anos': age_years,
             'situacao_cadastral': data.get('descricao_situacao_cadastral'),
+            'responsavel_nome': responsavel_nome,
+            'responsavel_contato': contato,
             'logradouro': data.get('logradouro'),
             'numero': data.get('numero'),
             'bairro': data.get('bairro'),

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Maps Scraper</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <div class="header-icon">📍</div>
+      <div>
+        <h1>Maps Scraper</h1>
+        <p class="subtitle">Coletor de empresas</p>
+      </div>
+    </div>
+
+    <!-- Alert banner -->
+    <div class="alert" id="alertBanner">
+      ⚠️ Abra o Google Maps e faça uma busca antes de iniciar.
+    </div>
+
+    <!-- Settings -->
+    <div class="section">
+      <label class="label">🏢 Limite de empresas</label>
+      <div class="limit-row">
+        <input type="range" id="limitSlider" min="5" max="100" value="20" step="5"/>
+        <span class="limit-value" id="limitValue">20</span>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-section" id="progressSection" style="display:none">
+      <div class="progress-header">
+        <span id="progressLabel">Coletando...</span>
+        <span id="progressCount">0 / 0</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <div class="status-text" id="statusText">Iniciando...</div>
+    </div>
+
+    <!-- Results preview -->
+    <div class="results-section" id="resultsSection" style="display:none">
+      <div class="results-header">
+        <span>✅ Coleta concluída</span>
+        <span id="totalCollected">0 empresas</span>
+      </div>
+      <div class="results-list" id="resultsList"></div>
+    </div>
+
+    <!-- Buttons -->
+    <div class="buttons">
+      <button class="btn btn-primary" id="startBtn">
+        <span class="btn-icon">▶</span> Iniciar Coleta
+      </button>
+      <button class="btn btn-danger" id="stopBtn" style="display:none">
+        <span class="btn-icon">■</span> Parar
+      </button>
+      <button class="btn btn-success" id="downloadBtn" style="display:none">
+        <span class="btn-icon">⬇</span> Baixar Excel
+      </button>
+    </div>
+
+    <!-- Legal disclaimer -->
+    <div class="disclaimer">
+      ⚖️ <strong>Aviso Legal:</strong> O uso desta extensão pode violar os
+      <a href="https://maps.google.com/help/terms_maps/" target="_blank">Termos de Uso</a>
+      do Google Maps. Use com responsabilidade.
+    </div>
+
+    <!-- Footer -->
+    <div class="dev-footer">
+      Desenvolvido por <a href="https://ricardoivanov.com.br" target="_blank">Ricardo Ivanov</a>
+    </div>
+
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@vis.gl/react-google-maps": "^1.8.1",
+    "@splinetool/react-spline": "^4.1.0",
+    "@splinetool/runtime": "^1.12.94",
+    "clsx": "^2.1.1",
+    "enhanced-resolve": "^5.20.1",
+    "framer-motion": "^12.38.0",
+    "jspdf": "^4.2.1",
+    "lightningcss-win32-x64-msvc": "^1.32.0",
+    "lucide-react": "^1.14.0",
+    "next": "^16.2.1",
+    "postcss-import": "^16.1.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "tailwind-merge": "^3.5.0"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.21",
+    "@types/node": "20.19.40",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "leaflet": "^1.9.4",
+    "lightningcss": "^1.32.0",
+    "postcss": "^8.5.14",
+    "react-leaflet": "^5.0.0",
+    "tailwindcss": "^3.4.19",
+    "typescript": "5.9.3"
+  }
+}
