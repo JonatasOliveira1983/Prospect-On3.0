@@ -116,7 +116,7 @@ class SmartEnrichment:
                     lead_data['responsavel_nome'] = cnpj_data.get('responsavel', 'A confirmar')
                     lead_data['razao_social'] = cnpj_data.get('razao_social')
 
-                building_details = self._get_building_details_v2(lead_data.get('name', 'Condomínio'))
+                building_details = self._get_building_details_v2(lead_data)
                 if not isinstance(building_details, dict): building_details = {}
                 lead_data.update(building_details)
                 lead_data['financial_health'] = self._estimate_financial_health(building_details)
@@ -185,29 +185,123 @@ class SmartEnrichment:
             pass
         return None
 
-    def _get_building_details_v2(self, name):
-        """Dados prediais enriquecidos 2.0 (Resiliente)."""
-        safe_name = name or "Condomínio"
+    def _get_building_details_v2(self, lead_data):
+        """Dados prediais enriquecidos 2.0 (Resiliente e Inteligente)."""
+        if isinstance(lead_data, str):
+            name = lead_data
+            lead_data = {'name': name}
+        else:
+            name = lead_data.get('name') or "Condomínio"
+
+        # Tenta obter dados estimados pelo agente de IA (DeepSeek)
+        torres = lead_data.get('torres_estimadas') or lead_data.get('num_torres')
+        unidades = lead_data.get('unidades_estimadas') or lead_data.get('num_apartamentos')
+        andares = lead_data.get('andares_estimados')
+        idade = lead_data.get('idade_estimada') or lead_data.get('building_age')
+        padrao = lead_data.get('tipo_condominio') or 'medio'
+
+        # Heurísticas de fallback inteligentes com base no nome do Condomínio
+        name_lower = name.lower()
+        if not torres or torres == "A avaliar":
+            if "park" in name_lower or "resort" in name_lower or "golden" in name_lower:
+                torres = 4
+            elif "vila" in name_lower or "village" in name_lower:
+                torres = 2
+            else:
+                torres = 1
+
+        if not andares or andares == "A avaliar":
+            if "tower" in name_lower or "solaris" in name_lower or "alto" in name_lower:
+                andares = 18
+            elif "edificio" in name_lower or "residencial" in name_lower:
+                andares = 12
+            else:
+                andares = 8
+
+        if not unidades or unidades == "A avaliar":
+            unidades = torres * andares * 4 # Média de 4 apartamentos por andar
+
+        if not idade or idade == "A avaliar":
+            if "solar" in name_lower or "antigo" in name_lower or "velho" in name_lower:
+                idade = 22
+            else:
+                idade = 12
+
+        # Metragem média por unidade
+        metragem_media = 90
+        if padrao == 'luxo' or "royal" in name_lower or "premium" in name_lower or "veduta" in name_lower:
+            padrao = 'luxo'
+            metragem_media = 140
+        elif padrao == 'popular' or "popular" in name_lower or "cdhu" in name_lower:
+            padrao = 'popular'
+            metragem_media = 55
+        else:
+            padrao = 'medio'
+
+        # Estimativa robusta da área total de fachada pintável (m²)
+        try:
+            unidades_por_torre = unidades / torres
+            area_andar = (unidades_por_torre / andares) * metragem_media * 1.25
+            if area_andar <= 0:
+                area_andar = 300
+            import math
+            lado_torre = math.sqrt(area_andar)
+            perimetro = 4 * lado_torre
+            altura = andares * 3
+            area_fachada_torre = perimetro * altura
+            area_total_estimada = round(area_fachada_torre * torres, 2)
+        except Exception:
+            area_total_estimada = torres * 3500
+
+        # Garante limites realistas
+        if area_total_estimada < 1000:
+            area_total_estimada = 2500
+
+        vagas = unidades * 1.5
+        if padrao == 'luxo':
+            vagas = unidades * 2.5
+
         return {
-            'num_torres': "A avaliar",
-            'num_apartamentos': "A avaliar",
-            'metragem_media': "A avaliar",
-            'area_total_estimada': 0,
-            'vagas_garagem': "A avaliar",
-            'idade_anos': "A avaliar",
-            'padrao': 'A avaliar',
-            'cnpj_status': 'A confirmar'
+            'num_torres': int(torres),
+            'num_apartamentos': int(unidades),
+            'metragem_media': f"{metragem_media} m²",
+            'area_total_estimada': area_total_estimada,
+            'vagas_garagem': int(vagas),
+            'idade_anos': int(idade),
+            'padrao': padrao.upper(),
+            'cnpj_status': 'ATIVO' if lead_data.get('cnpj') and lead_data.get('cnpj') != 'Pendente' else 'A confirmar'
         }
 
     def _estimate_financial_health(self, details):
-        """Simulador de Saúde Financeira 2.0 (Resiliente)."""
+        """Simulador de Saúde Financeira 2.0 (Resiliente e Inteligente)."""
         safe_details = details or {}
+        padrao = (safe_details.get('padrao') or 'MEDIO').upper()
+        
+        if padrao == 'LUXO':
+            inadimplencia = "5.2%"
+            caixa = "R$ 680.000,00"
+            score = 920
+            probabilidade = "ALTA"
+            comentario = "Condomínio de alto padrão com excelente saúde financeira e fundo de reserva robusto."
+        elif padrao == 'POPULAR':
+            inadimplencia = "12.8%"
+            caixa = "R$ 75.000,00"
+            score = 610
+            probabilidade = "MEDIA-BAIXA"
+            comentario = "Condomínio de padrão popular. Fundo de reserva limitado, recomendável parcelamento estendido."
+        else:
+            inadimplencia = "8.1%"
+            caixa = "R$ 280.000,00"
+            score = 790
+            probabilidade = "MEDIA-ALTA"
+            comentario = "Condomínio de padrão médio. Fluxo de caixa saudável e histórico regular de manutenção."
+            
         return {
-            'indice_inadimplencia_est': '8.5%',
-            'caixa_previsto_obras': 'R$ 450.000,00',
-            'score_credito_condominio': 850,
-            'probabilidade_aprovacao': 'ALTA',
-            'comentario': 'Condomínio de alto padrão com histórico de manutenção regular.'
+            'indice_inadimplencia_est': inadimplencia,
+            'caixa_previsto_obras': caixa,
+            'score_credito_condominio': score,
+            'probabilidade_aprovacao': probabilidade,
+            'comentario': comentario
         }
 
     def _gerar_proposta_comercial_v2(self, lead_data, area_total):
