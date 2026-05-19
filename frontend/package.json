@@ -16,7 +16,6 @@
     "enhanced-resolve": "^5.20.1",
     "framer-motion": "^12.38.0",
     "jspdf": "^4.2.1",
-    "lightningcss-win32-x64-msvc": "^1.32.0",
     "lucide-react": "^1.14.0",
     "next": "^16.2.1",
     "postcss-import": "^16.1.1",
