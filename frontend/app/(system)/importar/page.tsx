@@ -400,15 +400,15 @@ export default function ImportarPage() {
       {/* Instrução de uso */}
       <div className="bg-slate-950/20 border border-white/5 rounded-2xl p-5 space-y-3">
         <h3 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-          <Sparkles size={14} className="text-yellow-400" /> Como usar com a Metodologia Sniper 3 Fases
+          <Sparkles size={14} className="text-yellow-400" /> Como usar com a Metodologia Sniper 4 Fases
         </h3>
         <ol className="space-y-2">
           {[
             "Instale a extensão G Maps Extractor no Chrome (gratuita)",
-            'Acesse o Google Maps e busque usando as 3 fases: ex: "Condominios Residenciais Jundiaí SP"',
+            'Acesse o Google Maps e busque usando os 3 parâmetros: ex: "Condominios Residenciais Jundiaí SP"',
             "A extensão extrai todos os resultados visíveis e exporta como JSON ou CSV",
             "Cole o resultado aqui e clique em Importar",
-            "Os leads aparecem automaticamente no CRM Prospetor com score calculado",
+            "Os leads aparecem automaticamente no CRM Prospector com score calculado",
           ].map((step, i) => (
             <li key={i} className="flex items-start gap-3 text-xs font-medium text-slate-400">
               <span className="w-5 h-5 rounded-full bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">

@@ -628,7 +628,7 @@ export default function Dashboard() {
               <span>Operação Sniper 4 Fases</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-none">
-              CRM <span className="text-yellow-400">Prospetor</span>
+              CRM <span className="text-yellow-400">Prospector</span>
             </h1>
           </div>
 

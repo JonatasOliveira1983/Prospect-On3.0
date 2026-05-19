@@ -82,7 +82,7 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
           <Star size={28} className="text-slate-600" />
         </div>
         <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Nenhum lead no radar ainda</p>
-        <p className="text-slate-600 text-xs max-w-xs">Configure as 3 Fases acima e clique em <strong className="text-yellow-400">Iniciar Sniper 3 Fases</strong> para começar a capturar leads.</p>
+        <p className="text-slate-600 text-xs max-w-xs">Configure os 3 parâmetros acima e clique em <strong className="text-yellow-400">Iniciar Sniper 4 Fases</strong> para começar a capturar leads.</p>
       </div>
     );
   }
