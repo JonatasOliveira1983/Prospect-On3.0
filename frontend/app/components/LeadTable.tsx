@@ -36,7 +36,7 @@ interface Lead {
   contact_status?: string;
 }
 
-export default function LeadTable({ leads }: { leads: Lead[] }) {
+export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: () => void }) {
   const [inspectingLead, setInspectingLead] = useState<Lead | null>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
@@ -270,7 +270,10 @@ export default function LeadTable({ leads }: { leads: Lead[] }) {
           lead={inspectingLead}
           isOpen={!!inspectingLead}
           onClose={() => setInspectingLead(null)}
-          onSave={() => window.location.reload()}
+          onSave={() => {
+            setInspectingLead(null);
+            if (onSave) onSave();
+          }}
         />
       )}
     </>

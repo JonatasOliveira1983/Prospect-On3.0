@@ -19,7 +19,9 @@ import {
   User,
   Send,
   Sparkles,
-  Flame
+  Flame,
+  Image as ImageIcon,
+  AlertCircle
 } from "lucide-react";
 
 interface Lead {
@@ -56,6 +58,12 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
   const [status, setStatus] = useState(lead.contact_status || "Aguardando Abordagem");
   const [saving, setSaving] = useState(false);
 
+  // Estado para correção de fachada
+  const [fachadaUrl, setFachadaUrl] = useState(lead.vision_image_url || "");
+  const [fachadaInputVisible, setFachadaInputVisible] = useState(false);
+  const [fachadaPreview, setFachadaPreview] = useState(lead.vision_image_url || "");
+  const [fachadaError, setFachadaError] = useState(false);
+
   // Normalização do telefone para WhatsApp
   const phoneRaw = lead.phone || lead.responsavel_contato || "";
   const phoneNumbersOnly = phoneRaw.replace(/\D/g, "");
@@ -76,12 +84,13 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
       const body = {
         notes: notes,
         return_date: returnDate || null,
-        contact_status: status
+        contact_status: status,
+        vision_image_url: fachadaPreview || null
       };
       const res = await api.interaction(leadId, body);
 
       if (res.ok) {
-        onSave();
+        onSave();   // ← atualiza estado reativo sem reload de página
         onClose();
       } else {
         alert("Erro ao salvar dados comercial.");
@@ -94,10 +103,16 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
     }
   }
 
+  function handleApplyFachada() {
+    setFachadaPreview(fachadaUrl);
+    setFachadaError(false);
+    setFachadaInputVisible(false);
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[120] flex items-start md:items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -110,20 +125,20 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="bg-slate-900 border border-white/10 w-full max-w-4xl rounded-[2.5rem] p-6 lg:p-8 shadow-2xl relative z-10 my-8 flex flex-col md:flex-row gap-8 max-h-[90vh] overflow-y-auto"
+            className="bg-slate-900 border border-white/10 w-full max-w-4xl rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-2xl relative z-10 my-4 sm:my-8 flex flex-col md:flex-row gap-5 md:gap-8 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           >
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all z-20"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all z-20"
             >
               <X size={18} />
             </button>
 
             {/* Coluna 1: Informações Gerais do Lead */}
-            <div className="flex-1 flex flex-col gap-6 md:border-r md:border-white/5 md:pr-8">
+            <div className="flex-1 flex flex-col gap-4 sm:gap-6 md:border-r md:border-white/5 md:pr-8">
               <div>
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
                     <Sparkles size={10} className="fill-emerald-400/20" /> Lead Radar
                   </span>
@@ -133,7 +148,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                     </span>
                   ) : null}
                 </div>
-                <h2 className="text-2xl lg:text-3xl font-black text-white uppercase tracking-tight leading-tight">
+                <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tight leading-tight pr-10">
                   {lead.name}
                 </h2>
                 <p className="text-slate-400 text-xs flex items-center gap-1.5 mt-2 font-medium">
@@ -142,16 +157,73 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                 </p>
               </div>
 
-              {/* Fachada do Condomínio */}
-              <div className="w-full h-48 rounded-[2rem] overflow-hidden bg-slate-950 border border-white/5 relative shrink-0">
-                {lead.vision_image_url ? (
-                  <img src={lead.vision_image_url} className="w-full h-full object-cover" alt="Fachada" />
-                ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 gap-2 bg-slate-950">
-                    <Sparkles size={32} />
-                    <span className="text-[10px] uppercase font-bold tracking-widest">Sem Fachada Cadastrada</span>
-                  </div>
-                )}
+              {/* Fachada do Condomínio — com opção de corrigir */}
+              <div className="flex flex-col gap-2">
+                <div className="w-full h-36 sm:h-48 rounded-xl sm:rounded-[2rem] overflow-hidden bg-slate-950 border border-white/5 relative shrink-0">
+                  {fachadaPreview && !fachadaError ? (
+                    <img
+                      src={fachadaPreview}
+                      className="w-full h-full object-cover"
+                      alt="Fachada"
+                      onError={() => setFachadaError(true)}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 gap-2 bg-slate-950">
+                      <ImageIcon size={28} />
+                      <span className="text-[10px] uppercase font-bold tracking-widest">
+                        {fachadaError ? "Imagem Inválida / Não Encontrada" : "Sem Fachada Cadastrada"}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Botão sobreposto para corrigir fachada */}
+                  <button
+                    onClick={() => setFachadaInputVisible(v => !v)}
+                    className="absolute bottom-2 right-2 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl border border-white/10 transition-all flex items-center gap-1.5 backdrop-blur-sm"
+                    title="Corrigir imagem da fachada"
+                  >
+                    <ImageIcon size={10} />
+                    Corrigir Foto
+                  </button>
+                </div>
+
+                {/* Campo de correção de URL — mostra ao clicar */}
+                <AnimatePresence>
+                  {fachadaInputVisible && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="flex gap-2 bg-slate-950 border border-emerald-400/30 rounded-xl p-3">
+                        <div className="flex-1 flex flex-col gap-1">
+                          <label className="text-[9px] font-black text-emerald-400 uppercase tracking-widest">
+                            Cole a URL da foto correta da fachada
+                          </label>
+                          <input
+                            type="url"
+                            value={fachadaUrl}
+                            onChange={e => { setFachadaUrl(e.target.value); setFachadaError(false); }}
+                            placeholder="https://exemplo.com/imagem-fachada.jpg"
+                            className="w-full bg-transparent text-white text-xs font-medium outline-none placeholder-slate-600"
+                          />
+                        </div>
+                        <button
+                          onClick={handleApplyFachada}
+                          disabled={!fachadaUrl}
+                          className="bg-emerald-500 hover:bg-emerald-400 disabled:opacity-40 text-slate-950 font-black px-4 py-2 rounded-lg text-[10px] uppercase tracking-widest transition-all shrink-0 flex items-center gap-1"
+                        >
+                          <Check size={12} /> Aplicar
+                        </button>
+                      </div>
+                      <p className="text-[9px] text-slate-500 mt-1.5 px-1 flex items-center gap-1">
+                        <AlertCircle size={9} />
+                        A foto será salva no CRM ao clicar em "Salvar Registro".
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Atalhos de Ação Comercial (WhatsApp e Email) */}
@@ -161,7 +233,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                     href={whatsappUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/10 hover:scale-[1.02] active:scale-95"
                   >
                     <Phone size={16} className="fill-slate-950" />
                     Chamar WhatsApp
@@ -169,7 +241,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                 ) : (
                   <button
                     disabled
-                    className="flex-1 bg-slate-800 text-slate-600 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest opacity-40 cursor-not-allowed"
+                    className="flex-1 bg-slate-800 text-slate-600 font-black py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest opacity-40 cursor-not-allowed"
                   >
                     <Phone size={16} />
                     Sem WhatsApp
@@ -179,7 +251,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                 {lead.email && lead.email !== "N/D" ? (
                   <a
                     href={`mailto:${lead.email}`}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 border border-white/5 hover:border-white/10 text-white font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95"
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 border border-white/5 hover:border-white/10 text-white font-black py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest hover:scale-[1.02] active:scale-95"
                   >
                     <Mail size={16} className="text-yellow-400" />
                     Mandar E-mail
@@ -187,7 +259,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                 ) : (
                   <button
                     disabled
-                    className="flex-1 bg-slate-800 text-slate-600 font-black py-4 px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest opacity-40 cursor-not-allowed"
+                    className="flex-1 bg-slate-800 text-slate-600 font-black py-3.5 sm:py-4 px-4 sm:px-6 rounded-2xl flex items-center justify-center gap-2.5 transition-all text-xs uppercase tracking-widest opacity-40 cursor-not-allowed"
                   >
                     <Mail size={16} />
                     Sem E-mail
@@ -196,7 +268,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
               </div>
 
               {/* Detalhes de Canais Web */}
-              <div className="bg-slate-950/40 p-5 rounded-[2rem] border border-white/5 space-y-3">
+              <div className="bg-slate-950/40 p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-white/5 space-y-3">
                 <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2 flex items-center gap-1.5">
                   <User size={12} className="text-emerald-400" /> Canais Encontrados
                 </h4>
@@ -207,12 +279,12 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-500">E-mail</span>
-                    <span className="font-bold text-white truncate max-w-[220px]">{lead.email || "N/D"}</span>
+                    <span className="font-bold text-white truncate max-w-[180px] sm:max-w-[220px]">{lead.email || "N/D"}</span>
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-500">Website</span>
                     {lead.website && lead.website !== "N/D" ? (
-                      <a href={lead.website} target="_blank" rel="noreferrer" className="font-bold text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[220px]">
+                      <a href={lead.website} target="_blank" rel="noreferrer" className="font-bold text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[180px] sm:max-w-[220px]">
                         {lead.website} <ExternalLink size={10} />
                       </a>
                     ) : (
@@ -222,7 +294,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-slate-500">Perfil Social</span>
                     {lead.social_url && lead.social_url !== "N/D" ? (
-                      <a href={lead.social_url} target="_blank" rel="noreferrer" className="font-bold text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[220px]">
+                      <a href={lead.social_url} target="_blank" rel="noreferrer" className="font-bold text-emerald-400 hover:underline flex items-center gap-1 truncate max-w-[180px] sm:max-w-[220px]">
                         Instagram/Social <ExternalLink size={10} />
                       </a>
                     ) : (
@@ -234,10 +306,10 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
             </div>
 
             {/* Coluna 2: Painel CRM (Notas, Status e Retorno) */}
-            <div className="flex-1 flex flex-col gap-6 justify-between">
-              <div className="space-y-6">
+            <div className="flex-1 flex flex-col gap-4 sm:gap-6 justify-between">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <h3 className="text-lg font-black text-white uppercase tracking-tight mb-1">CRM Otto Pinturas</h3>
+                  <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-1">CRM Otto Pinturas</h3>
                   <p className="text-xs text-slate-400 font-medium">Acompanhe as prospecções e registre o andamento do contato com o condomínio.</p>
                 </div>
 
@@ -250,7 +322,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-400 appearance-none cursor-pointer"
+                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-3.5 sm:p-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-400 appearance-none cursor-pointer"
                   >
                     <option value="Aguardando Abordagem">🟡 Aguardando Abordagem</option>
                     <option value="Contato Iniciado">🔵 Contato Iniciado (WhatsApp/Ligação)</option>
@@ -271,7 +343,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     placeholder="Escreva notas rápidas: com quem falou, o que ele respondeu, se enviou proposta, valor cobrado..."
-                    rows={6}
+                    rows={5}
                     className="w-full bg-slate-950 border border-white/10 focus:border-emerald-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors focus:ring-1 focus:ring-emerald-400/15 resize-none font-medium leading-relaxed"
                   />
                 </div>
@@ -286,7 +358,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                     type="datetime-local"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 focus:border-emerald-400 rounded-2xl p-4 text-xs font-bold text-white outline-none transition-colors"
+                    className="w-full bg-slate-950 border border-white/10 focus:border-emerald-400 rounded-2xl p-3.5 sm:p-4 text-xs font-bold text-white outline-none transition-colors"
                   />
                 </div>
               </div>
@@ -316,4 +388,3 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
     </AnimatePresence>
   );
 }
-

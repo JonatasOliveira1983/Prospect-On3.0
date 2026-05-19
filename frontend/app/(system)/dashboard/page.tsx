@@ -258,7 +258,7 @@ export default function Dashboard() {
             <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Sincronizando Radar...</span>
           </div>
         ) : (
-          <LeadTable leads={leads} />
+          <LeadTable leads={leads} onSave={fetchLeads} />
         )}
       </div>
     </div>

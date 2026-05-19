@@ -83,6 +83,7 @@ class InteractionData(BaseModel):
     return_date: str = None
     contact_status: str = 'Aguardando Abordagem'
     email_sent_at: str = None
+    vision_image_url: str = None
 
 class FavoriteData(BaseModel):
     is_favorite: bool
@@ -196,10 +197,10 @@ async def get_lead_by_slug(slug: str):
 
 @app.post("/api/leads/{lead_id}/interaction")
 async def save_lead_interaction(lead_id: str, data: InteractionData):
-    """Salva a interação com o lead (anotações, retorno, status e data de email)."""
+    """Salva a interação com o lead (anotações, retorno, status, data de email e URL de fachada)."""
     try:
         logger.info(f"API: Salvando interação comercial para lead_id={lead_id} | Status: {data.contact_status}")
-        success = db.save_interaction(lead_id, data.notes, data.return_date, data.contact_status, data.email_sent_at)
+        success = db.save_interaction(lead_id, data.notes, data.return_date, data.contact_status, data.email_sent_at, data.vision_image_url)
         if success:
             return {"success": True, "message": "Interação comercial salva com sucesso."}
         else:

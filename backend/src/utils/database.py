@@ -105,15 +105,27 @@ class Database:
             """)
             conn.commit()
 
-    def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None):
+    def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None):
         try:
             with self._get_connection() as conn:
-                if email_sent_at:
+                if email_sent_at and vision_image_url:
+                    self._run_query(conn, """
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?, vision_image_url = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, email_sent_at, vision_image_url, lead_id))
+                elif email_sent_at:
                     self._run_query(conn, """
                         UPDATE leads 
                         SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
                         WHERE id = ?
                     """, (notes, return_date, contact_status, email_sent_at, lead_id))
+                elif vision_image_url:
+                    self._run_query(conn, """
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?, vision_image_url = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, vision_image_url, lead_id))
                 else:
                     self._run_query(conn, """
                         UPDATE leads 
