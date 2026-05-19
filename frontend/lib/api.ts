@@ -7,7 +7,7 @@ let rawBackend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 if (rawBackend && !rawBackend.startsWith('http://') && !rawBackend.startsWith('https://') && !rawBackend.startsWith('//')) {
   rawBackend = `https://${rawBackend}`;
 }
-const BACKEND = rawBackend;
+export const BACKEND = rawBackend;
 
 export const api = {
   leads:        () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store' }),
@@ -31,3 +31,22 @@ export const api = {
 export const WS_URL = BACKEND
   .replace(/^https:\/\//, 'wss://')
   .replace(/^http:\/\//, 'ws://');
+
+export function resolveLeadImageUrl(url?: string) {
+  if (!url) {
+    // Retorna uma foto moderna e premium de fachada de edifício do Unsplash como placeholder
+    return "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
+  }
+  
+  // Tratar URLs relativas
+  if (url.startsWith('/')) {
+    return `${BACKEND}${url}`;
+  }
+  
+  // Tratar gravação legada de localhost:8002 no banco de dados quando em produção
+  if (url.includes('localhost:8002') && !BACKEND.includes('localhost:8002')) {
+    return url.replace(/http:\/\/localhost:8002/, BACKEND);
+  }
+  
+  return url;
+}

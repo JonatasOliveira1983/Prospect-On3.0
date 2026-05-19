@@ -41,6 +41,7 @@ export default function Dashboard() {
   const [regiao, setRegiao] = useState("Jundiaí - SP");
   const [targetLeads, setTargetLeads] = useState(20);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const [filterByRegion, setFilterByRegion] = useState(false);
 
   async function fetchLeads() {
     try {
@@ -85,6 +86,15 @@ export default function Dashboard() {
       console.error("Erro ao limpar leads:", error);
     }
   }
+
+  const regionQuery = regiao ? regiao.split('-')[0].trim().toLowerCase() : "";
+  const filteredLeads = filterByRegion && regionQuery
+    ? leads.filter(lead => {
+        const address = (lead.address || "").toLowerCase();
+        const name = (lead.name || "").toLowerCase();
+        return address.includes(regionQuery) || name.includes(regionQuery);
+      })
+    : leads;
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-10">
@@ -220,28 +230,47 @@ export default function Dashboard() {
       <div className="bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-10 shadow-2xl relative overflow-hidden flex-1">
         <div className="absolute top-0 right-0 w-96 h-96 bg-yellow-400/5 blur-[120px] rounded-full -mr-48 -mt-48 pointer-events-none" />
 
-        <div className="flex items-center justify-between mb-6 sm:mb-8 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4 relative z-10">
           <div className="flex flex-col gap-1">
             <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">Leads Identificados</h3>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{leads.length} alvos no radar</span>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                {filterByRegion ? `${filteredLeads.length} de ` : ""}{leads.length} alvos no radar
+              </span>
             </div>
           </div>
 
-          <div className="flex bg-slate-800 p-1.5 rounded-xl">
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-yellow-400 text-slate-900 shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              <FileText size={18} />
-            </button>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-yellow-400 text-slate-900 shadow-md' : 'text-slate-400 hover:text-white'}`}
-            >
-              <LayoutDashboard size={18} />
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Toggle de Filtro por Cidade */}
+            {regiao && (
+              <button
+                onClick={() => setFilterByRegion(!filterByRegion)}
+                className={`text-[10px] font-black uppercase tracking-wider px-4 py-2.5 rounded-xl border transition-all flex items-center gap-2 ${
+                  filterByRegion
+                    ? "bg-yellow-400/10 border-yellow-400/30 text-yellow-400"
+                    : "bg-slate-900 border-white/5 text-slate-500 hover:text-white"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${filterByRegion ? 'bg-yellow-400 animate-pulse' : 'bg-slate-500'}`} />
+                <span>Apenas {regiao.split('-')[0].trim()}</span>
+              </button>
+            )}
+
+            <div className="flex bg-slate-800 p-1.5 rounded-xl">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-yellow-400 text-slate-900 shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                <FileText size={18} />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-yellow-400 text-slate-900 shadow-md' : 'text-slate-400 hover:text-white'}`}
+              >
+                <LayoutDashboard size={18} />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -251,7 +280,7 @@ export default function Dashboard() {
             <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Sincronizando Radar...</span>
           </div>
         ) : (
-          <LeadTable leads={leads} onSave={fetchLeads} />
+          <LeadTable leads={filteredLeads} onSave={fetchLeads} />
         )}
       </div>
     </div>

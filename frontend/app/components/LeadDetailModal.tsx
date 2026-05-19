@@ -1,5 +1,5 @@
 "use client";
-import { api } from '@/lib/api';
+import { api, resolveLeadImageUrl } from '@/lib/api';
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -158,21 +158,14 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
               {/* Fachada + Botão Corrigir */}
               <div className="flex flex-col gap-2">
                 <div className="w-full h-36 sm:h-44 rounded-xl sm:rounded-[2rem] overflow-hidden bg-slate-950 border border-white/5 relative shrink-0">
-                  {fachadaPreview && !fachadaError ? (
                     <img
-                      src={fachadaPreview}
+                      src={resolveLeadImageUrl(fachadaPreview)}
                       className="w-full h-full object-cover"
                       alt="Fachada"
-                      onError={() => setFachadaError(true)}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex flex-col items-center justify-center text-slate-700 gap-2 bg-slate-950">
-                      <ImageIcon size={28} />
-                      <span className="text-[10px] uppercase font-bold tracking-widest">
-                        {fachadaError ? "Imagem Inválida" : "Sem Fachada Cadastrada"}
-                      </span>
-                    </div>
-                  )}
                   <button
                     onClick={() => setFachadaInputVisible(v => !v)}
                     className="absolute bottom-2 right-2 bg-slate-900/90 hover:bg-yellow-400 hover:text-slate-900 text-slate-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl border border-white/10 transition-all flex items-center gap-1.5 backdrop-blur-sm"

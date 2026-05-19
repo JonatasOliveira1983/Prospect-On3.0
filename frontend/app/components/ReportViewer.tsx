@@ -1,4 +1,5 @@
 "use client";
+import { resolveLeadImageUrl } from '@/lib/api';
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -222,17 +223,14 @@ export default function ReportViewer({ report, reportUrl, onClose }: ReportViewe
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                       {/* Foto da Fachada Analisada (O visual que faltava!) */}
                       <div className="lg:col-span-5 relative group overflow-hidden rounded-2xl border border-white/10 bg-slate-900 shadow-2xl">
-                         {vision.image_url || report.vision_image_url ? (
-                           <img 
-                             src={vision.image_url || report.vision_image_url} 
-                             className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                             alt="Fachada Analisada"
-                           />
-                         ) : (
-                           <div className="w-full h-48 flex items-center justify-center bg-slate-800 text-slate-600 text-[10px] font-black uppercase">
-                              Fachada Original Indisponível
-                           </div>
-                         )}
+                         <img 
+                           src={resolveLeadImageUrl(vision.image_url || report.vision_image_url)} 
+                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+                           alt="Fachada Analisada"
+                           onError={(e) => {
+                             (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
+                           }}
+                         />
                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                          <div className="absolute top-3 left-3 px-2 py-1 bg-rose-500/80 backdrop-blur-md rounded text-[8px] font-black text-white uppercase tracking-widest">
                             Foco de Análise Técnica
@@ -289,14 +287,17 @@ export default function ReportViewer({ report, reportUrl, onClose }: ReportViewe
             ) : (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} key="proposta">
                 <div className="relative min-h-[450px] flex flex-col justify-end overflow-hidden">
-                   <div className="absolute inset-0">
-                     <img 
-                       src={report.vision_image_url || "/placeholder-facade.jpg"} 
-                       className="w-full h-full object-cover" 
-                       alt="Fachada"
-                     />
-                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
-                   </div>
+                    <div className="absolute inset-0">
+                      <img 
+                        src={resolveLeadImageUrl(report.vision_image_url)} 
+                        className="w-full h-full object-cover" 
+                        alt="Fachada"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-transparent" />
+                    </div>
                    <div className="relative z-10 p-10">
                      <div className="flex items-center gap-3 mb-6">
                         <div className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full">

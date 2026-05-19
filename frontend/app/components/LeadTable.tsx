@@ -1,5 +1,5 @@
 "use client";
-import { api } from '@/lib/api';
+import { api, resolveLeadImageUrl } from '@/lib/api';
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -100,15 +100,15 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
             >
               <div className="flex justify-between items-start gap-3">
                 <div className="flex gap-3 flex-1">
-                  {/* Thumbnail da fachada */}
                   <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shrink-0">
-                    {lead.vision_image_url ? (
-                      <img src={lead.vision_image_url} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-slate-900">
-                        <Star size={16} className="text-slate-600" />
-                      </div>
-                    )}
+                    <img 
+                      src={resolveLeadImageUrl(lead.vision_image_url)} 
+                      className="w-full h-full object-cover" 
+                      alt="" 
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
+                      }}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
@@ -193,13 +193,14 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-yellow-400/40 transition-colors shrink-0">
-                        {lead.vision_image_url ? (
-                          <img src={lead.vision_image_url} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-slate-600 bg-slate-900">
-                            <Star size={18} />
-                          </div>
-                        )}
+                        <img 
+                          src={resolveLeadImageUrl(lead.vision_image_url)} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
+                          }}
+                        />
                       </div>
                       <div>
                         <h5 className="text-white font-black group-hover:text-yellow-400 transition-colors uppercase tracking-tight text-sm">{lead.name}</h5>
