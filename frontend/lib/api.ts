@@ -3,7 +3,11 @@
  * Elimina o layer de proxy Next.js (que causava 404 em produção).
  * BACKEND_URL é injetado em build-time via NEXT_PUBLIC_API_URL.
  */
-const BACKEND = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
+let rawBackend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
+if (rawBackend && !rawBackend.startsWith('http://') && !rawBackend.startsWith('https://') && !rawBackend.startsWith('//')) {
+  rawBackend = `https://${rawBackend}`;
+}
+const BACKEND = rawBackend;
 
 export const api = {
   leads:       () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store' }),
