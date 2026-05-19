@@ -213,26 +213,7 @@ class ManagerAgent:
                     if rs.get("facebook"):
                         lead["facebook_url"] = rs["facebook"]
 
-                # 2. ENRIQUECIMENTO WEB AVANÇADO (WebEnrichmentAgent - Detetive Web)
-                if lead.get("email") in ("N/D", None, "") or lead.get("whatsapp") in ("N/D", None, ""):
-                    self.emit_log("WebEnrichmentAgent", "enriching", f"   🔍 Detetive Web buscando contatos adicionais para '{name}'...", "working")
-                    lead = await self.web_enrichment.enrich_lead(lead)
-
-                # 3. ENRIQUECIMENTO CONTEXTUAL COM DEEPSEEK (LeadEnrichmentAgent)
-                self.emit_log("LeadEnrichmentAgent", "analyzing", f"   🧠 DeepSeek analisando contexto de '{name}'...", "working")
-                lead = self.lead_enrichment.enrich_lead(lead)
-                self.emit_log("LeadEnrichmentAgent", "analyzing",
-                    f"   ✅ DeepSeek: urgência={lead.get('urgencia_pintura','?')}/10 | "
-                    f"match_otto={lead.get('match_otto_score','?')} | "
-                    f"unidades={lead.get('unidades_estimadas','?')}",
-                    "success")
-                
-                # 4. ANÁLISE COMERCIAL (AnalystAgent)
-                self.emit_log("AnalystAgent", "analyzing", f"   📈 Calculando contexto comercial para '{name}'...", "working")
-                commercial_data = self.analyst.analyze_business_context(lead)
-                lead.update(commercial_data)
-
-                # 5. INVESTIGAÇÃO DE INTENÇÃO DE OBRA ATIVA (DemandScoutAgent)
+                # 2. INVESTIGAÇÃO DE INTENÇÃO DE OBRA ATIVA (DemandScoutAgent - Obras, Atas e Editais)
                 self.emit_log("DemandScoutAgent", "scouting", f"   🔥 Varrendo atas de assembleias buscando concorrências ativas de pintura para '{name}'...", "working")
                 lead = await self.demand_scout.analyze_active_demand(lead)
                 
@@ -242,6 +223,25 @@ class ManagerAgent:
                         "success")
                 else:
                     self.emit_log("DemandScoutAgent", "no_demand", f"   ℹ️ Nenhuma cotação de reforma recente encontrada nos registros públicos.", "info")
+
+                # 3. ENRIQUECIMENTO WEB AVANÇADO (WebEnrichmentAgent - Detetive Web de Contatos)
+                if lead.get("email") in ("N/D", None, "") or lead.get("whatsapp") in ("N/D", None, ""):
+                    self.emit_log("WebEnrichmentAgent", "enriching", f"   🔍 Detetive Web buscando contatos adicionais para '{name}'...", "working")
+                    lead = await self.web_enrichment.enrich_lead(lead)
+
+                # 4. ENRIQUECIMENTO CONTEXTUAL COM DEEPSEEK (LeadEnrichmentAgent)
+                self.emit_log("LeadEnrichmentAgent", "analyzing", f"   🧠 DeepSeek analisando contexto de '{name}'...", "working")
+                lead = self.lead_enrichment.enrich_lead(lead)
+                self.emit_log("LeadEnrichmentAgent", "analyzing",
+                    f"   ✅ DeepSeek: urgência={lead.get('urgencia_pintura','?')}/10 | "
+                    f"match_otto={lead.get('match_otto_score','?')} | "
+                    f"unidades={lead.get('unidades_estimadas','?')}",
+                    "success")
+                
+                # 5. ANÁLISE COMERCIAL (AnalystAgent)
+                self.emit_log("AnalystAgent", "analyzing", f"   📈 Calculando contexto comercial para '{name}'...", "working")
+                commercial_data = self.analyst.analyze_business_context(lead)
+                lead.update(commercial_data)
 
                 # 3. DADOS DE MERCADO (preço por bairro)
                 bairro_lead = lead.get('address', city).split(',')[-2].strip() if ',' in lead.get('address', '') else city

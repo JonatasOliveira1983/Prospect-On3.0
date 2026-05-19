@@ -172,14 +172,14 @@ export default function Dashboard() {
           } else if (status === "warning") {
             setFaseStatuses(prev => ({ ...prev, fase2: 'warning' }));
           }
-        } else if (agent === "WebEnrichmentAgent") {
+        } else if (agent === "DemandScoutAgent") {
           setFaseStatuses(prev => ({ ...prev, fase1: 'success', fase2: 'success', fase3: 'working' }));
-          if (status === "success" || msg.includes("descoberto") || msg.includes("extraído")) {
+          if (status === "success" || log.action === "active_demand_found") {
             setFaseStatuses(prev => ({ ...prev, fase3: 'success' }));
           }
-        } else if (agent === "DemandScoutAgent") {
+        } else if (agent === "WebEnrichmentAgent") {
           setFaseStatuses(prev => ({ ...prev, fase1: 'success', fase2: 'success', fase3: 'success', fase4: 'working' }));
-          if (status === "success" || log.action === "active_demand_found") {
+          if (status === "success" || msg.includes("descoberto") || msg.includes("extraído")) {
             setFaseStatuses(prev => ({ ...prev, fase4: 'success' }));
           }
         }
@@ -422,52 +422,52 @@ export default function Dashboard() {
                       </span>
                     </div>
 
-                    {/* FASE 3: DETETIVE WEB */}
+                    {/* FASE 3: DEMAND SCOUT / INTELIGÊNCIA DE OBRAS */}
                     <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                      faseStatuses.fase3 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white' :
-                      faseStatuses.fase3 === 'success' ? 'bg-emerald-500/5 border-emerald-500/30 text-white' :
+                      faseStatuses.fase3 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white animate-pulse' :
+                      faseStatuses.fase3 === 'success' ? 'bg-amber-400/5 border-amber-400/40 text-amber-400' :
                       'bg-slate-950/40 border-white/5 text-slate-500'
                     }`}>
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-xl ${
-                          faseStatuses.fase3 === 'working' ? 'bg-yellow-400/20 text-yellow-400 animate-pulse' :
-                          faseStatuses.fase3 === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-900 text-slate-600'
-                        }`}>
-                          <Users size={18} />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 3: Detetive Web</h4>
-                          <p className="text-[9px] font-semibold opacity-60">Cruzando CNPJ e contatos cadastrais</p>
-                        </div>
-                      </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest">
-                        {faseStatuses.fase3 === 'working' && "ENRIQUECENDO"}
-                        {faseStatuses.fase3 === 'success' && "REVELADO"}
-                        {faseStatuses.fase3 === 'pending' && "PENDENTE"}
-                      </span>
-                    </div>
-
-                    {/* FASE 4: DEMAND SCOUT */}
-                    <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
-                      faseStatuses.fase4 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white animate-pulse' :
-                      faseStatuses.fase4 === 'success' ? 'bg-amber-400/5 border-amber-400/40 text-amber-400' :
-                      'bg-slate-950/40 border-white/5 text-slate-500'
-                    }`}>
-                      <div className="flex items-center gap-3">
-                        <div className={`p-2 rounded-xl ${
-                          faseStatuses.fase4 === 'working' ? 'bg-yellow-400/20 text-yellow-400 animate-bounce' :
-                          faseStatuses.fase4 === 'success' ? 'bg-amber-400/20 text-amber-400' : 'bg-slate-900 text-slate-600'
+                          faseStatuses.fase3 === 'working' ? 'bg-yellow-400/20 text-yellow-400 animate-bounce' :
+                          faseStatuses.fase3 === 'success' ? 'bg-amber-400/20 text-amber-400' : 'bg-slate-900 text-slate-600'
                         }`}>
                           <Zap size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 4: Rastreamento de Obras</h4>
+                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 3: Inteligência de Obras</h4>
                           <p className="text-[9px] font-semibold opacity-60">Varrendo atas de assembleias e editais</p>
                         </div>
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest font-mono text-yellow-400">
-                        {faseStatuses.fase4 === 'working' && "🔥 VARRENDO"}
-                        {faseStatuses.fase4 === 'success' && "🔍 ANALISADO"}
+                        {faseStatuses.fase3 === 'working' && "🔥 VARRENDO"}
+                        {faseStatuses.fase3 === 'success' && "🔍 ANALISADO"}
+                        {faseStatuses.fase3 === 'pending' && "PENDENTE"}
+                      </span>
+                    </div>
+
+                    {/* FASE 4: DETETIVE WEB / ENRIQUECIMENTO DE CONTATOS */}
+                    <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
+                      faseStatuses.fase4 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white animate-pulse' :
+                      faseStatuses.fase4 === 'success' ? 'bg-emerald-500/5 border-emerald-500/30 text-white' :
+                      'bg-slate-950/40 border-white/5 text-slate-500'
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-xl ${
+                          faseStatuses.fase4 === 'working' ? 'bg-yellow-400/20 text-yellow-400 animate-pulse' :
+                          faseStatuses.fase4 === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-900 text-slate-600'
+                        }`}>
+                          <Users size={18} />
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 4: Detetive de Contatos</h4>
+                          <p className="text-[9px] font-semibold opacity-60">Cruzando CNPJ e contatos cadastrais</p>
+                        </div>
+                      </div>
+                      <span className="text-[9px] font-black uppercase tracking-widest">
+                        {faseStatuses.fase4 === 'working' && "ENRIQUECENDO"}
+                        {faseStatuses.fase4 === 'success' && "REVELADO"}
                         {faseStatuses.fase4 === 'pending' && "PENDENTE"}
                       </span>
                     </div>
