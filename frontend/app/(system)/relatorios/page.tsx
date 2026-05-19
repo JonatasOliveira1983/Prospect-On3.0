@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
 import { Database, Building2, MapPin, Loader2, Phone, Globe, Mail } from "lucide-react";
@@ -19,7 +20,7 @@ export default function BaseLeads() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/leads').then(r => r.json()).then(data => {
+    api.leads().then(r => r.json()).then(data => {
       if (Array.isArray(data)) setLeads(data);
       setLoading(false);
     });

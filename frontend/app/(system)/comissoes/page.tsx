@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
 import { Clock, Phone, MessageSquare, Loader2 } from "lucide-react";
@@ -20,7 +21,7 @@ export default function Atividades() {
 
   async function fetchLeads() {
     try {
-      const res = await fetch('/api/leads');
+      const res = await api.leads();
       const data = await res.json();
       if (Array.isArray(data)) setLeads(data);
     } catch (error) {

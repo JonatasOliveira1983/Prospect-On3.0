@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
@@ -34,7 +35,7 @@ export default function MapaRadar() {
       setL(leaflet.default);
     });
 
-    fetch('/api/leads')
+    api.leads()
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) setLeads(data);
@@ -189,3 +190,4 @@ export default function MapaRadar() {
     </div>
   );
 }
+

@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
 import {
@@ -101,3 +102,4 @@ export default function LeadsQuentes() {
     </div>
   );
 }
+

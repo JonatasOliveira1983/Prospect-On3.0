@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Cpu, Zap } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface UsageStat {
   service: string;
@@ -16,9 +17,10 @@ export default function UsageIndicator() {
 
   const fetchUsage = async () => {
     try {
-      const res = await fetch('/api/usage');
+      const res = await api.usage();
       const data = await res.json();
-      setStats(data);
+      setStats(Array.isArray(data) ? data : []);
+
     } catch (err) {
       console.error('Falha ao buscar uso de IA:', err);
     } finally {

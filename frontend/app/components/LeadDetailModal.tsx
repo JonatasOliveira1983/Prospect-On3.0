@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -318,3 +319,4 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
     </AnimatePresence>
   );
 }
+

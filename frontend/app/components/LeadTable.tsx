@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
@@ -279,3 +280,4 @@ export default function LeadTable({ leads }: { leads: Lead[] }) {
     </>
   );
 }
+

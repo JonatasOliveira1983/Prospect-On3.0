@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
 import { Settings, Key, Globe, Cpu, Shield, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
@@ -14,7 +15,7 @@ export default function Configuracoes() {
   const [apiStatus, setApiStatus] = useState<ApiKeyStatus | null>(null);
 
   useEffect(() => {
-    fetch('/api/status')
+    api.status()
       .then(r => r.json())
       .then(data => setApiStatus(data))
       .catch(() => setApiStatus({ GOOGLE_MAPS_API_KEY: false, GEMINI_API_KEY: false, BR_API_BASE_URL: true }));
@@ -188,3 +189,4 @@ export default function Configuracoes() {
     </div>
   );
 }
+

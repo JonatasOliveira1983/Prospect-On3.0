@@ -1,4 +1,5 @@
-"use client";
+﻿"use client";
+import { api, WS_URL } from '@/lib/api';
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -75,10 +76,7 @@ export default function VistoriaManualModal({ lead, isOpen, onClose, onSave }: P
     };
 
     try {
-      const res = await fetch('/api/analyze-lead', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedLead)
+      const res = await api.analyzeLead(body)
       });
 
       if (res.ok) {
@@ -253,3 +251,4 @@ export default function VistoriaManualModal({ lead, isOpen, onClose, onSave }: P
     </AnimatePresence>
   );
 }
+

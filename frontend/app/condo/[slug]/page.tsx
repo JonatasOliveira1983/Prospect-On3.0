@@ -16,6 +16,7 @@ import {
   Lock,
   MessageSquare
 } from "lucide-react";
+import { api } from '@/lib/api';
 
 export default function ResidentLanding() {
   const params = useParams();
@@ -26,7 +27,7 @@ export default function ResidentLanding() {
     async function fetchLead() {
       if (!params || !params.slug) return;
       try {
-        const res = await fetch(`/api/leads/by-slug/${params.slug}`);
+        const res = await api.leadBySlug(params.slug as string);
         if (res.ok) {
           const data = await res.json();
           setLead(data);

@@ -14,6 +14,7 @@ import {
   MapPin,
   Layers
 } from 'lucide-react';
+import { api } from '@/lib/api';
 
 interface Lead {
   id: string;
@@ -41,7 +42,7 @@ export default function Dashboard() {
 
   async function fetchLeads() {
     try {
-      const res = await fetch(`/api/leads`);
+      const res = await api.leads();
       const data = await res.json();
       if (Array.isArray(data)) setLeads(data);
     } catch (error) {
@@ -61,9 +62,7 @@ export default function Dashboard() {
   async function handleTurboScan() {
     setTurboLoading(true);
     try {
-      // Chamando a rota de varredura 100% automatizada e resiliente no backend
-      await fetch(`/api/scan/start?query=${encodeURIComponent(niche)}&city=${encodeURIComponent(city)}&target=${encodeURIComponent(targetLeads)}`, { method: 'POST' });
-      // Notificação de sucesso ou feedback visual
+      await api.scanStart(niche, city, targetLeads);
       setTimeout(() => setTurboLoading(false), 5000);
     } catch (error) {
       console.error("Erro no Turbo Scan:", error);
@@ -74,7 +73,7 @@ export default function Dashboard() {
   async function handleClearLeads() {
     if (!confirm("Deseja realmente limpar todos os leads do radar?")) return;
     try {
-      const res = await fetch(`/api/leads/clear`, { method: 'POST' });
+      const res = await api.leadsClear();
       const data = await res.json();
       if (data.success) {
         setLeads([]);

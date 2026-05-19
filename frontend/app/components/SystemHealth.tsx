@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Activity, CheckCircle, AlertTriangle, XCircle, ShieldCheck } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { api } from '@/lib/api';
 
 interface ServiceHealth {
   status: string;
@@ -25,7 +26,7 @@ export default function SystemHealth() {
 
   async function checkHealth() {
     try {
-      const res = await fetch('/api/system/health');
+      const res = await api.health();
       if (res.ok) {
         const data = await res.json();
         setHealth(data);
