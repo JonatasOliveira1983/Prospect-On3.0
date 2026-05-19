@@ -35,8 +35,9 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [turboLoading, setTurboLoading] = useState(false);
-  const [niche, setNiche] = useState("Condominios");
-  const [city, setCity] = useState("Jundiaí");
+  const [publicoAlvo, setPublicoAlvo] = useState("Condominios");
+  const [palavraChave, setPalavraChave] = useState("Residenciais");
+  const [regiao, setRegiao] = useState("Jundiaí - SP");
   const [targetLeads, setTargetLeads] = useState(20);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
@@ -62,7 +63,9 @@ export default function Dashboard() {
   async function handleTurboScan() {
     setTurboLoading(true);
     try {
-      await api.scanStart(niche, city, targetLeads);
+      // Combina Fase 1 e Fase 2 na query e Fase 3 na cidade (city)
+      const combinedQuery = `${publicoAlvo} ${palavraChave}`.trim();
+      await api.scanStart(combinedQuery, regiao, targetLeads);
       setTimeout(() => setTurboLoading(false), 5000);
     } catch (error) {
       console.error("Erro no Turbo Scan:", error);
@@ -91,10 +94,10 @@ export default function Dashboard() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-emerald-400 font-black text-xs uppercase tracking-[0.3em]">
               <Zap size={14} className="fill-emerald-400" />
-              <span>Turbo Extension Mode</span>
+              <span>Metodologia Sniper 3 Fases</span>
             </div>
             <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-none">
-              Sniper <span className="text-emerald-400">Prospect</span>
+              CRM <span className="text-emerald-400">Prospetor</span>
             </h1>
           </div>
 
@@ -107,56 +110,115 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Painel de Controle Sniper */}
-        <div className="bg-slate-950/40 backdrop-blur-xl border border-white/5 p-2 rounded-[2rem] flex flex-col lg:flex-row gap-2">
-          <div className="flex-1 relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-colors" size={18} />
-            <input
-              type="text"
-              value={niche}
-              onChange={(e) => setNiche(e.target.value)}
-              className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-sm font-bold text-white outline-none"
-              placeholder="Qual o nicho? (Ex: Condominios)"
-            />
+        {/* Painel de Controle Sniper Educativo em 3 Fases */}
+        <div className="bg-slate-950/40 backdrop-blur-xl border border-white/5 p-6 rounded-[2.5rem] flex flex-col gap-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-64 h-64 bg-emerald-500/5 blur-[80px] rounded-full -ml-32 -mt-32 pointer-events-none" />
+
+          {/* Grid das Fases de Busca */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
+            
+            {/* FASE 1 */}
+            <div className="flex flex-col gap-2.5 p-5 bg-slate-900/60 border border-white/5 rounded-3xl group hover:border-emerald-400/20 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
+                  Fase 1
+                </span>
+                <Users size={16} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Público Alvo</h3>
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                Atividade Principal do Seu Cliente Ideal: Segmentação do Seu Cliente Ideal.
+              </p>
+              <div className="relative mt-2">
+                <input
+                  type="text"
+                  value={publicoAlvo}
+                  onChange={(e) => setPublicoAlvo(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl py-3.5 px-4 text-xs font-bold text-white outline-none focus:border-emerald-400 transition-colors"
+                  placeholder="Ex: Condominios, Industrias, Lojas de"
+                />
+              </div>
+            </div>
+
+            {/* FASE 2 */}
+            <div className="flex flex-col gap-2.5 p-5 bg-slate-900/60 border border-white/5 rounded-3xl group hover:border-emerald-400/20 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
+                  Fase 2
+                </span>
+                <Search size={16} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Palavra Chave</h3>
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                Palavras que Limitam o Interesse e o Perfil do Seu Cliente Ideal.
+              </p>
+              <div className="relative mt-2">
+                <input
+                  type="text"
+                  value={palavraChave}
+                  onChange={(e) => setPalavraChave(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl py-3.5 px-4 text-xs font-bold text-white outline-none focus:border-emerald-400 transition-colors"
+                  placeholder="Ex: Residenciais, Quimicas em, Calcados em"
+                />
+              </div>
+            </div>
+
+            {/* FASE 3 */}
+            <div className="flex flex-col gap-2.5 p-5 bg-slate-900/60 border border-white/5 rounded-3xl group hover:border-emerald-400/20 transition-all">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-400/10 px-2.5 py-1 rounded-full border border-emerald-400/20">
+                  Fase 3
+                </span>
+                <MapPin size={16} className="text-slate-500 group-hover:text-emerald-400 transition-colors" />
+              </div>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider">Região Segmentada</h3>
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                Começando de Baixo para Cima: segmentando Cidades Grandes na Busca.
+              </p>
+              <div className="relative mt-2">
+                <input
+                  type="text"
+                  value={regiao}
+                  onChange={(e) => setRegiao(e.target.value)}
+                  className="w-full bg-slate-950 border border-white/10 rounded-xl py-3.5 px-4 text-xs font-bold text-white outline-none focus:border-emerald-400 transition-colors"
+                  placeholder="Ex: Jundiai - SP, Curitiba - PR"
+                />
+              </div>
+            </div>
+
           </div>
 
-          <div className="w-px bg-white/5 hidden lg:block my-3" />
+          {/* Rodapé de Ação e Quantidade de Leads */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5 relative z-10">
+            <div className="flex items-center gap-4 w-full sm:w-auto">
+              <div className="flex items-center gap-2 bg-slate-950 border border-white/10 px-4 py-3 rounded-2xl w-full sm:w-44 group">
+                <Layers size={14} className="text-slate-500 group-focus-within:text-emerald-400" />
+                <input
+                  type="number"
+                  value={isNaN(targetLeads) ? "" : targetLeads}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value);
+                    setTargetLeads(isNaN(val) ? 0 : val);
+                  }}
+                  className="bg-transparent border-none text-xs font-black text-white outline-none w-full"
+                  placeholder="Qtd Leads"
+                />
+              </div>
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden md:inline">
+                Meta de Leads no Radar
+              </span>
+            </div>
 
-          <div className="flex-1 relative group">
-            <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-colors" size={18} />
-            <input
-              type="text"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-sm font-bold text-white outline-none"
-              placeholder="Qual cidade?"
-            />
+            <button
+              onClick={handleTurboScan}
+              disabled={turboLoading}
+              className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black px-12 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-[0_10px_25px_rgba(16,185,129,0.2)]"
+            >
+              {turboLoading ? <Loader2 className="animate-spin" size={18} /> : <Target size={18} />}
+              <span className="uppercase tracking-widest text-xs">Iniciar Sniper 3 Fases</span>
+            </button>
           </div>
 
-          <div className="w-px bg-white/5 hidden lg:block my-3" />
-
-          <div className="w-full lg:w-40 relative group">
-            <Layers className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-400 transition-colors" size={18} />
-            <input
-              type="number"
-              value={isNaN(targetLeads) ? "" : targetLeads}
-              onChange={(e) => {
-                const val = parseInt(e.target.value);
-                setTargetLeads(isNaN(val) ? 0 : val);
-              }}
-              className="w-full bg-transparent border-none py-4 pl-12 pr-4 text-sm font-bold text-white outline-none"
-              placeholder="Qtd Leads"
-            />
-          </div>
-
-          <button
-            onClick={handleTurboScan}
-            disabled={turboLoading}
-            className="bg-emerald-500 hover:bg-emerald-400 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black px-10 py-4 rounded-[1.5rem] flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-[0_10px_25px_rgba(16,185,129,0.2)]"
-          >
-            {turboLoading ? <Loader2 className="animate-spin" size={20} /> : <Target size={22} />}
-            <span className="uppercase tracking-widest text-xs">Iniciar Sniper Turbo</span>
-          </button>
         </div>
       </header>
 
