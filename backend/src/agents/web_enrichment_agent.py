@@ -136,7 +136,7 @@ class WebEnrichmentAgent:
             if len(parts) >= 3:
                 city = parts[-2].strip()
                 
-        search_query = f"site oficial condomínio {name} {city} contatos email telefone"
+        search_query = f"condominio {name} {city} CNPJ contatos telefone email"
         logger.info(f"WebEnrichmentAgent: Fazendo busca no Bing para '{name}'...")
         
         async with async_playwright() as p:
@@ -314,6 +314,19 @@ class WebEnrichmentAgent:
             lead["email"] = valid_emails[0]
             logger.info(f"WebEnrichmentAgent [Fallback]: E-mail extraído por regex: {valid_emails[0]}")
             
+        # Regex de telefone (10 a 11 dígitos com ou sem formatação, ex: (11) 98765-4321 ou 1133334444)
+        if lead.get("phone") in ("N/D", None, ""):
+            phone_pattern = r'(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\d{4}[-\s]?\d{4}|\d{4}[-\s]?\d{4})'
+            phones = re.findall(phone_pattern, raw_text)
+            valid_phones = []
+            for p in phones:
+                digits = re.sub(r'\D', '', p)
+                if len(digits) >= 10 and len(digits) <= 11:
+                    valid_phones.append(digits)
+            if valid_phones:
+                lead["phone"] = valid_phones[0]
+                logger.info(f"WebEnrichmentAgent [Fallback]: Telefone extraído por regex: {valid_phones[0]}")
+
         # Redes Sociais nos hrefs
         for href in hrefs:
             for platform, pattern in self.social_regex.items():

@@ -86,7 +86,12 @@ class Database:
                     return_date TEXT,
                     email_sent_at TEXT,
                     is_favorite BOOLEAN DEFAULT FALSE,
-                    contact_status TEXT DEFAULT 'Aguardando Abordagem'
+                    contact_status TEXT DEFAULT 'Aguardando Abordagem',
+                    intencao_ativa BOOLEAN DEFAULT FALSE,
+                    resumo_sinal TEXT,
+                    link_fonte TEXT,
+                    score_urgencia INTEGER DEFAULT 0,
+                    categoria_demanda TEXT
                 )
             """)
             
@@ -97,7 +102,12 @@ class Database:
                     ("return_date", "TEXT"), 
                     ("email_sent_at", "TEXT"),
                     ("is_favorite", "BOOLEAN DEFAULT 0"),
-                    ("contact_status", "TEXT DEFAULT 'Aguardando Abordagem'")
+                    ("contact_status", "TEXT DEFAULT 'Aguardando Abordagem'"),
+                    ("intencao_ativa", "BOOLEAN DEFAULT 0"),
+                    ("resumo_sinal", "TEXT"),
+                    ("link_fonte", "TEXT"),
+                    ("score_urgencia", "INTEGER DEFAULT 0"),
+                    ("categoria_demanda", "TEXT")
                 ]:
                     try:
                         conn.execute(f"ALTER TABLE leads ADD COLUMN {col} {col_type}")
@@ -197,8 +207,9 @@ class Database:
                         vision_image_path, vision_image_url, satellite_image_path,
                         vision_analysis_json, market_json, valuation_json, financial_health_json,
                         demand_json, source, urgency_score,
-                        is_confirmed, email, social_url, booking_url, scanned_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        is_confirmed, email, social_url, booking_url, scanned_at,
+                        intencao_ativa, resumo_sinal, link_fonte, score_urgencia, categoria_demanda
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         name=excluded.name, address=excluded.address, lat=excluded.lat, lng=excluded.lng,
                         score=excluded.score, justification=excluded.justification, category=excluded.category,
@@ -209,7 +220,10 @@ class Database:
                         valuation_json=excluded.valuation_json, financial_health_json=excluded.financial_health_json,
                         demand_json=excluded.demand_json, source=excluded.source, urgency_score=excluded.urgency_score,
                         is_confirmed=excluded.is_confirmed, email=excluded.email, social_url=excluded.social_url, 
-                        booking_url=excluded.booking_url, scanned_at=excluded.scanned_at
+                        booking_url=excluded.booking_url, scanned_at=excluded.scanned_at,
+                        intencao_ativa=excluded.intencao_ativa, resumo_sinal=excluded.resumo_sinal,
+                        link_fonte=excluded.link_fonte, score_urgencia=excluded.score_urgencia,
+                        categoria_demanda=excluded.categoria_demanda
                 """, (
                     lead_id, lead_data['name'], lead_data['address'], lat, lng,
                     lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
@@ -218,7 +232,10 @@ class Database:
                     market, valuation, financial,
                     demand, lead_data.get('source', 'Radar'), lead_data.get('urgency_score', 0),
                     lead_data.get('is_confirmed', False), lead_data.get('email', 'N/D'), 
-                    lead_data.get('social_url', 'N/D'), lead_data.get('booking_url', 'N/D'), lead_data.get('scanned_at')
+                    lead_data.get('social_url', 'N/D'), lead_data.get('booking_url', 'N/D'), lead_data.get('scanned_at'),
+                    lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
+                    lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
+                    lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma')
                 ))
                 conn.commit()
         except Exception as e:

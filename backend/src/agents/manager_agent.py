@@ -13,6 +13,7 @@ from src.agents.browser_scout_agent import BrowserScoutAgent
 from src.agents.lead_enrichment_agent import LeadEnrichmentAgent
 from src.agents.semantic_extractor_agent import SemanticExtractorAgent
 from src.agents.web_enrichment_agent import WebEnrichmentAgent
+from src.agents.demand_scout_agent import DemandScoutAgent
 from src.utils.vision_analyzer import VisionAnalyzer
 from src.utils.places_client import PlacesClient
 from src.utils.database import Database
@@ -42,6 +43,7 @@ class ManagerAgent:
         self.lead_enrichment = LeadEnrichmentAgent()   # Enriquecimento DeepSeek
         self.semantic_extractor = SemanticExtractorAgent() # Novo: Extração semântica profunda
         self.web_enrichment = WebEnrichmentAgent(headless=True) # Novo: Detetive Web
+        self.demand_scout = DemandScoutAgent(headless=True) # Novo: Investigador de Intenções de Obra
         self.vision_tools = VisionAnalyzer()
         self.webhook = WebhookClient()
         self.db = Database()
@@ -184,32 +186,32 @@ class ManagerAgent:
             try:
                 # 1. EXTRAÇÃO E QUALIFICAÇÃO SEMÂNTICA (SemanticExtractorAgent)
                 raw_text = lead.get("raw_text", "")
-                if raw_text:
-                    self.emit_log("SemanticExtractorAgent", "extracting", f"   🧠 Extração Semântica DeepSeek para '{name}'...", "working")
-                    extracted = self.semantic_extractor.extract_semantic_data(name, lead.get("address", ""), raw_text)
+                self.emit_log("SemanticExtractorAgent", "extracting", f"   🧠 Qualificação e Extração Semântica DeepSeek para '{name}'...", "working")
+                extracted = self.semantic_extractor.extract_semantic_data(name, lead.get("address", ""), raw_text)
+                
+                # Se desqualificado pelo DeepSeek, descarta o lead imediatamente
+                if not extracted.get("qualificado", True):
+                    motivo = extracted.get("motivo_desqualificacao", "Fora do perfil comercial")
+                    self.emit_log("SemanticExtractorAgent", "disqualified", f"   ❌ Lead DESQUALIFICADO: {name} - Motivo: {motivo}", "warning")
+                    continue
                     
-                    # Se desqualificado pelo DeepSeek, descarta o lead imediatamente
-                    if not extracted.get("qualificado", True):
-                        motivo = extracted.get("motivo_desqualificacao", "Fora do perfil comercial")
-                        self.emit_log("SemanticExtractorAgent", "disqualified", f"   ❌ Lead DESQUALIFICADO: {name} - Motivo: {motivo}", "warning")
-                        continue
-                        
-                    # Atualiza os dados do lead com o que foi extraído semântica e fidedignamente
-                    lead["address"] = extracted.get("endereco_higienizado", lead.get("address"))
-                    if extracted.get("telefones"):
-                        lead["phone"] = extracted["telefones"][0]
-                    if extracted.get("whatsapp"):
-                        lead["whatsapp"] = extracted["whatsapp"]
-                    if extracted.get("email") and extracted["email"] != "N/D":
-                        lead["email"] = extracted["email"]
-                    if extracted.get("website") and extracted["website"] != "N/D":
-                        lead["website"] = extracted["website"]
-                    if extracted.get("redes_sociais"):
-                        rs = extracted["redes_sociais"]
-                        if rs.get("instagram"):
-                            lead["social_url"] = rs["instagram"]
-                        if rs.get("facebook"):
-                            lead["facebook_url"] = rs["facebook"]
+                # Atualiza os dados do lead com o que foi extraído semântica e fidedignamente
+                lead["address"] = extracted.get("endereco_higienizado", lead.get("address"))
+                if extracted.get("telefones"):
+                    # Se o lead já tinha telefone e o extraído for diferente ou não-vazio, atualizamos
+                    lead["phone"] = extracted["telefones"][0]
+                if extracted.get("whatsapp"):
+                    lead["whatsapp"] = extracted["whatsapp"]
+                if extracted.get("email") and extracted["email"] != "N/D":
+                    lead["email"] = extracted["email"]
+                if extracted.get("website") and extracted["website"] != "N/D":
+                    lead["website"] = extracted["website"]
+                if extracted.get("redes_sociais"):
+                    rs = extracted["redes_sociais"]
+                    if rs.get("instagram"):
+                        lead["social_url"] = rs["instagram"]
+                    if rs.get("facebook"):
+                        lead["facebook_url"] = rs["facebook"]
 
                 # 2. ENRIQUECIMENTO WEB AVANÇADO (WebEnrichmentAgent - Detetive Web)
                 if lead.get("email") in ("N/D", None, "") or lead.get("whatsapp") in ("N/D", None, ""):
@@ -229,6 +231,17 @@ class ManagerAgent:
                 self.emit_log("AnalystAgent", "analyzing", f"   📈 Calculando contexto comercial para '{name}'...", "working")
                 commercial_data = self.analyst.analyze_business_context(lead)
                 lead.update(commercial_data)
+
+                # 5. INVESTIGAÇÃO DE INTENÇÃO DE OBRA ATIVA (DemandScoutAgent)
+                self.emit_log("DemandScoutAgent", "scouting", f"   🔥 Varrendo atas de assembleias buscando concorrências ativas de pintura para '{name}'...", "working")
+                lead = await self.demand_scout.analyze_active_demand(lead)
+                
+                if lead.get("intencao_ativa"):
+                    self.emit_log("DemandScoutAgent", "active_demand_found",
+                        f"   🔥 OPORTUNIDADE ATIVA! Score {lead.get('score_urgencia')}/10 | {lead.get('resumo_sinal')}",
+                        "success")
+                else:
+                    self.emit_log("DemandScoutAgent", "no_demand", f"   ℹ️ Nenhuma cotação de reforma recente encontrada nos registros públicos.", "info")
 
                 # 3. DADOS DE MERCADO (preço por bairro)
                 bairro_lead = lead.get('address', city).split(',')[-2].strip() if ',' in lead.get('address', '') else city
@@ -299,10 +312,16 @@ class ManagerAgent:
 
     def _calculate_sniper_score(self, lead):
         """
-        Cálculo de score v8.0: prioriza DADOS DE CONTATO REAIS.
-        Quanto mais dados de contato verificáveis, maior o score.
+        Cálculo de score v8.0: prioriza DADOS DE CONTATO REAIS e INTENÇÃO DE OBRA ATIVA.
+        Quanto mais dados de contato verificáveis e sinais ativos de pintura, maior o score.
         """
         score = 3.0  # Base
+
+        # Bônus POR INTENÇÃO DE OBRA ATIVA (oportunidade de ouro)
+        if lead.get('intencao_ativa'):
+            score += 3.0
+            urgencia_obra = lead.get('score_urgencia', 0)
+            score += (urgencia_obra / 10.0) * 1.5
 
         # Bônus POR DADOS DE CONTATO REAIS (o mais importante!)
         # Telefone real (não N/D)

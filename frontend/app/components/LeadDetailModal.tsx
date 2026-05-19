@@ -40,6 +40,11 @@ interface Lead {
   return_date?: string;
   contact_status?: string;
   is_favorite?: boolean | number;
+  intencao_ativa?: boolean | number;
+  resumo_sinal?: string;
+  link_fonte?: string;
+  score_urgencia?: number;
+  categoria_demanda?: string;
 }
 
 interface Props {
@@ -243,6 +248,51 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   </button>
                 )}
               </div>
+
+              {/* Inteligência de Obra Ativa */}
+              {lead.intencao_ativa ? (
+                <div className="bg-rose-500/10 p-4 rounded-2xl border border-rose-500/25 space-y-2.5 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl pointer-events-none" />
+                  <h4 className="text-[10px] font-black text-rose-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5 animate-pulse">
+                    <Flame size={12} className="fill-rose-400" /> Inteligência de Obra Ativa
+                  </h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs border-b border-rose-500/10 pb-1.5">
+                      <span className="text-slate-400">Score de Urgência da Obra</span>
+                      <span className="font-black text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded text-[10px] shadow-[0_0_8px_rgba(244,63,94,0.2)]">
+                        {lead.score_urgencia}/10
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs border-b border-rose-500/10 pb-1.5">
+                      <span className="text-slate-400">Categoria</span>
+                      <span className="font-bold text-white uppercase text-[10px] tracking-wider">
+                        {lead.categoria_demanda === 'pintura_fachada' ? '🎨 Pintura de Fachada' :
+                         lead.categoria_demanda === 'lavagem_pastilhas' ? '🧽 Lavagem de Pastilhas' :
+                         lead.categoria_demanda === 'reforma_geral' ? '🧱 Reforma Geral' : lead.categoria_demanda || 'N/D'}
+                      </span>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <span className="text-slate-500 block">Sinal Detectado:</span>
+                      <p className="text-white font-medium bg-slate-950/60 p-2.5 rounded-xl border border-white/5 leading-relaxed">
+                        {lead.resumo_sinal}
+                      </p>
+                    </div>
+                    {lead.link_fonte && lead.link_fonte !== "N/D" && (
+                      <div className="flex items-center justify-between text-xs pt-1">
+                        <span className="text-slate-400">Fonte Pública</span>
+                        <a
+                          href={lead.link_fonte}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="font-bold text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 truncate max-w-[180px]"
+                        >
+                          Acessar Fonte <ExternalLink size={9} />
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
 
               {/* Canais Encontrados */}
               <div className="bg-slate-950/40 p-4 rounded-2xl border border-white/5 space-y-2.5">

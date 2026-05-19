@@ -31,6 +31,11 @@ interface Lead {
   interaction_notes?: string;
   return_date?: string;
   contact_status?: string;
+  intencao_ativa?: boolean | number;
+  resumo_sinal?: string;
+  link_fonte?: string;
+  score_urgencia?: number;
+  categoria_demanda?: string;
 }
 
 const STATUS_DOT: Record<string, string> = {
@@ -111,7 +116,14 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
+                      {lead.intencao_ativa ? (
+                        <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] shrink-0">
+                          🔥 OPORTUNIDADE ATIVA
+                        </span>
+                      ) : null}
+                    </div>
                     <h4 className="text-white font-black text-sm leading-tight uppercase tracking-tight truncate">{lead.name}</h4>
                     <p className="text-slate-400 text-[10px] mt-0.5 flex items-center gap-1 truncate">
                       <MapPin size={9} className="text-yellow-400/70 shrink-0" /> {lead.address}
@@ -203,7 +215,14 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
                         />
                       </div>
                       <div>
-                        <h5 className="text-white font-black group-hover:text-yellow-400 transition-colors uppercase tracking-tight text-sm">{lead.name}</h5>
+                        <div className="flex items-center gap-2">
+                          <h5 className="text-white font-black group-hover:text-yellow-400 transition-colors uppercase tracking-tight text-sm">{lead.name}</h5>
+                          {lead.intencao_ativa ? (
+                            <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] whitespace-nowrap">
+                              🔥 OPORTUNIDADE ATIVA
+                            </span>
+                          ) : null}
+                        </div>
                         <p className="text-slate-400 text-xs flex items-center gap-1 mt-0.5 font-medium max-w-xs truncate">
                           <MapPin size={10} className="text-yellow-400/60 shrink-0" /> {lead.address}
                         </p>
