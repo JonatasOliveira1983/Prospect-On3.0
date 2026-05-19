@@ -1,6 +1,6 @@
 import Sidebar from "../components/Sidebar";
 import Link from "next/link";
-import { LayoutDashboard, Target, Map as MapIcon, Database, Clock, Settings } from "lucide-react";
+import { LayoutDashboard, Target, Map as MapIcon, Database, Clock, Settings, Upload } from "lucide-react";
 
 export default function SystemLayout({
   children,
@@ -33,6 +33,10 @@ export default function SystemLayout({
         <Link href="/relatorios" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
           <Database size={20} />
           <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Leads</span>
+        </Link>
+        <Link href="/importar" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
+          <Upload size={20} />
+          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Importar</span>
         </Link>
         <Link href="/comissoes" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
           <Clock size={20} />

@@ -88,6 +88,40 @@ class InteractionData(BaseModel):
 class FavoriteData(BaseModel):
     is_favorite: bool
 
+class ImportLeadItem(BaseModel):
+    """
+    Modelo flexível para importação de leads de extensões de navegador.
+    Aceita campos de G Maps Extractor, Instant Data Scraper, Outscraper, etc.
+    """
+    # Campos principais (vários nomes possíveis)
+    name: str = None
+    title: str = None                  # G Maps Extractor usa 'title'
+    business_name: str = None          # Outscraper
+    address: str = None
+    full_address: str = None           # Outscraper
+    vicinity: str = None               # Google Places API
+    phone: str = None
+    phone_number: str = None           # G Maps Extractor
+    phone_1: str = None                # Outscraper
+    email: str = None
+    email_1: str = None                # Outscraper
+    website: str = None
+    site: str = None
+    url: str = None
+    rating: float = None
+    reviews_count: int = None
+    user_ratings_total: int = None
+    category: str = None
+    categories: str = None
+    lat: float = None
+    latitude: float = None
+    lng: float = None
+    longitude: float = None
+    place_id: str = None
+
+class ImportBatch(BaseModel):
+    leads: list[ImportLeadItem]
+
 # Instanciar Motores
 enricher = SmartEnrichment()
 report_gen = ReportGenerator()
@@ -223,7 +257,83 @@ async def toggle_lead_favorite(lead_id: str, data: FavoriteData):
         logger.error(f"API: Erro ao alternar favorito: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/api/leads/import")
+async def import_leads(batch: ImportBatch):
+    """
+    Importa leads em lote vindos de extensões de navegador (CSV/JSON).
+    Normaliza automaticamente campos de G Maps Extractor, Outscraper, Instant Data Scraper, etc.
+    """
+    def normalize(item: ImportLeadItem) -> dict:
+        """Normaliza um item de qualquer extensão para o formato interno do sistema."""
+        # Nome do negócio (diferentes extensões usam campos diferentes)
+        name = (item.name or item.title or item.business_name or "").strip()
+        if not name:
+            return None
+
+        # Endereço
+        address = (item.address or item.full_address or item.vicinity or "").strip()
+
+        # Telefone
+        phone = (item.phone or item.phone_number or item.phone_1 or "N/D").strip()
+
+        # E-mail
+        email = (item.email or item.email_1 or "N/D").strip()
+
+        # Website
+        website = (item.website or item.site or item.url or "N/D").strip()
+
+        # Coordenadas
+        lat = item.lat or item.latitude or 0.0
+        lng = item.lng or item.longitude or 0.0
+
+        # Categoria
+        category = (item.category or item.categories or "Condomínio").strip()
+
+        return {
+            "name": name,
+            "address": address,
+            "phone": phone if phone else "N/D",
+            "email": email if email else "N/D",
+            "website": website if website else "N/D",
+            "rating": item.rating or 0.0,
+            "user_ratings_total": item.user_ratings_total or item.reviews_count or 0,
+            "category": category,
+            "coords": {"lat": lat, "lng": lng} if (lat or lng) else None,
+            "lat": lat,
+            "lng": lng,
+            "place_id": item.place_id or "",
+            "source": "Importação Manual (Extensão)",
+            "score": 5.0,
+            "contact_status": "Aguardando Abordagem",
+        }
+
+    imported = 0
+    skipped = 0
+    errors = 0
+
+    for item in batch.leads:
+        try:
+            lead_dict = normalize(item)
+            if not lead_dict:
+                skipped += 1
+                continue
+            db.upsert_lead(lead_dict)
+            imported += 1
+        except Exception as e:
+            logger.error(f"Erro ao importar lead: {e}")
+            errors += 1
+
+    logger.info(f"Importação concluída: {imported} importados, {skipped} ignorados, {errors} erros")
+    return {
+        "success": True,
+        "imported": imported,
+        "skipped": skipped,
+        "errors": errors,
+        "message": f"{imported} lead(s) importado(s) com sucesso!"
+    }
+
 @app.post("/api/leads/clear")
+
 async def clear_leads():
     """Limpa todos os leads do banco de dados."""
     try:

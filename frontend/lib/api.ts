@@ -10,20 +10,22 @@ if (rawBackend && !rawBackend.startsWith('http://') && !rawBackend.startsWith('h
 const BACKEND = rawBackend;
 
 export const api = {
-  leads:       () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store' }),
-  scanStart:   (query: string, city: string, target: number) =>
+  leads:        () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store' }),
+  scanStart:    (query: string, city: string, target: number) =>
     fetch(`${BACKEND}/api/scan/start?query=${encodeURIComponent(query)}&city=${encodeURIComponent(city)}&target=${target}`, { method: 'POST' }),
-  leadsClear:  () => fetch(`${BACKEND}/api/leads/clear`, { method: 'POST' }),
-  usage:       () => fetch(`${BACKEND}/api/usage`, { cache: 'no-store' }),
-  health:      () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
-  analyzeLead: (body: unknown) =>
+  leadsClear:   () => fetch(`${BACKEND}/api/leads/clear`, { method: 'POST' }),
+  usage:        () => fetch(`${BACKEND}/api/usage`, { cache: 'no-store' }),
+  health:       () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
+  analyzeLead:  (body: unknown) =>
     fetch(`${BACKEND}/api/analyze-lead`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
-  favorite:    (id: string, is_favorite: boolean) =>
+  favorite:     (id: string, is_favorite: boolean) =>
     fetch(`${BACKEND}/api/leads/${id}/favorite`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_favorite }) }),
-  interaction: (id: string, body: unknown) =>
+  interaction:  (id: string, body: unknown) =>
     fetch(`${BACKEND}/api/leads/${id}/interaction`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
-  leadBySlug:  (slug: string) => fetch(`${BACKEND}/api/leads/by-slug/${slug}`, { cache: 'no-store' }),
-  status:      () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
+  leadBySlug:   (slug: string) => fetch(`${BACKEND}/api/leads/by-slug/${slug}`, { cache: 'no-store' }),
+  status:       () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
+  importLeads:  (leads: unknown[]) =>
+    fetch(`${BACKEND}/api/leads/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leads }) }),
 };
 
 export const WS_URL = BACKEND

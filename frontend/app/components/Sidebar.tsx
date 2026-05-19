@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Map as MapIcon, Database, Clock, Settings, Target } from "lucide-react";
+import { LayoutDashboard, Map as MapIcon, Database, Clock, Settings, Target, Upload } from "lucide-react";
 import UsageIndicator from "./UsageIndicator";
 
 export default function Sidebar() {
@@ -12,6 +12,7 @@ export default function Sidebar() {
     { icon: Target, label: "Leads Elite", href: "/leads-quentes" },
     { icon: MapIcon, label: "Mapa Radar", href: "/mapa-radar" },
     { icon: Database, label: "Base Leads", href: "/relatorios" },
+    { icon: Upload, label: "Importar Leads", href: "/importar" },
     { icon: Clock, label: "Atividades", href: "/comissoes" },
     { icon: Settings, label: "Ajustes", href: "/configuracoes" },
   ];
