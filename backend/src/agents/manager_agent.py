@@ -28,7 +28,7 @@ class ManagerAgent:
     """
     def __init__(self):
         self.places = PlacesClient()                  # Primário (dados estruturados)
-        self.browser_scout = BrowserScoutAgent()       # Secundário (scraping visual)
+        self.browser_scout = BrowserScoutAgent(headless=True)  # Secundário (scraping visual, headless para nuvem)
         self.hunter = HunterAgent()                    # Terciário (OSM gratuito)
         self.surveyor = SurveyorAgent()
         self.contact = ContactAgent()
@@ -77,41 +77,54 @@ class ManagerAgent:
         3. OSM → fallback gratuito (se ambos falharem)
         4. DeepSeek → enriquecimento textual de cada lead
         """
-        self.emit_log("ManagerAgent", "start_scan", f"Operação Multi-Fonte: Buscando {target_leads} lead(s) em {city}", "info")
+        from datetime import datetime
+        import time
+        scan_start = time.time()
+        
+        self.emit_log("ManagerAgent", "start_scan", f"{'='*60}", "info")
+        self.emit_log("ManagerAgent", "start_scan", f"🎯 OPERAÇÃO SNIPER v8.0 INICIADA", "info")
+        self.emit_log("ManagerAgent", "start_scan", f"   Alvo: {query} | Cidade: {city} | Meta: {target_leads} lead(s)", "info")
+        self.emit_log("ManagerAgent", "start_scan", f"{'='*60}", "info")
         processed_leads = []
         leads_coletados = []
 
         # =====================
         # CAMADA 1: GOOGLE PLACES API (dados estruturados, confiáveis)
         # =====================
-        self.emit_log("ManagerAgent", "search", "Camada 1: Buscando via Google Places API (dados estruturados)...", "working")
+        self.emit_log("ManagerAgent", "search", "[CAMADA 1] Google Places API — dados estruturados...", "working")
         try:
             places_leads = self.places.search_and_enrich(city, query)
             if places_leads:
-                self.emit_log("ManagerAgent", "success", f"Places API: {len(places_leads)} leads encontrados com dados estruturados!", "success")
+                self.emit_log("ManagerAgent", "success", f"✅ Places API: {len(places_leads)} leads com dados estruturados!", "success")
                 leads_coletados.extend(places_leads)
             else:
-                self.emit_log("ManagerAgent", "warning", "Places API não retornou resultados. Tentando camada 2...", "warning")
+                self.emit_log("ManagerAgent", "warning", "⚠️  Places API sem resultados. Ativando Camada 2 (Playwright)...", "warning")
         except Exception as places_err:
-            self.emit_log("ManagerAgent", "error", f"Places API falhou: {places_err}. Tentando camada 2...", "error")
+            self.emit_log("ManagerAgent", "error", f"❌ Places API falhou: {places_err}. Ativando Camada 2...", "error")
 
         # =====================
         # CAMADA 2: PLAYWRIGHT / GOOGLE MAPS (scraping visual)
         # =====================
         if not leads_coletados:
-            self.emit_log("ManagerAgent", "search", "Camada 2: Iniciando scraping via Playwright (Google Maps)...", "working")
+            self.emit_log("ManagerAgent", "search", "[CAMADA 2] Playwright → Scraping Google Maps (modo headless)...", "working")
             try:
+                playwright_count = 0
                 async for lead in self.browser_scout.search_leads(f"{query} em {city}", limit=50):
                     leads_coletados.append(lead)
-                self.emit_log("ManagerAgent", "success", f"Playwright: {len(leads_coletados)} leads encontrados!", "success")
+                    playwright_count += 1
+                    self.emit_log("BrowserScoutAgent", "scraping",
+                        f"   [{playwright_count}] Lead capturado: {lead.get('name', 'N/D')} "
+                        f"| Tel: {lead.get('phone', 'N/D')} | Email: {lead.get('email', 'N/D')}",
+                        "info")
+                self.emit_log("ManagerAgent", "success", f"✅ Playwright: {playwright_count} leads encontrados no Google Maps!", "success")
             except Exception as maps_err:
-                self.emit_log("ManagerAgent", "error", f"Playwright falhou: {maps_err}. Tentando camada 3...", "error")
+                self.emit_log("ManagerAgent", "error", f"❌ Playwright falhou: {maps_err}. Ativando Camada 3 (OSM)...", "error")
 
         # =====================
         # CAMADA 3: OPENSTREETMAP (fallback gratuito)
         # =====================
         if not leads_coletados:
-            self.emit_log("ManagerAgent", "search", "Camada 3: Fallback via OpenStreetMap (OSM)...", "working")
+            self.emit_log("ManagerAgent", "search", "[CAMADA 3] OpenStreetMap (OSM) — fallback gratuito...", "working")
             try:
                 osm_leads = self.hunter.search_condos(city)
                 vision_analyzer = VisionAnalyzer()
@@ -141,28 +154,40 @@ class ManagerAgent:
                     }
                     leads_coletados.append(adapted_lead)
                     
-                self.emit_log("ManagerAgent", "success", f"OSM: {len(osm_leads)} leads de fallback encontrados!", "success")
+                self.emit_log("ManagerAgent", "success", f"✅ OSM: {len(osm_leads)} leads de fallback encontrados!", "success")
             except Exception as osm_err:
-                self.emit_log("ManagerAgent", "error", f"Fallback OSM falhou: {osm_err}", "error")
+                self.emit_log("ManagerAgent", "error", f"❌ Fallback OSM falhou: {osm_err}", "error")
+
+        self.emit_log("ManagerAgent", "info",
+            f"📊 Total de candidatos coletados: {len(leads_coletados)} | Iniciando enriquecimento dos {min(target_leads, len(leads_coletados))} melhores...",
+            "info")
+        self.emit_log("ManagerAgent", "info", f"{'-'*60}", "info")
 
         # =====================
         # PROCESSAMENTO: Enriquecer e validar cada lead
         # =====================
-        for lead in leads_coletados:
+        for idx, lead in enumerate(leads_coletados):
             if len(processed_leads) >= target_leads:
                 break
 
             name = lead.get('name', 'Desconhecido')
-            self.emit_log("ManagerAgent", "inspecting", f"Processando candidato: {name}", "working")
+            lead_start = time.time()
+            self.emit_log("ManagerAgent", "inspecting",
+                f"[{len(processed_leads)+1}/{target_leads}] ➤ Processando: {name}",
+                "working")
 
             try:
                 # 1. ENRIQUECIMENTO COM DEEPSEEK
-                # Analisa nome/endereço para inferir tipo, porte, urgência
-                self.emit_log("LeadEnrichmentAgent", "analyzing", f"Analisando contexto de {name} via DeepSeek...", "working")
+                self.emit_log("LeadEnrichmentAgent", "analyzing", f"   🧠 DeepSeek analisando contexto de '{name}'...", "working")
                 lead = self.lead_enrichment.enrich_lead(lead)
+                self.emit_log("LeadEnrichmentAgent", "analyzing",
+                    f"   ✅ DeepSeek: urgência={lead.get('urgencia_pintura','?')}/10 | "
+                    f"match_otto={lead.get('match_otto_score','?')} | "
+                    f"unidades={lead.get('unidades_estimadas','?')}",
+                    "success")
                 
                 # 2. ANÁLISE COMERCIAL (AnalystAgent)
-                self.emit_log("AnalystAgent", "analyzing", f"Analisando contexto comercial de {name}...", "working")
+                self.emit_log("AnalystAgent", "analyzing", f"   📈 Calculando contexto comercial para '{name}'...", "working")
                 commercial_data = self.analyst.analyze_business_context(lead)
                 lead.update(commercial_data)
 
@@ -187,17 +212,50 @@ class ManagerAgent:
                 self.db.upsert_lead(lead)
                 processed_leads.append(lead)
 
-                self.emit_log("ManagerAgent", "success", 
-                    f"LEAD CONFIRMADO: {name} | Score: {lead['score']:.1f} | "
-                    f"Tel: {lead.get('phone', 'N/D')} | Email: {lead.get('email', 'N/D')} | "
-                    f"Urgência: {lead.get('urgencia_pintura', 5)}/10", "success")
+                elapsed = time.time() - lead_start
+                self.emit_log("ManagerAgent", "success",
+                    f"   ✅ LEAD CONFIRMADO [{len(processed_leads)}/{target_leads}] em {elapsed:.1f}s",
+                    "success")
+                self.emit_log("ManagerAgent", "success",
+                    f"      Nome    : {name}",
+                    "success")
+                self.emit_log("ManagerAgent", "success",
+                    f"      Endereço: {lead.get('address', 'N/D')}",
+                    "success")
+                self.emit_log("ManagerAgent", "success",
+                    f"      Score   : {lead['score']:.1f}/10 | Urgência: {lead.get('urgencia_pintura', 5)}/10",
+                    "success")
+                self.emit_log("ManagerAgent", "success",
+                    f"      Telefone: {lead.get('phone', 'N/D')} | Email: {lead.get('email', 'N/D')}",
+                    "success")
+                self.emit_log("ManagerAgent", "success",
+                    f"      Website : {lead.get('website', 'N/D')}",
+                    "success")
+                self.emit_log("ManagerAgent", "success",
+                    f"      Fonte   : {lead.get('source', 'N/D')}",
+                    "success")
+                self.emit_log("ManagerAgent", "info", f"   {'-'*50}", "info")
 
             except Exception as e:
-                self.emit_log("ManagerAgent", "error", f"Erro ao processar {name}: {e}", "error")
+                self.emit_log("ManagerAgent", "error", f"❌ Erro ao processar {name}: {e}", "error")
                 continue
 
-        final_msg = f"Operação Finalizada. {len(processed_leads)}/{target_leads} leads processados."
-        self.emit_log("ManagerAgent", "complete", final_msg, "success")
+        total_elapsed = time.time() - scan_start
+        self.emit_log("ManagerAgent", "complete", f"{'='*60}", "success")
+        self.emit_log("ManagerAgent", "complete",
+            f"🏁 OPERAÇÃO CONCLUÍDA em {total_elapsed:.1f}s",
+            "success")
+        self.emit_log("ManagerAgent", "complete",
+            f"   Leads confirmados: {len(processed_leads)}/{target_leads}",
+            "success")
+        if processed_leads:
+            avg_score = sum(l.get('score', 0) for l in processed_leads) / len(processed_leads)
+            leads_com_tel = sum(1 for l in processed_leads if l.get('phone', 'N/D') not in ('N/D', 'N/A', ''))
+            leads_com_email = sum(1 for l in processed_leads if l.get('email', 'N/D') not in ('N/D', 'N/A', ''))
+            self.emit_log("ManagerAgent", "complete",
+                f"   Score médio: {avg_score:.1f}/10 | Com telefone: {leads_com_tel} | Com email: {leads_com_email}",
+                "success")
+        self.emit_log("ManagerAgent", "complete", f"{'='*60}", "success")
         return len(processed_leads)
 
     def _calculate_sniper_score(self, lead):

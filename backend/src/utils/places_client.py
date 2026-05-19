@@ -66,7 +66,7 @@ class PlacesClient:
     def __init__(self):
         self.api_key = os.getenv("GOOGLE_MAPS_API_KEY")
         if not self.api_key:
-            logger.warning("PlacesClient: GOOGLE_MAPS_API_KEY nao configurada")
+            logger.info("PlacesClient: GOOGLE_MAPS_API_KEY não configurada — Google Places desativado. Usando Playwright como fonte primária.")
 
     def search_condominiums(self, city: str, query: str = "condomínio") -> List[PlaceResult]:
         """
