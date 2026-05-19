@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { api, WS_URL } from '@/lib/api';
 
 import { useState } from "react";
@@ -73,15 +73,12 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
   async function handleSave() {
     setSaving(true);
     try {
-      const res = await fetch(`/api/leads/${leadId}/interaction`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          notes: notes,
-          return_date: returnDate || null,
-          contact_status: status
-        })
-      });
+      const body = {
+        notes: notes,
+        return_date: returnDate || null,
+        contact_status: status
+      };
+      const res = await api.interaction(leadId, body);
 
       if (res.ok) {
         onSave();

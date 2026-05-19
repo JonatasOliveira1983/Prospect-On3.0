@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { api, WS_URL } from '@/lib/api';
 
 import { useState, useEffect } from "react";
@@ -62,11 +62,7 @@ export default function LeadTable({ leads }: { leads: Lead[] }) {
 
     try {
       const leadId = lead.id || lead.name.toLowerCase().replace(/\s+/g, "_").replace(/\//g, "-");
-      const res = await fetch(`/api/leads/${leadId}/favorite`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ is_favorite: nextFavorite })
-      });
+      const res = await api.favorite(leadId, nextFavorite);
 
       if (!res.ok) {
         // Rollback se falhar

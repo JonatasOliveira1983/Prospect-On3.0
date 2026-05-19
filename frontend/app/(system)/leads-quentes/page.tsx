@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
@@ -33,7 +33,7 @@ export default function LeadsQuentes() {
 
   async function fetchLeads() {
     try {
-      const res = await fetch(`/api/leads`);
+      const res = await api.leads();
       const data = await res.json();
       if (Array.isArray(data)) {
         // Filtrar apenas favoritos (Leads Quentes selecionados pelo usuário)
