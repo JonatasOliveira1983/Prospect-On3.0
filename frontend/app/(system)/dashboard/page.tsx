@@ -162,36 +162,39 @@ export default function Dashboard() {
         const agent = log.agent || "";
         const status = log.status || "";
 
-        // Orquestração reativa de fases baseado no log recebido
-        if (agent === "BrowserScoutAgent" || agent === "PlacesClient" || agent === "HunterAgent") {
+        // Orquestração reativa de fases baseado no log recebido (Demand-First)
+        if (agent === "DemandScoutAgent") {
           setFaseStatuses(prev => ({ ...prev, fase1: 'working' }));
-        } else if (agent === "SemanticExtractorAgent") {
-          setFaseStatuses(prev => ({ ...prev, fase1: 'success', fase2: 'working' }));
-          if (status === "success") {
-            setFaseStatuses(prev => ({ ...prev, fase2: 'success' }));
-          } else if (status === "warning") {
-            setFaseStatuses(prev => ({ ...prev, fase2: 'warning' }));
+          if (status === "success" || msg.includes("Sucesso") || log.action === "active_demand_found") {
+            setFaseStatuses(prev => ({ ...prev, fase1: 'success' }));
           }
-        } else if (agent === "DemandScoutAgent") {
+        } else if (agent === "BrowserScoutAgent" || agent === "PlacesClient" || agent === "HunterAgent") {
+          setFaseStatuses(prev => ({ ...prev, fase1: 'success', fase2: 'working' }));
+          if (status === "success" || msg.includes("Sucesso")) {
+            setFaseStatuses(prev => ({ ...prev, fase2: 'success' }));
+          }
+        } else if (agent === "SemanticExtractorAgent") {
           setFaseStatuses(prev => ({ ...prev, fase1: 'success', fase2: 'success', fase3: 'working' }));
-          if (status === "success" || log.action === "active_demand_found") {
+          if (status === "success" || msg.includes("Sucesso")) {
             setFaseStatuses(prev => ({ ...prev, fase3: 'success' }));
+          } else if (status === "warning" || msg.includes("Descartado")) {
+            setFaseStatuses(prev => ({ ...prev, fase3: 'warning' }));
           }
         } else if (agent === "WebEnrichmentAgent") {
           setFaseStatuses(prev => ({ ...prev, fase1: 'success', fase2: 'success', fase3: 'success', fase4: 'working' }));
-          if (status === "success" || msg.includes("descoberto") || msg.includes("extraído")) {
+          if (status === "success" || msg.includes("descoberto") || msg.includes("extraído") || msg.includes("Sucesso")) {
             setFaseStatuses(prev => ({ ...prev, fase4: 'success' }));
           }
         }
 
         // Mapeamento estruturado de contatos e demandas ativas baseadas em texto de logs
-        if (msg.includes("➤ Processando:")) {
-          const match = msg.match(/Processando:\s*(.+)/);
+        if (msg.includes("➤ Processando:") || msg.includes("➤ Snipando Alvo Quente:")) {
+          const match = msg.match(/(?:Processando:|Snipando Alvo Quente:)\s*(.+)/);
           if (match && match[1]) {
             setCurrentLead({
               name: match[1].trim(),
               address: "Localizando coordenadas e dados cadastrais...",
-              intencao_ativa: false
+              intencao_ativa: true
             });
             setScanMetrics(prev => ({ ...prev, totalProcessed: prev.totalProcessed + 1 }));
             setFaseStatuses({
@@ -203,46 +206,50 @@ export default function Dashboard() {
           }
         }
 
+        // Mapeia detalhes cadastrais capturados na Fase 2 / Fase 3
+        if (msg.includes("Endereço:") || msg.includes("Endereço higienizado")) {
+          const addrMatch = msg.match(/(?:Endereço|Endereço higienizado):\s*(.+)/i);
+          if (addrMatch) {
+            setCurrentLead(prev => prev ? { ...prev, address: addrMatch[1].trim() } : null);
+          }
+        }
+
         // Extrai enriquecimentos cadastrais no card do lead atual
-        if (msg.includes("Novo website descoberto") || msg.includes("Novo E-mail") || msg.includes("Novo WhatsApp") || msg.includes("Novos telefones") || msg.includes("extraído")) {
-          setScanMetrics(prev => {
-            // Evitar duplicar contador se for a mesma etapa
-            return { ...prev, enrichedContacts: prev.enrichedContacts + 1 };
-          });
+        if (msg.includes("Novo website") || msg.includes("Novo E-mail") || msg.includes("Novo WhatsApp") || msg.includes("telefone:") || msg.includes("telefones:") || msg.includes("Email:") || msg.includes("Telefone:")) {
+          setScanMetrics(prev => ({ ...prev, enrichedContacts: prev.enrichedContacts + 1 }));
           setCurrentLead(prev => {
             if (!prev) return null;
             let email = prev.email;
             let phone = prev.phone;
-            if (msg.includes("E-mail")) {
-              const emailMatch = msg.match(/E-mail.*:\s*(.+)/i);
-              if (emailMatch) email = emailMatch[1].trim();
-            }
-            if (msg.includes("WhatsApp") || msg.includes("telefone") || msg.includes("telefones")) {
-              const phoneMatch = msg.match(/(?:WhatsApp|telefone|telefones).*:\s*(.+)/i);
-              if (phoneMatch) phone = phoneMatch[1].trim();
-            }
+            
+            const emailMatch = msg.match(/(?:E-mail|Email):\s*([^\s|]+)/i);
+            if (emailMatch) email = emailMatch[1].trim();
+
+            const phoneMatch = msg.match(/(?:WhatsApp|telefone|telefones|Telefone):\s*([^\s|]+)/i);
+            if (phoneMatch) phone = phoneMatch[1].trim();
+
             return { ...prev, email: email || prev.email, phone: phone || prev.phone };
           });
         }
 
         // Extrai evidências de obras ou orçamentos aprovados
-        if (msg.includes("🔥 OPORTUNIDADE ATIVA")) {
+        if (msg.includes("🔥 SINAL DETECTADO") || msg.includes("🔥 OPORTUNIDADE ATIVA") || msg.includes("🔥 OPORTUNIDADE ATIVA IDENTIFICADA")) {
           setScanMetrics(prev => ({ ...prev, activeDemands: prev.activeDemands + 1 }));
-          const scoreMatch = msg.match(/Score\s*(\d+)\/10/);
-          const detailsMatch = msg.match(/Score.*\|\s*(.+)/);
+          const scoreMatch = msg.match(/Score\s*(?:Urgência:)?\s*(\d+)/i);
+          const detailsMatch = msg.match(/(?:OPORTUNIDADE ATIVA IDENTIFICADA em|SINAL DETECTADO:|OPORTUNIDADE ATIVA!)\s*(?:.+?)\s*\|\s*(.+)/i);
           setCurrentLead(prev => {
             if (!prev) return null;
             return {
               ...prev,
               intencao_ativa: true,
               score_urgencia: scoreMatch ? parseInt(scoreMatch[1]) : 9,
-              resumo_sinal: detailsMatch ? detailsMatch[1].trim() : "Licitação ou orçamento de pintura aprovado em assembleia recente."
+              resumo_sinal: detailsMatch ? detailsMatch[1].trim() : "Demanda de pintura predial ativa ou licitação encontrada."
             };
           });
         }
 
         // Conclusão geral de varreduras
-        if (msg.includes("🏁 OPERAÇÃO CONCLUÍDA") || (agent === "ManagerAgent" && log.action === "complete")) {
+        if (msg.includes("OPERAÇÃO DEMAND-FIRST CONCLUÍDA") || msg.includes("OPERAÇÃO CONCLUÍDA") || (agent === "ManagerAgent" && log.action === "complete")) {
           setFaseStatuses({
             fase1: 'success',
             fase2: 'success',
@@ -369,7 +376,7 @@ export default function Dashboard() {
                   </h3>
 
                   <div className="flex flex-col gap-3">
-                    {/* FASE 1: SCOUT */}
+                    {/* FASE 1: INTELIGÊNCIA DE OBRAS */}
                     <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                       faseStatuses.fase1 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white' :
                       faseStatuses.fase1 === 'success' ? 'bg-emerald-500/5 border-emerald-500/30 text-white' :
@@ -380,21 +387,21 @@ export default function Dashboard() {
                           faseStatuses.fase1 === 'working' ? 'bg-yellow-400/20 text-yellow-400 animate-pulse' :
                           faseStatuses.fase1 === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-900 text-slate-600'
                         }`}>
-                          <Search size={18} />
+                          <Zap size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 1: Scout Radar</h4>
-                          <p className="text-[9px] font-semibold opacity-60">Mapeando alvos no Maps e Overpass</p>
+                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 1: Captação de Demanda</h4>
+                          <p className="text-[9px] font-semibold opacity-60">Buscando atas, editais e obras na cidade</p>
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest">
-                        {faseStatuses.fase1 === 'working' && "SCANNING"}
+                      <span className="text-[9px] font-black uppercase tracking-widest font-mono text-yellow-400">
+                        {faseStatuses.fase1 === 'working' && "VARRENDO"}
                         {faseStatuses.fase1 === 'success' && "CONCLUÍDO"}
-                        {faseStatuses.fase1 === 'pending' && "AGUARDANDO"}
+                        {faseStatuses.fase1 === 'pending' && "PENDENTE"}
                       </span>
                     </div>
 
-                    {/* FASE 2: SEMANTIC EXTRACTOR */}
+                    {/* FASE 2: MAPEAMENTO CADASTRAL */}
                     <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                       faseStatuses.fase2 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white' :
                       faseStatuses.fase2 === 'success' ? 'bg-emerald-500/5 border-emerald-500/30 text-white' :
@@ -407,47 +414,50 @@ export default function Dashboard() {
                           faseStatuses.fase2 === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 
                           faseStatuses.fase2 === 'warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-600'
                         }`}>
-                          <ShieldCheck size={18} />
+                          <Search size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 2: Extractor Semântico</h4>
-                          <p className="text-[9px] font-semibold opacity-60">Higienizando endereços e qualificando</p>
+                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 2: Mapeamento Cadastral</h4>
+                          <p className="text-[9px] font-semibold opacity-60">Localizando endereço, fachada e coordenadas</p>
                         </div>
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest">
-                        {faseStatuses.fase2 === 'working' && "QUALIFICANDO"}
-                        {faseStatuses.fase2 === 'success' && "APROVADO"}
-                        {faseStatuses.fase2 === 'warning' && "FILTRADO"}
+                        {faseStatuses.fase2 === 'working' && "LOCALIZANDO"}
+                        {faseStatuses.fase2 === 'success' && "MAPEDADO"}
+                        {faseStatuses.fase2 === 'warning' && "SEM COORDENADAS"}
                         {faseStatuses.fase2 === 'pending' && "PENDENTE"}
                       </span>
                     </div>
 
-                    {/* FASE 3: DEMAND SCOUT / INTELIGÊNCIA DE OBRAS */}
+                    {/* FASE 3: DETETIVE DE DECISORES */}
                     <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                       faseStatuses.fase3 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white animate-pulse' :
-                      faseStatuses.fase3 === 'success' ? 'bg-amber-400/5 border-amber-400/40 text-amber-400' :
+                      faseStatuses.fase3 === 'success' ? 'bg-emerald-500/5 border-emerald-500/30 text-white' :
+                      faseStatuses.fase3 === 'warning' ? 'bg-amber-500/5 border-amber-500/30 text-white' :
                       'bg-slate-950/40 border-white/5 text-slate-500'
                     }`}>
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-xl ${
                           faseStatuses.fase3 === 'working' ? 'bg-yellow-400/20 text-yellow-400 animate-bounce' :
-                          faseStatuses.fase3 === 'success' ? 'bg-amber-400/20 text-amber-400' : 'bg-slate-900 text-slate-600'
+                          faseStatuses.fase3 === 'success' ? 'bg-emerald-500/20 text-emerald-400' : 
+                          faseStatuses.fase3 === 'warning' ? 'bg-amber-500/20 text-amber-400' : 'bg-slate-900 text-slate-600'
                         }`}>
-                          <Zap size={18} />
+                          <ShieldCheck size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 3: Inteligência de Obras</h4>
-                          <p className="text-[9px] font-semibold opacity-60">Varrendo atas de assembleias e editais</p>
+                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 3: Detetive de Decisores</h4>
+                          <p className="text-[9px] font-semibold opacity-60">Rastreando CNPJ, síndico e administradora</p>
                         </div>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest font-mono text-yellow-400">
-                        {faseStatuses.fase3 === 'working' && "🔥 VARRENDO"}
-                        {faseStatuses.fase3 === 'success' && "🔍 ANALISADO"}
+                      <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">
+                        {faseStatuses.fase3 === 'working' && "INVESTIGANDO"}
+                        {faseStatuses.fase3 === 'success' && "DEVELADO"}
+                        {faseStatuses.fase3 === 'warning' && "DESCARTADO"}
                         {faseStatuses.fase3 === 'pending' && "PENDENTE"}
                       </span>
                     </div>
 
-                    {/* FASE 4: DETETIVE WEB / ENRIQUECIMENTO DE CONTATOS */}
+                    {/* FASE 4: SNIPER DE CONTATOS */}
                     <div className={`p-4 rounded-2xl border transition-all flex items-center justify-between ${
                       faseStatuses.fase4 === 'working' ? 'bg-yellow-400/5 border-yellow-400/30 text-white animate-pulse' :
                       faseStatuses.fase4 === 'success' ? 'bg-emerald-500/5 border-emerald-500/30 text-white' :
@@ -461,13 +471,13 @@ export default function Dashboard() {
                           <Users size={18} />
                         </div>
                         <div>
-                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 4: Detetive de Contatos</h4>
-                          <p className="text-[9px] font-semibold opacity-60">Cruzando CNPJ e contatos cadastrais</p>
+                          <h4 className="text-xs font-black uppercase tracking-wider">Fase 4: Sniper de Contatos</h4>
+                          <p className="text-[9px] font-semibold opacity-60">Cruzando contatos cadastrais e emails</p>
                         </div>
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest">
                         {faseStatuses.fase4 === 'working' && "ENRIQUECENDO"}
-                        {faseStatuses.fase4 === 'success' && "REVELADO"}
+                        {faseStatuses.fase4 === 'success' && "SNIPADO"}
                         {faseStatuses.fase4 === 'pending' && "PENDENTE"}
                       </span>
                     </div>
