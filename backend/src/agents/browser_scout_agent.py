@@ -71,10 +71,29 @@ class BrowserScoutAgent:
         os.makedirs(vistorias_dir, exist_ok=True)
 
         async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=self.headless,
-                args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
-            )
+            try:
+                browser = await p.chromium.launch(
+                    headless=self.headless,
+                    args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                )
+            except Exception as launch_err:
+                if "playwright install" in str(launch_err) or "Executable doesn't exist" in str(launch_err):
+                    logger.warning("BrowserScoutAgent: Executável do navegador ausente na nuvem! Instalando Chromium sob demanda...")
+                    import subprocess
+                    import sys
+                    subprocess.run(
+                        [sys.executable, "-m", "playwright", "install", "chromium"],
+                        capture_output=True,
+                        text=True
+                    )
+                    logger.info("BrowserScoutAgent: Re-tentando abrir o navegador pós-instalação...")
+                    browser = await p.chromium.launch(
+                        headless=self.headless,
+                        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                    )
+                else:
+                    raise launch_err
+            
             context = await browser.new_context(
                 viewport={'width': 1280, 'height': 900},
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"

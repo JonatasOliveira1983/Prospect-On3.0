@@ -27,6 +27,30 @@ health_monitor = HealthAgent()
 extension_launcher = ExtensionLauncherAgent()
 executor = ThreadPoolExecutor(max_workers=4)
 
+@app.on_event("startup")
+async def startup_event():
+    logger.info("API Startup: Garantindo navegadores do Playwright instalados...")
+    import subprocess
+    import sys
+    
+    def install_playwright_background():
+        try:
+            logger.info("Background: Iniciando 'playwright install chromium'...")
+            # Roda de forma limpa sem bloquear o boot da API no Railway (evita timeout de deploy)
+            result = subprocess.run(
+                [sys.executable, "-m", "playwright", "install", "chromium"],
+                capture_output=True,
+                text=True,
+                timeout=180
+            )
+            logger.info(f"Background: Instalação do Playwright Chromium concluída. stdout: {result.stdout}")
+            if result.stderr:
+                logger.warning(f"Background: Playwright stderr: {result.stderr}")
+        except Exception as ex:
+            logger.error(f"Background: Falha ao instalar navegadores do Playwright: {ex}")
+
+    threading.Thread(target=install_playwright_background, daemon=True).start()
+
 # Gerenciador de conexões WebSocket para Logs Ativos
 class ConnectionManager:
     def __init__(self):
