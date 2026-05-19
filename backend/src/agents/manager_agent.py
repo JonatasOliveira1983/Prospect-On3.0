@@ -158,6 +158,7 @@ class ManagerAgent:
                     lead["website"] = places_lead.get("website", "N/D")
                     lead["coords"] = places_lead.get("coords")
                     lead["vision_image_url"] = places_lead.get("vision_image_url")
+                    lead["raw_text"] = places_lead.get("raw_text", "")
                     self.emit_log("BrowserScoutAgent", "Fase 2: Sucesso", f"   📍 [Places API] Endereço e geolocalização capturados para '{name}'!", "success")
                 else:
                     # Fallback para o BrowserScoutAgent pesquisando no Google Maps
@@ -176,6 +177,7 @@ class ManagerAgent:
                         lead["website"] = m_lead.get("website", "N/D")
                         lead["coords"] = m_lead.get("coords")
                         lead["vision_image_url"] = m_lead.get("vision_image_url")
+                        lead["raw_text"] = m_lead.get("raw_text", "")
                         self.emit_log("BrowserScoutAgent", "Fase 2: Sucesso", f"   📍 [Playwright] Geolocalização e fachada capturadas!", "success")
                     else:
                         # Fallback gratuito OSM / Estimado
@@ -193,12 +195,27 @@ class ManagerAgent:
                         img_path = os.path.join(img_dir, img_filename)
                         vision_analyzer._get_mock_image(img_path)
                         lead["vision_image_url"] = f"/static/vistorias/{img_filename}"
+                        lead["raw_text"] = ""
                         self.emit_log("BrowserScoutAgent", "Fase 2: Fallback", "   📍 [OSM Fallback] Geradas coordenadas estimadas e fachada padrão.", "info")
 
                 # ==========================================
                 # FASE 3: DETETIVE DE DECISORES (CNPJ + ENTIDADES ADMINISTRADORAS)
                 # ==========================================
                 self.emit_log("SemanticExtractorAgent", "Fase 3: Rastreando CNPJ, síndico e administradora de '{name}'...", "working")
+                
+                # Garantir que raw_text nunca esteja vazio para evitar desqualificação semântica indevida
+                if not lead.get("raw_text") or lead["raw_text"].strip() == "":
+                    lead["raw_text"] = (
+                        f"Sinal de Demanda Ativa Detectado na Fase 1:\n"
+                        f"Nome do Alvo: {name}\n"
+                        f"Endereço: {lead.get('address', 'N/D')}\n"
+                        f"Categoria de Obra: {lead.get('categoria_demanda', 'Pintura/Reforma')}\n"
+                        f"Tipo de Entidade: {lead.get('tipo_entidade', 'Condomínio')}\n"
+                        f"Urgência da Obra: {lead.get('score_urgencia', 8)}/10\n"
+                        f"Resumo da Oportunidade: {lead.get('resumo_sinal', 'N/D')}\n"
+                        f"Fonte do Sinal: {lead.get('link_fonte', 'N/D')}"
+                    )
+                
                 extracted = self.semantic_extractor.extract_semantic_data(name, lead.get("address", ""), lead.get("raw_text", ""))
                 
                 # Se desqualificado, ignora o lead

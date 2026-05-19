@@ -63,6 +63,137 @@ class BrowserScoutAgent:
             }
         return None
 
+    async def _extract_lead_details(self, page, name, current_url, vistorias_dir) -> dict:
+        """
+        Método auxiliar para extrair informações semânticas e contatos de uma página aberta no Maps.
+        """
+        coords = self._extract_coordinates_from_url(current_url)
+        details = {
+            "address": "N/D", "phone": "N/D", "website": "N/D", 
+            "social_url": "N/D", "booking_url": "N/D", "email": "N/D",
+            "vision_image_url": None, "lat": None, "lng": None
+        }
+        
+        if coords:
+            details['lat'] = coords['lat']
+            details['lng'] = coords['lng']
+            logger.info(f"BrowserScoutAgent: Coordenadas extraídas: {coords['lat']}, {coords['lng']}")
+        
+        try:
+            # Endereço
+            addr_els = [
+                "button[data-item-id='address']",
+                "div[data-item-id='address']",
+                "[class*='address']",
+            ]
+            for sel in addr_els:
+                el = await page.query_selector(sel)
+                if el:
+                    details['address'] = (await el.inner_text()).strip()
+                    break
+            
+            # TELEFONE - Seletores atualizados para o DOM 2026
+            phone_selectors = [
+                "button[data-item-id*='phone:tel:']",
+                "button[data-item-id*='phone']",
+                "a[data-tooltip*='telefone']",
+                "a[data-tooltip*='Telefone']",
+                "a[href^='tel:']",
+                "button[aria-label*='telefone']",
+                "button[aria-label*='Telefone']",
+                "div[class*='phone'] button",
+            ]
+            phone = None
+            for sel in phone_selectors:
+                el = await page.query_selector(sel)
+                if el:
+                    href = await el.get_attribute("href") or await el.get_attribute("data-item-id") or ""
+                    if "tel:" in href:
+                        phone = href.replace("tel:", "").replace("phone:tel:", "")
+                    else:
+                        phone = (await el.inner_text()).strip()
+                    if phone:
+                        details['phone'] = phone
+                        logger.info(f"BrowserScoutAgent: Telefone encontrado: {phone}")
+                        break
+            
+            # WEBSITE - Seletores atualizados
+            website_selectors = [
+                "a[data-item-id='authority']",
+                "a[data-item-id*='authority']",
+                "a[href*='http']:not([href*='maps'])",
+                "a[data-tooltip*='site']",
+                "a[aria-label*='site']",
+            ]
+            for sel in website_selectors:
+                el = await page.query_selector(sel)
+                if el:
+                    url = await el.get_attribute("href")
+                    if url and url.startswith("http") and "google.com" not in url:
+                        category = self._classify_url(url)
+                        if category == "social": details['social_url'] = url
+                        elif category == "booking": details['booking_url'] = url
+                        else: details['website'] = url
+                        logger.info(f"BrowserScoutAgent: Website/Social encontrado: {url[:50]}")
+                        break
+
+            # EMAIL e TEXTO BRUTO - Extração completa do texto visível
+            side_panel = await page.query_selector("div[role='main']")
+            all_text = await side_panel.inner_text() if side_panel else ""
+            
+            # Como garantia adicional, busca elementos menores caso o painel role='main' mude
+            if not all_text:
+                info_elements = await page.query_selector_all(".Io6YTe, .fontBodyMedium, div[class*='text'], span[class*='text']")
+                for el in info_elements:
+                    try:
+                        all_text += f" {await el.inner_text()}"
+                    except: pass
+            
+            details['email'] = self._extract_email(all_text)
+            if details['email'] and details['email'] != "N/D":
+                logger.info(f"BrowserScoutAgent: Email encontrado por regex: {details['email']}")
+                
+        except Exception as e:
+            logger.warning(f"BrowserScoutAgent: Erro na extração de dados para {name}: {e}")
+
+        # CAPTURA DE FACHADA via screenshot do painel lateral
+        try:
+            safe_name = re.sub(r'[^a-z0-9]', '', name.lower())[:30]
+            timestamp = int(asyncio.get_event_loop().time())
+            filename = f"facade_{safe_name}_{timestamp}.png"
+            filepath = os.path.join(vistorias_dir, filename)
+
+            # Screenshot da área do painel lateral à direita
+            side_panel = await page.query_selector("div[role='main']")
+            if side_panel:
+                box = await side_panel.bounding_box()
+                if box:
+                    # Captura a parte superior do painel (foto + info)
+                    await page.screenshot(
+                        path=filepath,
+                        clip={"x": box["x"], "y": box["y"], "width": box["width"], "height": min(box["height"], 600)}
+                    )
+                    if os.path.exists(filepath) and os.path.getsize(filepath) > 1000:
+                        details['vision_image_url'] = f"/static/vistorias/{filename}"
+                        logger.info(f"BrowserScoutAgent: Fachada capturada para {name}")
+        except Exception as e_img:
+            logger.warning(f"BrowserScoutAgent: Falha na captura de fachada para {name}: {e_img}")
+
+        return {
+            "name": name,
+            "address": details['address'],
+            "phone": details['phone'],
+            "website": details['website'],
+            "social_url": details['social_url'],
+            "booking_url": details['booking_url'],
+            "email": details['email'],
+            "vision_image_url": details['vision_image_url'],
+            "coords": {"lat": details['lat'], "lng": details['lng']} if details['lat'] else None,
+            "source": "Google Maps (Sniper v3.0)",
+            "scanned_at": datetime.now().isoformat(),
+            "raw_text": all_text
+        }
+
     async def search_leads(self, query, limit=20):
         logger.info(f"BrowserScoutAgent: Iniciando busca Sniper v3.0 por '{query}'...")
         
@@ -106,6 +237,20 @@ class BrowserScoutAgent:
                 
                 await page.goto(search_url, wait_until="domcontentloaded", timeout=60000)
                 await page.wait_for_timeout(5000)
+
+                # --- SUPORTE A REDIRECIONAMENTO DE LOCAL ÚNICO ---
+                current_url = page.url
+                is_single_place = "/maps/place/" in current_url or await page.query_selector("h1") is not None
+                
+                if is_single_place:
+                    logger.info("BrowserScoutAgent: Redirecionado diretamente para local único no Google Maps.")
+                    h1_el = await page.query_selector("h1")
+                    name = (await h1_el.inner_text()).strip() if h1_el else query.split(" em ")[0]
+                    
+                    lead = await self._extract_lead_details(page, name, current_url, vistorias_dir)
+                    yield lead
+                    return  # Conclui a busca para este termo específico de local único
+                # -------------------------------------------------
                 
                 # Rolar para carregar a lista
                 logger.info("BrowserScoutAgent: Carregando resultados via scroll...")
@@ -176,136 +321,8 @@ class BrowserScoutAgent:
                         
                         await page.wait_for_timeout(3000)
                         
-                        # EXTRAIR COORDENADAS DA URL ATUAL
-                        current_url = page.url
-                        coords = self._extract_coordinates_from_url(current_url)
-                        
-                        details = {
-                            "address": "N/D", "phone": "N/D", "website": "N/D", 
-                            "social_url": "N/D", "booking_url": "N/D", "email": "N/D",
-                            "vision_image_url": None, "lat": None, "lng": None
-                        }
-                        
-                        if coords:
-                            details['lat'] = coords['lat']
-                            details['lng'] = coords['lng']
-                            logger.info(f"BrowserScoutAgent: Coordenadas extraídas: {coords['lat']}, {coords['lng']}")
-                        
-                        # EXTRAÇÃO DE DADOS DE CONTATO - Seletores v3.0 atualizados
-                        try:
-                            # Endereço
-                            addr_els = [
-                                "button[data-item-id='address']",
-                                "div[data-item-id='address']",
-                                "[class*='address']",
-                            ]
-                            for sel in addr_els:
-                                el = await page.query_selector(sel)
-                                if el:
-                                    details['address'] = (await el.inner_text()).strip()
-                                    break
-                            
-                            # TELEFONE - Seletores atualizados para o DOM 2026
-                            phone_selectors = [
-                                "button[data-item-id*='phone:tel:']",
-                                "button[data-item-id*='phone']",
-                                "a[data-tooltip*='telefone']",
-                                "a[data-tooltip*='Telefone']",
-                                "a[href^='tel:']",
-                                "button[aria-label*='telefone']",
-                                "button[aria-label*='Telefone']",
-                                "div[class*='phone'] button",
-                            ]
-                            phone = None
-                            for sel in phone_selectors:
-                                el = await page.query_selector(sel)
-                                if el:
-                                    href = await el.get_attribute("href") or await el.get_attribute("data-item-id") or ""
-                                    if "tel:" in href:
-                                        phone = href.replace("tel:", "").replace("phone:tel:", "")
-                                    else:
-                                        phone = (await el.inner_text()).strip()
-                                    if phone:
-                                        details['phone'] = phone
-                                        logger.info(f"BrowserScoutAgent: Telefone encontrado: {phone}")
-                                        break
-                            
-                            # WEBSITE - Seletores atualizados
-                            website_selectors = [
-                                "a[data-item-id='authority']",
-                                "a[data-item-id*='authority']",
-                                "a[href*='http']:not([href*='maps'])",
-                                "a[data-tooltip*='site']",
-                                "a[aria-label*='site']",
-                            ]
-                            for sel in website_selectors:
-                                el = await page.query_selector(sel)
-                                if el:
-                                    url = await el.get_attribute("href")
-                                    if url and url.startswith("http") and "google.com" not in url:
-                                        category = self._classify_url(url)
-                                        if category == "social": details['social_url'] = url
-                                        elif category == "booking": details['booking_url'] = url
-                                        else: details['website'] = url
-                                        logger.info(f"BrowserScoutAgent: Website/Social encontrado: {url[:50]}")
-                                        break
-
-                            # EMAIL e TEXTO BRUTO - Extração completa do texto visível
-                            side_panel = await page.query_selector("div[role='main']")
-                            all_text = await side_panel.inner_text() if side_panel else ""
-                            
-                            # Como garantia adicional, busca elementos menores caso o painel role='main' mude
-                            if not all_text:
-                                info_elements = await page.query_selector_all(".Io6YTe, .fontBodyMedium, div[class*='text'], span[class*='text']")
-                                for el in info_elements:
-                                    try:
-                                        all_text += f" {await el.inner_text()}"
-                                    except: pass
-                            
-                            details['email'] = self._extract_email(all_text)
-                            if details['email'] and details['email'] != "N/D":
-                                logger.info(f"BrowserScoutAgent: Email encontrado por regex: {details['email']}")
-                                
-                        except Exception as e:
-                            logger.warning(f"BrowserScoutAgent: Erro na extração de dados para {name}: {e}")
-
-                        # CAPTURA DE FACHADA via screenshot do painel lateral
-                        try:
-                            safe_name = re.sub(r'[^a-z0-9]', '', name.lower())[:30]
-                            timestamp = int(asyncio.get_event_loop().time())
-                            filename = f"facade_{safe_name}_{timestamp}.png"
-                            filepath = os.path.join(vistorias_dir, filename)
-
-                            # Screenshot da área do painel lateral à direita
-                            side_panel = await page.query_selector("div[role='main']")
-                            if side_panel:
-                                box = await side_panel.bounding_box()
-                                if box:
-                                    # Captura a parte superior do painel (foto + info)
-                                    await page.screenshot(
-                                        path=filepath,
-                                        clip={"x": box["x"], "y": box["y"], "width": box["width"], "height": min(box["height"], 600)}
-                                    )
-                                    if os.path.exists(filepath) and os.path.getsize(filepath) > 1000:
-                                        details['vision_image_url'] = f"/static/vistorias/{filename}"
-                                        logger.info(f"BrowserScoutAgent: Fachada capturada para {name}")
-                        except Exception as e_img:
-                            logger.warning(f"BrowserScoutAgent: Falha na captura de fachada para {name}: {e_img}")
-
-                        lead = {
-                            "name": name,
-                            "address": details['address'],
-                            "phone": details['phone'],
-                            "website": details['website'],
-                            "social_url": details['social_url'],
-                            "booking_url": details['booking_url'],
-                            "email": details['email'],
-                            "vision_image_url": details['vision_image_url'],
-                            "coords": {"lat": details['lat'], "lng": details['lng']} if details['lat'] else None,
-                            "source": "Google Maps (Sniper v3.0)",
-                            "scanned_at": datetime.now().isoformat(),
-                            "raw_text": all_text
-                        }
+                        # Extrai detalhes usando o método auxiliar
+                        lead = await self._extract_lead_details(page, name, page.url, vistorias_dir)
                         
                         yielded_count += 1
                         yield lead 

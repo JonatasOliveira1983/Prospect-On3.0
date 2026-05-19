@@ -2,6 +2,7 @@ import os
 import json
 import re
 import asyncio
+from html.parser import HTMLParser
 from playwright.async_api import async_playwright
 from src.utils.logger import logger
 from src.utils.usage_monitor import UsageMonitor
@@ -9,6 +10,37 @@ from src.utils.deepseek_client import DeepSeekClient
 from dotenv import load_dotenv
 
 load_dotenv()
+
+class HTMLTextExtractor(HTMLParser):
+    """
+    Parser nativo de HTML para extração de texto visível.
+    Utiliza apenas a biblioteca padrão do Python, sendo 100% imune a erros de execução do JS no navegador.
+    """
+    def __init__(self):
+        super().__init__()
+        self.result = []
+
+    def handle_data(self, d):
+        self.result.append(d)
+
+    def get_text(self):
+        return " ".join(" ".join(self.result).split())
+
+def extract_text_from_html(html: str) -> str:
+    if not html:
+        return ""
+    # Remove tags script, style e noscript de forma case-insensitive e seus respectivos conteúdos
+    html_clean = re.sub(r'<(script|style|noscript)\b[^>]*>([\s\S]*?)</\1>', '', html, flags=re.IGNORECASE)
+    parser = HTMLTextExtractor()
+    parser.feed(html_clean)
+    return parser.get_text()
+
+def extract_links_from_html(html: str) -> list:
+    if not html:
+        return []
+    # Captura valores das tags <a ... href="...">
+    return re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
+
 
 class WebEnrichmentAgent:
     """
@@ -61,7 +93,7 @@ class WebEnrichmentAgent:
 
     async def _scrape_website(self, lead: dict, url: str) -> dict:
         """
-        Navega no website do condomínio para extrair contatos usando Playwright e DeepSeek.
+        Navega no website do condomínio para extrair contatos usando Playwright e DeepSeek de forma ultra-resiliente.
         """
         name = lead.get("name", "")
         logger.info(f"WebEnrichmentAgent: Raspando o website oficial '{url}' de '{name}'...")
@@ -101,19 +133,10 @@ class WebEnrichmentAgent:
                 await page.goto(url, wait_until="domcontentloaded", timeout=30000)
                 await page.wait_for_timeout(3000)
                 
-                # Coleta todo o texto visível da página
-                body_element = await page.query_selector("body")
-                raw_text = await body_element.inner_text() if body_element else ""
-                
-                # Coleta links de redes sociais
-                links = await page.query_selector_all("a")
-                hrefs = []
-                for link in links:
-                    try:
-                        href = await link.get_attribute("href")
-                        if href:
-                            hrefs.append(href)
-                    except: pass
+                # Coleta todo o texto visível da página e links usando parsers Python 100% seguros
+                html_content = await page.content()
+                raw_text = extract_text_from_html(html_content)
+                hrefs = extract_links_from_html(html_content)
                 
                 await browser.close()
                 
@@ -173,21 +196,18 @@ class WebEnrichmentAgent:
                 # Usar Bing para evitar recaptchas agressivos do Google
                 bing_url = f"https://www.bing.com/search?q={search_query.replace(' ', '+')}"
                 await page.goto(bing_url, wait_until="domcontentloaded", timeout=30000)
-                await page.wait_for_timeout(3000)
                 
-                # Coleta o texto visível da primeira página do buscador
-                body_element = await page.query_selector("body")
-                raw_text = await body_element.inner_text() if body_element else ""
+                try:
+                    await page.wait_for_selector("#b_results", timeout=8000)
+                except Exception as sel_err:
+                    logger.warning(f"WebEnrichmentAgent: Timeout aguardando #b_results, continuando. Erro: {sel_err}")
+                    
+                await page.wait_for_timeout(2000)
                 
-                # Coleta links de resultados
-                links = await page.query_selector_all("a")
-                hrefs = []
-                for link in links:
-                    try:
-                        href = await link.get_attribute("href")
-                        if href and href.startswith("http") and "bing.com" not in href:
-                            hrefs.append(href)
-                    except: pass
+                # Coleta todo o texto visível da primeira página do buscador e links
+                html_content = await page.content()
+                raw_text = extract_text_from_html(html_content)
+                hrefs = extract_links_from_html(html_content)
                 
                 await browser.close()
                 
