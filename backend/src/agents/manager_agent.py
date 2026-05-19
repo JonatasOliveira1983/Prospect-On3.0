@@ -11,6 +11,8 @@ from src.agents.geosampa_agent import GeosampaAgent
 from src.agents.analyst_agent import AnalystAgent
 from src.agents.browser_scout_agent import BrowserScoutAgent
 from src.agents.lead_enrichment_agent import LeadEnrichmentAgent
+from src.agents.semantic_extractor_agent import SemanticExtractorAgent
+from src.agents.web_enrichment_agent import WebEnrichmentAgent
 from src.utils.vision_analyzer import VisionAnalyzer
 from src.utils.places_client import PlacesClient
 from src.utils.database import Database
@@ -19,12 +21,13 @@ from src.utils.logger import logger
 
 class ManagerAgent:
     """
-    ManagerAgent v8.0: Orquestrador multi-fonte.
-    Pipeline de descoberta com 3 camadas:
+    ManagerAgent v9.0: Orquestrador multi-fonte e multiagente indestrutível.
+    Pipeline de descoberta com 3 camadas e processamento semântico DeepSeek:
       1. Google Places API (dados estruturados: telefone, website, fotos reais, coordenadas)
-      2. Playwright / Google Maps (scraping visual, fallback)
+      2. Playwright / Google Maps (Scout puro + Extração Semântica DeepSeek)
       3. OpenStreetMap (fallback gratuito)
-      4. DeepSeek (enriquecimento textual de cada lead)
+      4. WebEnrichmentAgent (Detetive Web para enriquecimento complementar)
+      5. LeadEnrichmentAgent (Enriquecimento de contexto com DeepSeek)
     """
     def __init__(self):
         self.places = PlacesClient()                  # Primário (dados estruturados)
@@ -36,7 +39,9 @@ class ManagerAgent:
         self.scout = DemandScraperAgent()
         self.geosampa = GeosampaAgent()
         self.analyst = AnalystAgent()
-        self.lead_enrichment = LeadEnrichmentAgent()   # Novo: enriquecimento DeepSeek
+        self.lead_enrichment = LeadEnrichmentAgent()   # Enriquecimento DeepSeek
+        self.semantic_extractor = SemanticExtractorAgent() # Novo: Extração semântica profunda
+        self.web_enrichment = WebEnrichmentAgent(headless=True) # Novo: Detetive Web
         self.vision_tools = VisionAnalyzer()
         self.webhook = WebhookClient()
         self.db = Database()
@@ -177,7 +182,41 @@ class ManagerAgent:
                 "working")
 
             try:
-                # 1. ENRIQUECIMENTO COM DEEPSEEK
+                # 1. EXTRAÇÃO E QUALIFICAÇÃO SEMÂNTICA (SemanticExtractorAgent)
+                raw_text = lead.get("raw_text", "")
+                if raw_text:
+                    self.emit_log("SemanticExtractorAgent", "extracting", f"   🧠 Extração Semântica DeepSeek para '{name}'...", "working")
+                    extracted = self.semantic_extractor.extract_semantic_data(name, lead.get("address", ""), raw_text)
+                    
+                    # Se desqualificado pelo DeepSeek, descarta o lead imediatamente
+                    if not extracted.get("qualificado", True):
+                        motivo = extracted.get("motivo_desqualificacao", "Fora do perfil comercial")
+                        self.emit_log("SemanticExtractorAgent", "disqualified", f"   ❌ Lead DESQUALIFICADO: {name} - Motivo: {motivo}", "warning")
+                        continue
+                        
+                    # Atualiza os dados do lead com o que foi extraído semântica e fidedignamente
+                    lead["address"] = extracted.get("endereco_higienizado", lead.get("address"))
+                    if extracted.get("telefones"):
+                        lead["phone"] = extracted["telefones"][0]
+                    if extracted.get("whatsapp"):
+                        lead["whatsapp"] = extracted["whatsapp"]
+                    if extracted.get("email") and extracted["email"] != "N/D":
+                        lead["email"] = extracted["email"]
+                    if extracted.get("website") and extracted["website"] != "N/D":
+                        lead["website"] = extracted["website"]
+                    if extracted.get("redes_sociais"):
+                        rs = extracted["redes_sociais"]
+                        if rs.get("instagram"):
+                            lead["social_url"] = rs["instagram"]
+                        if rs.get("facebook"):
+                            lead["facebook_url"] = rs["facebook"]
+
+                # 2. ENRIQUECIMENTO WEB AVANÇADO (WebEnrichmentAgent - Detetive Web)
+                if lead.get("email") in ("N/D", None, "") or lead.get("whatsapp") in ("N/D", None, ""):
+                    self.emit_log("WebEnrichmentAgent", "enriching", f"   🔍 Detetive Web buscando contatos adicionais para '{name}'...", "working")
+                    lead = await self.web_enrichment.enrich_lead(lead)
+
+                # 3. ENRIQUECIMENTO CONTEXTUAL COM DEEPSEEK (LeadEnrichmentAgent)
                 self.emit_log("LeadEnrichmentAgent", "analyzing", f"   🧠 DeepSeek analisando contexto de '{name}'...", "working")
                 lead = self.lead_enrichment.enrich_lead(lead)
                 self.emit_log("LeadEnrichmentAgent", "analyzing",
@@ -186,7 +225,7 @@ class ManagerAgent:
                     f"unidades={lead.get('unidades_estimadas','?')}",
                     "success")
                 
-                # 2. ANÁLISE COMERCIAL (AnalystAgent)
+                # 4. ANÁLISE COMERCIAL (AnalystAgent)
                 self.emit_log("AnalystAgent", "analyzing", f"   📈 Calculando contexto comercial para '{name}'...", "working")
                 commercial_data = self.analyst.analyze_business_context(lead)
                 lead.update(commercial_data)

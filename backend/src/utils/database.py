@@ -5,13 +5,23 @@ from datetime import datetime
 from src.utils.logger import logger
 
 class Database:
+    def _is_valid_postgres_url(self, url: str) -> bool:
+        if not url:
+            return False
+        url_lower = url.lower()
+        if not (url_lower.startswith("postgres://") or url_lower.startswith("postgresql://")):
+            return False
+        if "sua_url" in url_lower or "<" in url_lower or "placeholder" in url_lower:
+            return False
+        return True
+
     def __init__(self, db_path="data/prospecton.db"):
         self.db_path = db_path
         self.is_postgres = False
         
-        # Se houver DATABASE_URL no ambiente, usamos PostgreSQL
+        # Se houver DATABASE_URL válida no ambiente, usamos PostgreSQL
         db_url = os.environ.get("DATABASE_URL")
-        if not db_url:
+        if not self._is_valid_postgres_url(db_url):
             os.makedirs(os.path.dirname(db_path), exist_ok=True)
         else:
             self.is_postgres = True
@@ -20,7 +30,7 @@ class Database:
 
     def _get_connection(self):
         db_url = os.environ.get("DATABASE_URL")
-        if db_url:
+        if self._is_valid_postgres_url(db_url):
             try:
                 import psycopg2
                 conn = psycopg2.connect(db_url)
@@ -203,7 +213,7 @@ class Database:
                 """, (
                     lead_id, lead_data['name'], lead_data['address'], lat, lng,
                     lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
-                    lead_data.get('responsavel_nome', ''), lead_data.get('responsavel_contato', ''),
+                    lead_data.get('responsavel_nome', ''), lead_data.get('responsavel_contato') or lead_data.get('whatsapp') or lead_data.get('phone', 'N/D'),
                     vision_path, vision_url, satellite_path, vision_analysis,
                     market, valuation, financial,
                     demand, lead_data.get('source', 'Radar'), lead_data.get('urgency_score', 0),

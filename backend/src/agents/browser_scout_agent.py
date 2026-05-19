@@ -231,17 +231,21 @@ class BrowserScoutAgent:
                                         logger.info(f"BrowserScoutAgent: Website/Social encontrado: {url[:50]}")
                                         break
 
-                            # EMAIL - Extração do texto visível
-                            info_elements = await page.query_selector_all(".Io6YTe, .fontBodyMedium, div[class*='text'], span[class*='text']")
-                            all_text = ""
-                            for el in info_elements:
-                                try:
-                                    all_text += f" {await el.inner_text()}"
-                                except: pass
+                            # EMAIL e TEXTO BRUTO - Extração completa do texto visível
+                            side_panel = await page.query_selector("div[role='main']")
+                            all_text = await side_panel.inner_text() if side_panel else ""
+                            
+                            # Como garantia adicional, busca elementos menores caso o painel role='main' mude
+                            if not all_text:
+                                info_elements = await page.query_selector_all(".Io6YTe, .fontBodyMedium, div[class*='text'], span[class*='text']")
+                                for el in info_elements:
+                                    try:
+                                        all_text += f" {await el.inner_text()}"
+                                    except: pass
                             
                             details['email'] = self._extract_email(all_text)
                             if details['email'] and details['email'] != "N/D":
-                                logger.info(f"BrowserScoutAgent: Email encontrado: {details['email']}")
+                                logger.info(f"BrowserScoutAgent: Email encontrado por regex: {details['email']}")
                                 
                         except Exception as e:
                             logger.warning(f"BrowserScoutAgent: Erro na extração de dados para {name}: {e}")
@@ -280,7 +284,8 @@ class BrowserScoutAgent:
                             "vision_image_url": details['vision_image_url'],
                             "coords": {"lat": details['lat'], "lng": details['lng']} if details['lat'] else None,
                             "source": "Google Maps (Sniper v3.0)",
-                            "scanned_at": datetime.now().isoformat()
+                            "scanned_at": datetime.now().isoformat(),
+                            "raw_text": all_text
                         }
                         
                         yielded_count += 1
