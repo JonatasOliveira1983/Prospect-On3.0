@@ -9,3 +9,6 @@ uvicorn
 python-multipart
 pillow
 google-genai
+psycopg2-binary
+redis
+
