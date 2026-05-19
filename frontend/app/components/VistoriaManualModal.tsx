@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { api, WS_URL } from '@/lib/api';
 
 import { useState } from "react";
@@ -76,8 +76,7 @@ export default function VistoriaManualModal({ lead, isOpen, onClose, onSave }: P
     };
 
     try {
-      const res = await api.analyzeLead(body)
-      });
+      const res = await api.analyzeLead(updatedLead);
 
       if (res.ok) {
         onSave(updatedLead);
