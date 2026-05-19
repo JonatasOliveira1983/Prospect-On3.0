@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { BACKEND_URL } from '@/lib/config';
 
 export async function POST(
     request: NextRequest,
@@ -8,7 +9,7 @@ export async function POST(
         const { id } = params;
         const body = await request.json();
 
-        const response = await fetch(`http://localhost:8002/api/leads/${id}/interaction`, {
+        const response = await fetch(`${BACKEND_URL}/api/leads/${id}/interaction`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),

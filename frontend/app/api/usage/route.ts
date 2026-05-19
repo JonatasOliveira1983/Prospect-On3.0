@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { BACKEND_URL } from '@/lib/config';
 
 export async function GET() {
     try {
-        const response = await fetch('http://localhost:8002/api/usage', {
+        const response = await fetch(`${BACKEND_URL}/api/usage`, {
             cache: 'no-store'
         });
 

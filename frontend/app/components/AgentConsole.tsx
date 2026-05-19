@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Terminal, Activity, Bot, Database, Search, Target, Mail } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { BACKEND_WS_URL } from "@/lib/config";
 
 interface AgentLog {
   timestamp: string;
@@ -30,7 +31,7 @@ export default function AgentConsole() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8002/ws/logs");
+    const ws = new WebSocket(`${BACKEND_WS_URL}/ws/logs`);
 
     ws.onopen = () => setIsConnected(true);
     ws.onclose = () => setIsConnected(false);

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
+import { BACKEND_URL } from '@/lib/config';
 
 export async function GET() {
   try {
-    // Busca os dados diretamente da API Backend (SQL) v5.1
-    const response = await fetch('http://localhost:8002/api/leads', {
-      cache: 'no-store' // Garante dados sempre frescos do SQL
+    const response = await fetch(`${BACKEND_URL}/api/leads`, {
+      cache: 'no-store'
     });
     
     if (!response.ok) {
@@ -18,3 +18,4 @@ export async function GET() {
     return NextResponse.json({ error: 'Servidor Backend Offline' }, { status: 503 });
   }
 }
+

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
+import { BACKEND_URL } from '@/lib/config';
 
 export async function POST() {
   try {
-    const response = await fetch('http://localhost:8002/api/scan/start', {
+    const response = await fetch(`${BACKEND_URL}/api/scan/start`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store'
