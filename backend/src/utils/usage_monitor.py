@@ -1,7 +1,9 @@
+import sqlite3
 from datetime import datetime
 import os
 from src.utils.logger import logger
 from src.utils.database import Database
+
 
 class UsageMonitor(Database):
     """
