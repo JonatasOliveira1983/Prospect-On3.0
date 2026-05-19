@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { api, WS_URL } from '@/lib/api';
 
 import { useEffect, useState } from "react";
@@ -47,9 +47,9 @@ export default function Configuracoes() {
   ];
 
   const systemParams = [
-    { label: "Cidade Base", value: "Jundiaí, SP", editable: false },
+    { label: "Cidade Base", value: "São Paulo, SP", editable: false },
     { label: "Raio de Varredura", value: "10.000m", editable: true },
-    { label: "Regiões Ativas", value: "Jundiaí, Campinas, Valinhos, Vinhedo, Itupeva, Louveira", editable: false },
+    { label: "Regiões Ativas", value: "São Paulo, Campinas, Jundiaí, Santos, Grande SP", editable: false },
     { label: "Fator de Valorização", value: "12%", editable: true },
     { label: "Limite de Leads por Scan", value: "50", editable: true },
     { label: "Intervalo de Rescan", value: "7 dias", editable: true },

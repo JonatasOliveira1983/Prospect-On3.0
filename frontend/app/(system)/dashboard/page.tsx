@@ -57,7 +57,7 @@ export default function Dashboard() {
   const [turboLoading, setTurboLoading] = useState(false);
   const [publicoAlvo, setPublicoAlvo] = useState("Condominios");
   const [palavraChave, setPalavraChave] = useState("Residenciais");
-  const [regiao, setRegiao] = useState("Jundiaí - SP");
+  const [regiao, setRegiao] = useState("São Paulo - SP");
   const [targetLeads, setTargetLeads] = useState(5);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [filterByRegion, setFilterByRegion] = useState(false);

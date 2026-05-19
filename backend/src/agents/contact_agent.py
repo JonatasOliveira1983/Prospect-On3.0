@@ -11,7 +11,7 @@ class ContactAgent:
     def __init__(self):
         self.br_api_url = "https://brasilapi.com.br/api/cnpj/v1"
 
-    def enrich_contact_data(self, lead_name, city="Jundiaí"):
+    def enrich_contact_data(self, lead_name, city="São Paulo"):
         """
         Tenta encontrar o CNPJ e os contatos reais do condomínio.
         """

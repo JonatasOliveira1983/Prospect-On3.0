@@ -130,7 +130,7 @@ class WebEnrichmentAgent:
         """
         name = lead.get("name", "")
         address = lead.get("address", "")
-        city = "Jundiaí"
+        city = lead.get("city") or "São Paulo"
         if "," in address:
             parts = address.split(",")
             if len(parts) >= 3:

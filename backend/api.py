@@ -371,7 +371,7 @@ async def clear_leads():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/scan/start")
-async def start_scan(query: str = "Condominios", city: str = "Jundiaí", target: int = 1):
+async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1):
     """Dispara a varredura completa Sniper (Discovery + Enrichment) em background."""
     try:
         logger.info(f"API: Disparando varredura Sniper para {query} em {city} (Objetivo: {target})...")
@@ -386,12 +386,12 @@ async def start_scan(query: str = "Condominios", city: str = "Jundiaí", target:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sniper/start")
-async def start_sniper_scan(query: str = "Condominios", city: str = "Jundiaí"):
+async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo"):
     """Dispara a varredura Sniper (Google Maps Browser). Agora unificado com o scan principal."""
     return await start_scan(query, city)
 
 @app.post("/api/scan/extension")
-async def start_extension_scan(query: str = "Condominios", city: str = "Jundiaí"):
+async def start_extension_scan(query: str = "Condominios", city: str = "São Paulo"):
     """Lança o navegador com a extensão Sniper carregada para busca ultra-rápida."""
     try:
         full_query = f"{query} em {city}"

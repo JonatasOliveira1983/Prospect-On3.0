@@ -28,7 +28,7 @@ def main():
     report_gen = ReportGenerator()
     
     # 2. Varredura Inicial Real (v5.0)
-    target_city = "Jundiaí"
+    target_city = "São Paulo"
     logger.info(f"🔎 Mapeando oportunidades REAIS em {target_city}...")
     
     # Usar arquivo local para bypass do erro de API Legacy

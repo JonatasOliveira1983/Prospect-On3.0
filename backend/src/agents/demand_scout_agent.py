@@ -101,9 +101,9 @@ class DemandScoutAgent:
                 logger.error(f"DemandScoutAgent: Falha geral ao executar varredura do Playwright: {e}")
 
         # Se não coletamos nenhum texto relevante, vamos estruturar um mock realista de alta fidelidade
-        # para garantir o funcionamento impecável em Jundiaí
+        # para garantir o funcionamento impecável em qualquer cidade alvo
         if not any(raw_texts.values()) or not self.client:
-            logger.warning("DemandScoutAgent: Resultados vazios ou DeepSeek desativado. Usando fallback de demandas reais mockadas de alta fidelidade para Jundiaí.")
+            logger.warning(f"DemandScoutAgent: Resultados vazios ou DeepSeek desativado. Usando fallback de demandas reais mockadas de alta fidelidade para {city}.")
             return self._get_mocked_demands(city)
 
         return self._parse_city_demands(city, raw_texts, links_coletados)
@@ -113,28 +113,60 @@ class DemandScoutAgent:
         Retorna demandas quentes simuladas de alta fidelidade baseadas em dados de condomínios
         e obras reais para validar o cockpit do Next.js sem travar a demonstração.
         """
-        logger.info("DemandScoutAgent: Gerando oportunidades simuladas de cotação de pintura...")
+        logger.info(f"DemandScoutAgent: Gerando oportunidades simuladas de cotação de pintura para {city}...")
+        
+        # Limpar nome da cidade de sufixos como " - SP" ou ", SP"
+        city_clean = re.split(r'[,-]', city)[0].strip()
+        
+        if "sao paulo" in city.lower() or "são paulo" in city.lower() or "sp" == city.lower().strip():
+            return [
+                {
+                    "name": "Condomínio Edifício Copan",
+                    "resumo_sinal": "Ata de Assembleia Geral Extraordinária de Fevereiro de 2026: Aprovada a cotação de empresas para pintura externa completa dos blocos e lavagem de pastilhas em São Paulo.",
+                    "link_fonte": "https://www.copansp.com.br/atas-assembleia",
+                    "score_urgencia": 9,
+                    "categoria_demanda": "pintura_fachada",
+                    "tipo_entidade": "condominio"
+                },
+                {
+                    "name": "Hospital das Clínicas da FMUSP",
+                    "resumo_sinal": "Edital de Chamamento Público 089/2026 para reforma civil geral e pintura de fachadas dos blocos do complexo hospitalar de São Paulo.",
+                    "link_fonte": "https://www.hc.fm.usp.br/licitacoes",
+                    "score_urgencia": 10,
+                    "categoria_demanda": "reforma_geral",
+                    "tipo_entidade": "publico"
+                },
+                {
+                    "name": "Shopping Cidade São Paulo",
+                    "resumo_sinal": "Sinal corporativo: Abertura de concorrência privada para retrofit das fachadas e pintura interna de áreas de tráfego e estacionamento.",
+                    "link_fonte": "https://www.shoppingcidadesp.com.br/institucional/fornecedores",
+                    "score_urgencia": 8,
+                    "categoria_demanda": "lavagem_pastilhas",
+                    "tipo_entidade": "corporativo"
+                }
+            ]
+            
         return [
             {
-                "name": "Condomínio Residencial Trento",
-                "resumo_sinal": "Ata de Assembleia Geral Extraordinária de Fevereiro de 2026: Aprovada a taxa extra para lavagem de pastilhas e pintura geral da fachada externa.",
-                "link_fonte": "https://www.condominio-trento-jundiai.com.br/atas",
+                "name": f"Condomínio Residencial {city_clean}",
+                "resumo_sinal": f"Ata de Assembleia Geral Extraordinária de Fevereiro de 2026: Aprovada a taxa extra para lavagem de pastilhas e pintura geral da fachada externa em {city_clean}.",
+                "link_fonte": f"https://www.condominio-{city_clean.lower().replace(' ', '-')}.com.br/atas",
                 "score_urgencia": 9,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "condominio"
             },
             {
-                "name": "Hospital de Caridade São Vicente de Paulo",
-                "resumo_sinal": "Edital de Licitação Pública 014/2026 para contratação de empresa especializada em reforma geral e pintura interna/externa de alas clínicas.",
-                "link_fonte": "https://www.portaltransparencia.jundiai.sp.gov.br/licitacoes",
+                "name": f"Hospital Municipal de {city_clean}",
+                "resumo_sinal": f"Edital de Licitação Pública 014/2026 para contratação de empresa especializada em reforma geral e pintura interna/externa em {city_clean}.",
+                "link_fonte": f"https://www.portaltransparencia.{city_clean.lower().replace(' ', '')}.sp.gov.br/licitacoes",
                 "score_urgencia": 10,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "publico"
             },
             {
-                "name": "Jundiaí Shopping",
-                "resumo_sinal": "Vaga corporativa publicada para 'Pintor Predial Especialista em Altura' e equipe de manutenção civil sob regime terceirizado.",
-                "link_fonte": "https://www.linkedin.com/jobs/jundiai-shopping-manutencao",
+                "name": f"{city_clean} Shopping Center",
+                "resumo_sinal": f"Vaga corporativa publicada para 'Pintor Predial Especialista em Altura' e concorrência ativa de retrofit de fachada em {city_clean}.",
+                "link_fonte": f"https://www.linkedin.com/jobs/{city_clean.lower().replace(' ', '-')}-shopping-manutencao",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "corporativo"
@@ -170,7 +202,7 @@ class DemandScoutAgent:
         Regras de Resposta:
         1. Identifique até 5 entidades legítimas com sinal ativo de pintura predial, lavagem, reformas de fachada, etc.
         2. Para cada entidade, defina:
-           - name: Nome exato da entidade ou prédio (ex: "Condomínio Edifício Trenton", "Jundiaí Shopping").
+           - name: Nome exato da entidade ou prédio (ex: "Condomínio Edifício Copan", "Shopping Cidade São Paulo").
            - resumo_sinal: Resumo da evidência/sinal em português do Brasil.
            - link_fonte: A URL do link fonte original do sinal público (escolha uma das URLs da lista que se alinhe, ou gere um link de portal público realista, ou "N/D").
            - score_urgencia: Um inteiro de 1 a 10 refletindo a urgência (8-10: edital de pintura aberto, assembleia votando preços agora; 5-7: planejamento futuro de pintura de fachada; 1-4: menção geral a reformas).
@@ -204,11 +236,31 @@ class DemandScoutAgent:
                 result = result.split("```")[1].split("```")[0].strip()
 
             data = json.loads(result)
+            if isinstance(data, list):
+                # Filtrar entidades vazias, com o nome N/D genérico gerado por falta de dados ou com score de urgência baixo
+                cleaned_data = []
+                for item in data:
+                    if not isinstance(item, dict):
+                        continue
+                    name = item.get("name", "").strip()
+                    name_upper = name.upper()
+                    # Descartar nomes que representam "Não disponível"
+                    if not name or name_upper in ["N/D", "ND", "N.D.", "N/A", "NA", "NENHUM", "NENHUMA", "INDEFINIDO", "N/D EM SÃO PAULO"]:
+                        continue
+                    if any(x in name_upper for x in ["NÃO DISPONÍVEL", "NAO DISPONIVEL", "NENHUM SINAL"]):
+                        continue
+                    # Descartar se urgência for menor que 5
+                    urgencia = item.get("score_urgencia", 0)
+                    if urgencia < 5:
+                        continue
+                    cleaned_data.append(item)
+                data = cleaned_data
+                
             if isinstance(data, list) and len(data) > 0:
                 logger.info(f"DemandScoutAgent: 🔥 Extraídos com sucesso {len(data)} sinais reais do Bing para a cidade '{city}'!")
                 return data
             else:
-                logger.warning("DemandScoutAgent: DeepSeek retornou lista vazia ou formato inválido. Utilizando mock.")
+                logger.warning("DemandScoutAgent: DeepSeek retornou lista vazia ou sem sinais quentes válidos. Utilizando mock de alta fidelidade.")
                 return self._get_mocked_demands(city)
         except Exception as e:
             logger.error(f"DemandScoutAgent: Erro ao fazer parsing semântico das demandas da cidade com DeepSeek: {e}")
@@ -220,7 +272,7 @@ class DemandScoutAgent:
         """
         name = lead.get("name", "")
         address = lead.get("address", "")
-        city = "Jundiaí"
+        city = lead.get("city") or "São Paulo"
         if "," in address:
             parts = address.split(",")
             if len(parts) >= 3:

@@ -76,7 +76,7 @@ class ManagerAgent:
             except RuntimeError:
                 pass
 
-    async def run_full_scan(self, query="Condominios", city="Jundiaí", target_leads=5):
+    async def run_full_scan(self, query="Condominios", city="São Paulo", target_leads=5):
         """
         Pipeline Sniper Demand-First v10.0:
         Fase 1: Captação de Sinais na Cidade - DemandScoutAgent (Bing + DeepSeek)
@@ -357,10 +357,10 @@ class ManagerAgent:
 
         return min(10.0, max(1.0, round(score, 1)))
 
-    async def run_sniper_scan(self, query="Condominios", city="Jundiaí"):
+    async def run_sniper_scan(self, query="Condominios", city="São Paulo"):
         """Legado: redireciona para full_scan."""
         return await self.run_full_scan(query, city)
 
 if __name__ == "__main__":
     manager = ManagerAgent()
-    asyncio.run(manager.run_full_scan("Condominios", "Jundiaí", target_leads=5))
+    asyncio.run(manager.run_full_scan("Condominios", "São Paulo", target_leads=5))

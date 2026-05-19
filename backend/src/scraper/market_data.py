@@ -19,7 +19,7 @@ class MarketScraper:
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.98 Safari/537.36"
         ]
 
-    def search_condos_by_city(self, city="Jundiaí", state="SP"):
+    def search_condos_by_city(self, city="São Paulo", state="SP"):
         """
         Busca condomínios reais usando Google Places API.
         Retorna lista de dicionários formatados para o Radar.
@@ -51,25 +51,28 @@ class MarketScraper:
             print(f"Erro na busca Google Places: {e}")
             return []
 
-    def get_avg_m2_price(self, neighborhood, city="Jundiaí"):
+    def get_avg_m2_price(self, neighborhood, city="São Paulo"):
         """
         Busca o valor médio do m² no bairro.
         Mantido para cálculos de valuation.
         """
-        jundiai_data = {
-            "Centro": 5500,
-            "Jardim Samambaia": 8500,
-            "Anhangabaú": 7200,
-            "Eloy Chaves": 6800,
-            "Vila Arens": 6200,
-            "Retiro": 7000,
-            "Jardim do Lago": 5800
+        sp_data = {
+            "Centro": 7500,
+            "Pinheiros": 13000,
+            "Jardins": 15000,
+            "Itaim Bibi": 18000,
+            "Vila Mariana": 11000,
+            "Moema": 14000,
+            "Consolação": 9500,
+            "República": 7200,
+            "Cerqueira César": 12500,
+            "Bela Vista": 9000
         }
         
         # Extrair nome simples do bairro se vier completo
         clean_neighborhood = neighborhood.split(',')[0] if ',' in neighborhood else neighborhood
-        price = jundiai_data.get(clean_neighborhood, 6500) 
-        price += random.randint(-200, 200)
+        price = sp_data.get(clean_neighborhood, 8500) 
+        price += random.randint(-500, 500)
         
         return price
 
@@ -86,7 +89,7 @@ class MarketScraper:
 
 if __name__ == "__main__":
     scraper = MarketScraper()
-    print("Buscando condomínios reais em Jundiaí...")
-    results = scraper.search_condos_by_city("Jundiaí")
+    print("Buscando condomínios reais em São Paulo...")
+    results = scraper.search_condos_by_city("São Paulo")
     for r in results[:3]:
         print(f"- {r['name']} em {r['address']} (Coords: {r['coords']})")

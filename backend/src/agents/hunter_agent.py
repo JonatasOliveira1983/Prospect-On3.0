@@ -13,14 +13,14 @@ class HunterAgent:
             "https://overpass.kumi.systems/api/interpreter"
         ]
 
-    def search_condos(self, city="Jundiaí"):
+    def search_condos(self, city="São Paulo"):
         """
         Busca condomínios usando Bounding Box e User-Agent para máxima estabilidade (v2.7).
         """
         logger.info(f"HunterAgent: Iniciando busca robusta por Bounding Box em {city}...")
         
-        # Jundiaí Bbox default de fallback
-        bbox = "(-23.3267, -47.0288, -23.0763, -46.7860)"
+        # São Paulo Bbox default de fallback
+        bbox = "(-23.6005, -46.6833, -23.5005, -46.5833)"
         
         # Tentar obter bounding box via Nominatim API do OSM
         import requests
@@ -83,7 +83,7 @@ class HunterAgent:
                 logger.warning(f"HunterAgent: Erro ao buscar cidade base: {e}")
                 
         if not success_geo:
-            logger.warning(f"HunterAgent: Usando Bbox de fallback (Jundiaí): {bbox}")
+            logger.warning(f"HunterAgent: Usando Bbox de fallback (São Paulo): {bbox}")
             
         query = f"""
         [out:json];
@@ -162,6 +162,6 @@ class HunterAgent:
 if __name__ == "__main__":
     # Teste rápido
     hunter = HunterAgent()
-    results = hunter.search_condos("Jundiaí")
+    results = hunter.search_condos("São Paulo")
     for r in results[:5]:
         print(f"- {r['name']} ({r['coords']})")
