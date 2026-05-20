@@ -1,11 +1,48 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowRight, ShieldCheck, Award, Briefcase, Play } from "lucide-react";
 import Script from "next/script";
 
 export default function HomeHero() {
   const [splineUrl, setSplineUrl] = useState<string>("https://prod.spline.design/p9DEvpgdmtwGsA57/scene.splinecode");
+  const [load3D, setLoad3D] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    // Detectar viewport para rodar 3D apenas em computadores
+    const checkViewport = () => {
+      setIsDesktop(window.innerWidth >= 1024);
+    };
+    checkViewport();
+    window.addEventListener("resize", checkViewport);
+
+    // Carregar em segundo plano após 1.5 segundos ou na primeira interação do usuário
+    const timer = setTimeout(() => {
+      setLoad3D(true);
+    }, 1500);
+
+    const handleInteraction = () => {
+      setLoad3D(true);
+      cleanup();
+    };
+
+    const cleanup = () => {
+      clearTimeout(timer);
+      window.removeEventListener("mousemove", handleInteraction);
+      window.removeEventListener("scroll", handleInteraction);
+      window.removeEventListener("touchstart", handleInteraction);
+    };
+
+    window.addEventListener("mousemove", handleInteraction, { passive: true });
+    window.addEventListener("scroll", handleInteraction, { passive: true });
+    window.addEventListener("touchstart", handleInteraction, { passive: true });
+
+    return () => {
+      cleanup();
+      window.removeEventListener("resize", checkViewport);
+    };
+  }, []);
 
   return (
     <section className="relative w-full min-h-[90vh] lg:min-h-[95vh] flex items-center justify-center bg-slate-950 overflow-hidden py-20 lg:py-28 border-b border-white/5">
@@ -25,21 +62,54 @@ export default function HomeHero() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
 
-      {/* Spline 3D Scene rendered using official high-performance Web Component */}
+      {/* Spline 3D Scene rendered dynamically for high performance */}
       <div className="absolute top-[12%] lg:top-[5%] right-0 w-full lg:w-[50%] h-[400px] lg:h-[650px] z-0 overflow-hidden opacity-90 pointer-events-auto">
         <div className="w-full h-full relative">
-          <Script 
-            type="module" 
-            src="https://unpkg.com/@splinetool/viewer@1.9.2/build/spline-viewer.js"
-            strategy="afterInteractive"
-          />
-          {/* @ts-ignore */}
-          <spline-viewer 
-            url="https://prod.spline.design/p9DEvpgdmtwGsA57/scene.splinecode" 
-            className="w-full h-full scale-[1.05]"
-          />
-          {/* Elegante máscara de fundo para cobrir a logo/marca d'água do Spline na versão gratuita */}
-          <div className="absolute bottom-0 right-0 w-[140px] h-[45px] bg-[#020617] z-20 pointer-events-none select-none" />
+          {load3D && isDesktop ? (
+            <>
+              <Script 
+                type="module" 
+                src="https://unpkg.com/@splinetool/viewer@1.9.2/build/spline-viewer.js"
+                strategy="lazyOnload"
+              />
+              {/* @ts-ignore */}
+              <spline-viewer 
+                url="https://prod.spline.design/p9DEvpgdmtwGsA57/scene.splinecode" 
+                className="w-full h-full scale-[1.05]"
+              />
+              {/* Elegante máscara de fundo para cobrir a logo/marca d'água do Spline na versão gratuita */}
+              <div className="absolute bottom-0 right-0 w-[140px] h-[45px] bg-[#020617] z-20 pointer-events-none select-none" />
+            </>
+          ) : (
+            /* Blueprint de Prédios Futuristas 3D Holográfico como Fallback leve e responsivo */
+            <div className="w-full h-full flex items-center justify-center relative select-none">
+              <div className="absolute w-[280px] h-[280px] lg:w-[450px] lg:h-[450px] rounded-full border border-cyan-500/5 animate-[spin_100s_linear_infinite] flex items-center justify-center pointer-events-none">
+                <div className="w-[80%] h-[80%] rounded-full border border-dashed border-otto-yellow/5 animate-[spin_60s_linear_infinite_reverse]" />
+              </div>
+              <svg viewBox="0 0 400 400" className="w-[75%] h-[75%] text-cyan-400 opacity-55 drop-shadow-[0_0_15px_rgba(34,211,238,0.15)] animate-pulse pointer-events-none" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M 200 80 L 270 120 L 270 280 L 200 320 L 130 280 L 130 120 Z" stroke="currentColor" strokeWidth="1.2" strokeDasharray="3 3" />
+                <path d="M 200 80 L 200 320" stroke="currentColor" strokeWidth="1.2" />
+                <path d="M 130 120 L 200 160 L 270 120" stroke="currentColor" strokeWidth="1.2" />
+                {Array.from({ length: 9 }).map((_, i) => {
+                  const y = 120 + i * 20;
+                  return (
+                    <g key={i}>
+                      <path d={`M 130 ${y} L 200 ${y + 40} L 270 ${y}`} stroke="currentColor" strokeWidth="0.8" opacity="0.2" />
+                    </g>
+                  );
+                })}
+                <path d="M 100 160 L 130 180 L 130 300 L 100 280 Z" stroke="#eab308" strokeWidth="1" opacity="0.3" />
+                <path d="M 70 180 L 100 200 L 100 300 L 70 280 Z" stroke="#eab308" strokeWidth="1" opacity="0.2" />
+                <path d="M 270 180 L 300 160 L 300 280 L 270 300 Z" stroke="#eab308" strokeWidth="1" opacity="0.3" />
+                <path d="M 300 200 L 330 180 L 330 280 L 300 300 Z" stroke="#eab308" strokeWidth="1" opacity="0.2" />
+                <line x1="200" y1="320" x2="350" y2="400" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.15" />
+                <line x1="200" y1="320" x2="50" y2="400" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.15" />
+                <line x1="200" y1="320" x2="200" y2="380" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.15" />
+                <text x="210" y="95" fill="currentColor" className="text-[10px] font-mono tracking-widest uppercase opacity-60" stroke="none">OTTO 3D ENGINE</text>
+                <text x="210" y="110" fill="#eab308" className="text-[8px] font-mono tracking-widest uppercase opacity-50" stroke="none">STATUS: READY</text>
+              </svg>
+            </div>
+          )}
         </div>
       </div>
 

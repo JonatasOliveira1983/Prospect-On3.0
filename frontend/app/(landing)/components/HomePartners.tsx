@@ -87,6 +87,9 @@ export default function HomePartners() {
                   src={src}
                   alt={`Parceiro Otto`}
                   fill
+                  quality={70}
+                  sizes="192px"
+                  loading="lazy"
                   className="object-contain"
                 />
               </div>
@@ -111,6 +114,9 @@ export default function HomePartners() {
                   src={client.src}
                   alt={client.name}
                   fill
+                  quality={70}
+                  sizes="192px"
+                  loading="lazy"
                   className="object-contain rounded-lg"
                 />
               </div>

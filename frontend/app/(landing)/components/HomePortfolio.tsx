@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import { Search, SlidersHorizontal, X, ArrowUpRight, Scale, MapPin } from "lucide-react";
 
@@ -18,6 +18,12 @@ export default function HomePortfolio() {
   const [activeCategory, setActiveCategory] = useState<"all" | "condo" | "commercial" | "industrial">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [visibleCount, setVisibleCount] = useState(6);
+
+  // Reseta a quantidade visível ao alterar categoria ou buscar
+  useEffect(() => {
+    setVisibleCount(6);
+  }, [activeCategory, searchQuery]);
 
   const projects: Project[] = useMemo(() => [
     {
@@ -285,6 +291,10 @@ export default function HomePortfolio() {
     });
   }, [activeCategory, searchQuery, projects]);
 
+  const displayedProjects = useMemo(() => {
+    return filteredProjects.slice(0, visibleCount);
+  }, [filteredProjects, visibleCount]);
+
   return (
     <section className="py-24 lg:py-32 bg-slate-950 text-white relative border-b border-white/5" id="portfolio">
       <div className="container mx-auto px-6 lg:px-8 relative z-10">
@@ -363,7 +373,7 @@ export default function HomePortfolio() {
 
         {/* Dynamic Project Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {filteredProjects.map((project) => (
+          {displayedProjects.map((project) => (
             <div
               key={project.id}
               onClick={() => setSelectedProject(project)}
@@ -375,6 +385,7 @@ export default function HomePortfolio() {
                   src={project.img}
                   alt={project.client}
                   fill
+                  quality={80}
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                   className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
@@ -425,6 +436,19 @@ export default function HomePortfolio() {
           </div>
         )}
 
+        {/* Carregar Mais Button */}
+        {filteredProjects.length > visibleCount && (
+          <div className="mt-16 text-center">
+            <button
+              onClick={() => setVisibleCount((prev) => prev + 6)}
+              className="group relative px-8 py-3.5 rounded-full bg-white/5 hover:bg-white/10 text-white border border-white/10 text-xs font-bold tracking-widest uppercase transition-all duration-300 active:scale-95 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] inline-flex items-center gap-2"
+            >
+              Carregar Mais Casos
+              <span className="text-otto-yellow transition-transform group-hover:translate-y-0.5">↓</span>
+            </button>
+          </div>
+        )}
+
       </div>
 
       {/* Glassmorphic Modal Lightbox for Project Details */}
@@ -447,6 +471,7 @@ export default function HomePortfolio() {
                 src={selectedProject.img}
                 alt={selectedProject.client}
                 fill
+                quality={85}
                 className="object-cover object-center"
               />
             </div>
