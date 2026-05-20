@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, ArrowRight, LogIn, X } from "lucide-react";
+import { BACKEND } from "../../../lib/api";
 
 export default function HomeHeader() {
   const router = useRouter();
@@ -24,7 +25,7 @@ export default function HomeHeader() {
 
     try {
       setError("");
-      const res = await fetch("http://localhost:8002/api/auth/login", {
+      const res = await fetch(`${BACKEND}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

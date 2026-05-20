@@ -4,6 +4,15 @@
  * BACKEND_URL é injetado em build-time via NEXT_PUBLIC_API_URL.
  */
 let rawBackend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
+
+// Otimização inteligente para rede local (celular testando no computador)
+if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL) {
+  const hostname = window.location.hostname;
+  if (hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '') {
+    rawBackend = `http://${hostname}:8002`;
+  }
+}
+
 if (rawBackend && !rawBackend.startsWith('http://') && !rawBackend.startsWith('https://') && !rawBackend.startsWith('//')) {
   rawBackend = `https://${rawBackend}`;
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { User, Lock, Mail, Phone, FileText, CheckCircle, AlertCircle } from "lucide-react";
+import { BACKEND } from "../../../lib/api";
 
 export default function MinhaContaPage() {
   const [currentUser, setCurrentUser] = useState<any>(null);
@@ -45,7 +46,7 @@ export default function MinhaContaPage() {
 
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8002/api/users/profile", {
+      const res = await fetch(`${BACKEND}/api/users/profile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

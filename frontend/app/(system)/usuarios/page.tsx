@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Users, UserPlus, Trash2, Mail, Phone, FileText, Lock, Eye, EyeOff, ExternalLink, CheckCircle, AlertCircle, ShieldAlert } from "lucide-react";
+import { BACKEND } from "../../../lib/api";
 import Link from "next/link";
 
 export default function UsuariosAdminPage() {
@@ -35,7 +36,7 @@ export default function UsuariosAdminPage() {
   const fetchUsers = async (callerId: number) => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8002/api/admin/users", {
+      const res = await fetch(`${BACKEND}/api/admin/users`, {
         headers: {
           "X-User-Id": callerId.toString(),
         },
@@ -65,7 +66,7 @@ export default function UsuariosAdminPage() {
 
     setActionLoading(true);
     try {
-      const res = await fetch("http://localhost:8002/api/admin/users", {
+      const res = await fetch(`${BACKEND}/api/admin/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -123,7 +124,7 @@ export default function UsuariosAdminPage() {
     setSuccessMsg("");
     
     try {
-      const res = await fetch(`http://localhost:8002/api/admin/users/${userId}`, {
+      const res = await fetch(`${BACKEND}/api/admin/users/${userId}`, {
         method: "DELETE",
         headers: {
           "X-User-Id": currentUser.id.toString(),
