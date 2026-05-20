@@ -10,6 +10,9 @@ import {
   Globe,
   Phone,
   Star,
+  Building2,
+  ScrollText,
+  Briefcase
 } from "lucide-react";
 import LeadDetailModal from "./LeadDetailModal";
 
@@ -36,6 +39,7 @@ interface Lead {
   link_fonte?: string;
   score_urgencia?: number;
   categoria_demanda?: string;
+  pilar?: string;
 }
 
 const STATUS_DOT: Record<string, string> = {
@@ -116,8 +120,26 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
                       <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
+                      
+                      {/* Badge do Pilar */}
+                      {(lead.pilar || 'A') === 'A' && (
+                        <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                          <Building2 size={8} /> Pilar A: Condomínios
+                        </span>
+                      )}
+                      {lead.pilar === 'B' && (
+                        <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                          <ScrollText size={8} /> Pilar B: Públicos
+                        </span>
+                      )}
+                      {lead.pilar === 'C' && (
+                        <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                          <Briefcase size={8} /> Pilar C: Corporativo
+                        </span>
+                      )}
+
                       {lead.intencao_ativa ? (
                         <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] shrink-0">
                           🔥 OPORTUNIDADE ATIVA
@@ -215,8 +237,26 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
                         />
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h5 className="text-white font-black group-hover:text-yellow-400 transition-colors uppercase tracking-tight text-sm">{lead.name}</h5>
+                          
+                          {/* Badge do Pilar */}
+                          {(lead.pilar || 'A') === 'A' && (
+                            <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
+                              <Building2 size={8} /> Pilar A: Condomínios
+                            </span>
+                          )}
+                          {lead.pilar === 'B' && (
+                            <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
+                              <ScrollText size={8} /> Pilar B: Públicos
+                            </span>
+                          )}
+                          {lead.pilar === 'C' && (
+                            <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
+                              <Briefcase size={8} /> Pilar C: Corporativo
+                            </span>
+                          )}
+
                           {lead.intencao_ativa ? (
                             <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] whitespace-nowrap">
                               🔥 OPORTUNIDADE ATIVA

@@ -11,8 +11,15 @@ export const BACKEND = rawBackend;
 
 export const api = {
   leads:        () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store' }),
-  scanStart:    (query: string, city: string, target: number) =>
-    fetch(`${BACKEND}/api/scan/start?query=${encodeURIComponent(query)}&city=${encodeURIComponent(city)}&target=${target}`, { method: 'POST' }),
+  scanStart:    (query: string, city: string, target: number, publicoAlvo?: string, palavraChave?: string, pilares?: string) => {
+    let url = `${BACKEND}/api/scan/start?query=${encodeURIComponent(query)}&city=${encodeURIComponent(city)}&target=${target}`;
+    if (publicoAlvo) url += `&publico_alvo=${encodeURIComponent(publicoAlvo)}`;
+    if (palavraChave) url += `&palavra_chave=${encodeURIComponent(palavraChave)}`;
+    if (pilares) url += `&pilares=${encodeURIComponent(pilares)}`;
+    return fetch(url, { method: 'POST' });
+  },
+  sendToCRM:    (id: string) =>
+    fetch(`${BACKEND}/api/leads/${id}/crm`, { method: 'POST' }),
   leadsClear:   () => fetch(`${BACKEND}/api/leads/clear`, { method: 'POST' }),
   usage:        () => fetch(`${BACKEND}/api/usage`, { cache: 'no-store' }),
   health:       () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
@@ -26,6 +33,8 @@ export const api = {
   status:       () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
   importLeads:  (leads: unknown[]) =>
     fetch(`${BACKEND}/api/leads/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leads }) }),
+  scanPillars:  (city: string = "São Paulo", pilares: string = "A,B,C") =>
+    fetch(`${BACKEND}/api/scan-pillars?city=${encodeURIComponent(city)}&pilares=${encodeURIComponent(pilares)}`, { cache: 'no-store' }),
 };
 
 export const WS_URL = BACKEND

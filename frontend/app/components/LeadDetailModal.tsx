@@ -20,7 +20,10 @@ import {
   Star,
   Check,
   Image as ImageIcon,
-  AlertCircle
+  AlertCircle,
+  Building2,
+  ScrollText,
+  Briefcase
 } from "lucide-react";
 
 interface Lead {
@@ -45,6 +48,7 @@ interface Lead {
   link_fonte?: string;
   score_urgencia?: number;
   categoria_demanda?: string;
+  pilar?: string;
 }
 
 interface Props {
@@ -150,6 +154,23 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                       <Flame size={10} className="fill-rose-400" /> Lead Quente
                     </span>
                   ) : null}
+                  
+                  {/* Badge de Pilar Comercial */}
+                  {(lead.pilar || 'A') === 'A' && (
+                    <span className="bg-blue-500/10 text-blue-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-blue-500/20 flex items-center gap-1">
+                      <Building2 size={10} /> Pilar A: Condomínios
+                    </span>
+                  )}
+                  {lead.pilar === 'B' && (
+                    <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                      <ScrollText size={10} /> Pilar B: Públicos
+                    </span>
+                  )}
+                  {lead.pilar === 'C' && (
+                    <span className="bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-purple-500/20 flex items-center gap-1">
+                      <Briefcase size={10} /> Pilar C: Corporativo
+                    </span>
+                  )}
                 </div>
                 <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white uppercase tracking-tight leading-tight pr-10">
                   {lead.name}
@@ -257,6 +278,24 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                     <Flame size={12} className="fill-rose-400" /> Inteligência de Obra Ativa
                   </h4>
                   <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs border-b border-rose-500/10 pb-1.5">
+                      <span className="text-slate-400">Pilar de Prospecção</span>
+                      {(lead.pilar || 'A') === 'A' && (
+                        <span className="font-black text-blue-400 bg-blue-500/15 border border-blue-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
+                          <Building2 size={10} /> Pilar A: Condomínios
+                        </span>
+                      )}
+                      {lead.pilar === 'B' && (
+                        <span className="font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
+                          <ScrollText size={10} /> Pilar B: Públicos
+                        </span>
+                      )}
+                      {lead.pilar === 'C' && (
+                        <span className="font-black text-purple-400 bg-purple-500/15 border border-purple-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
+                          <Briefcase size={10} /> Pilar C: Corporativo
+                        </span>
+                      )}
+                    </div>
                     <div className="flex items-center justify-between text-xs border-b border-rose-500/10 pb-1.5">
                       <span className="text-slate-400">Score de Urgência da Obra</span>
                       <span className="font-black text-rose-400 bg-rose-500/20 px-2 py-0.5 rounded text-[10px] shadow-[0_0_8px_rgba(244,63,94,0.2)]">

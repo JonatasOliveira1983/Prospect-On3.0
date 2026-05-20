@@ -14,6 +14,7 @@ from src.utils.usage_monitor import UsageMonitor
 from src.agents.manager_agent import ManagerAgent
 from src.agents.health_agent import HealthAgent
 from src.agents.extension_launcher import ExtensionLauncherAgent
+from src.agents.demand_scout_agent import DemandScoutAgent
 import threading
 import asyncio
 from datetime import datetime
@@ -25,6 +26,7 @@ usage_monitor = UsageMonitor()
 manager = ManagerAgent()
 health_monitor = HealthAgent()
 extension_launcher = ExtensionLauncherAgent()
+demand_scout = DemandScoutAgent(headless=True)
 executor = ThreadPoolExecutor(max_workers=4)
 
 @app.on_event("startup")
@@ -371,13 +373,13 @@ async def clear_leads():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/scan/start")
-async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1):
+async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C"):
     """Dispara a varredura completa Sniper (Discovery + Enrichment) em background."""
     try:
-        logger.info(f"API: Disparando varredura Sniper para {query} em {city} (Objetivo: {target})...")
+        logger.info(f"API: Disparando varredura Sniper para {query} em {city} (Objetivo: {target}) | Público: {publico_alvo} | Palavra: {palavra_chave} | Pilares: {pilares}...")
         
         async def trigger():
-            await manager.run_full_scan(query, city, target_leads=target)
+            await manager.run_full_scan(query, city, target_leads=target, publico_alvo=publico_alvo, palavra_chave=palavra_chave, pilares=pilares)
             
         asyncio.create_task(trigger())
         return {"success": True, "message": f"Varredura Sniper iniciada para {query} em {city}. Objetivo: {target} lead(s)."}
@@ -386,9 +388,59 @@ async def start_scan(query: str = "Condominios", city: str = "São Paulo", targe
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sniper/start")
-async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo"):
+async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo", publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C"):
     """Dispara a varredura Sniper (Google Maps Browser). Agora unificado com o scan principal."""
-    return await start_scan(query, city)
+    return await start_scan(query, city, publico_alvo=publico_alvo, palavra_chave=palavra_chave, pilares=pilares)
+
+@app.post("/api/leads/{lead_id}/crm")
+async def send_lead_to_crm(lead_id: str):
+    """Simula a integração comercial e envio do lead para o CRM externo."""
+    try:
+        logger.info(f"API: Solicitando integração CRM para lead_id={lead_id}")
+        
+        # 1. Buscar lead no DB
+        leads = db.get_all_leads()
+        lead = None
+        for l in leads:
+            if l.get("id") == lead_id:
+                lead = l
+                break
+        
+        if not lead:
+            raise HTTPException(status_code=404, detail="Lead não encontrado para envio ao CRM.")
+            
+        # 2. Atualizar notas locais com informações do CRM e status para "Contato Iniciado"
+        current_time = datetime.now().strftime("%d/%m/%Y %H:%M")
+        
+        # Incrementar as notas de interação
+        existing_notes = lead.get("interaction_notes") or ""
+        new_notes = f"{existing_notes}\n[{current_time}] [CRM-SINC]: Lead integrado com sucesso ao CRM comercial."
+        new_notes = new_notes.strip()
+        
+        # Salvar a data no banco e alterar status para 'Contato Iniciado'
+        success = db.save_interaction(
+            lead_id=lead_id,
+            notes=new_notes,
+            return_date=lead.get("return_date"),
+            contact_status="Contato Iniciado",
+            email_sent_at=lead.get("email_sent_at") or current_time,
+            vision_image_url=lead.get("vision_image_url")
+        )
+        
+        if not success:
+            raise HTTPException(status_code=500, detail="Falha ao salvar dados de integração no Banco de Dados.")
+            
+        return {
+            "success": True, 
+            "message": f"Lead '{lead.get('name')}' integrado com sucesso ao CRM comercial externo!",
+            "integrated_at": current_time,
+            "new_status": "Contato Iniciado"
+        }
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"API: Erro ao enviar lead {lead_id} ao CRM: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/scan/extension")
 async def start_extension_scan(query: str = "Condominios", city: str = "São Paulo"):
@@ -451,6 +503,31 @@ async def get_image(filename: str):
             headers={"Access-Control-Allow-Origin": "*", "Cross-Origin-Resource-Policy": "cross-origin"}
         )
     raise HTTPException(status_code=404, detail="Imagem não encontrada")
+
+@app.get("/api/scan-pillars")
+async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C"):
+    """
+    Varredura completa de demanda nos 3 Pilares (A/B/C) em paralelo.
+    
+    Pilar A — Condomínios (atas, fundos de obra, cotações)
+    Pilar B — Editais Públicos (licitações, pregões, diários oficiais)
+    Pilar C — Corporativo (vagas, facilities, cotações empresariais)
+
+    Retorna leads organizados por pilar com metadados visuais para o frontend.
+    """
+    try:
+        logger.info(f"API: 🔍 Iniciando varredura de Pilares para '{city}' com pilares='{pilares}'...")
+        result = await demand_scout.scan_all_pillars(city, pilares=pilares)
+        logger.info(
+            f"API: ✅ Varredura de Pilares concluída — {result['total_leads']} leads "
+            f"(A={len(result['pilares']['A']['leads'])} "
+            f"B={len(result['pilares']['B']['leads'])} "
+            f"C={len(result['pilares']['C']['leads'])})"
+        )
+        return {"success": True, **result}
+    except Exception as e:
+        logger.error(f"API: Erro na varredura de Pilares: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws/logs")
 async def websocket_endpoint(websocket: WebSocket):

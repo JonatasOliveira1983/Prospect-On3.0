@@ -15,24 +15,22 @@ from src.agents.semantic_extractor_agent import SemanticExtractorAgent
 from src.agents.web_enrichment_agent import WebEnrichmentAgent
 from src.agents.demand_scout_agent import DemandScoutAgent
 from src.utils.vision_analyzer import VisionAnalyzer
-from src.utils.places_client import PlacesClient
 from src.utils.database import Database
 from src.utils.webhook_client import WebhookClient
 from src.utils.logger import logger
 
+
 class ManagerAgent:
     """
-    ManagerAgent v9.0: Orquestrador multi-fonte e multiagente indestrutível.
-    Pipeline de descoberta com 3 camadas e processamento semântico DeepSeek:
-      1. Google Places API (dados estruturados: telefone, website, fotos reais, coordenadas)
-      2. Playwright / Google Maps (Scout puro + Extração Semântica DeepSeek)
-      3. OpenStreetMap (fallback gratuito)
-      4. WebEnrichmentAgent (Detetive Web para enriquecimento complementar)
-      5. LeadEnrichmentAgent (Enriquecimento de contexto com DeepSeek)
+    ManagerAgent v10.0: Modo Extensão de Navegador Real.
+    Opera sem qualquer API paga — apenas Playwright stealth + DeepSeek:
+      1. DemandScoutAgent → 3 Pilares via Google Search (sem Bing, sem API)
+      2. BrowserScoutAgent → Google Maps via Playwright stealth (sem Places API)
+      3. WebEnrichmentAgent → Google Search stealth para contatos
+      4. SemanticExtractorAgent + LeadEnrichmentAgent → DeepSeek analisa tudo
     """
     def __init__(self):
-        self.places = PlacesClient()                  # Primário (dados estruturados)
-        self.browser_scout = BrowserScoutAgent(headless=True)  # Secundário (scraping visual, headless para nuvem)
+        self.browser_scout = BrowserScoutAgent(headless=True)  # Google Maps via Playwright stealth (sem Places API)
         self.hunter = HunterAgent()                    # Terciário (OSM gratuito)
         self.surveyor = SurveyorAgent()
         self.contact = ContactAgent()
@@ -76,7 +74,7 @@ class ManagerAgent:
             except RuntimeError:
                 pass
 
-    async def run_full_scan(self, query="Condominios", city="São Paulo", target_leads=5):
+    async def run_full_scan(self, query="Condominios", city="São Paulo", target_leads=5, publico_alvo=None, palavra_chave=None, pilares: str = "A,B,C"):
         """
         Pipeline Sniper Demand-First v10.0:
         Fase 1: Captação de Sinais na Cidade - DemandScoutAgent (Bing + DeepSeek)
@@ -87,9 +85,19 @@ class ManagerAgent:
         import time
         scan_start = time.time()
         
+        pa = publico_alvo or query or "Condomínios"
+        pk = palavra_chave or "Residenciais"
+        
+        # Traduz a string de pilares para nomes amigáveis para exibir no log premium
+        pilar_names = []
+        if "A" in pilares: pilar_names.append("Condomínios (Pilar A)")
+        if "B" in pilares: pilar_names.append("Editais Públicos (Pilar B)")
+        if "C" in pilares: pilar_names.append("Corporativo (Pilar C)")
+        
         self.emit_log("ManagerAgent", "start_scan", "="*60, "info")
-        self.emit_log("ManagerAgent", "start_scan", "🎯 SNIPER MULTIAGENTE DEMAND-FIRST v10.0 INICIADO", "info")
-        self.emit_log("ManagerAgent", "start_scan", f"   Cidade Alvo: {city} | Meta: {target_leads} lead(s) com demanda quente", "info")
+        self.emit_log("ManagerAgent", "start_scan", "🎯 SNIPER MULTIAGENTE DEMAND-FIRST v10.5 INICIADO", "info")
+        self.emit_log("ManagerAgent", "start_scan", f"   Cidade Alvo: {city} | Focos: {', '.join(pilar_names)}", "info")
+        self.emit_log("ManagerAgent", "start_scan", f"   Meta: {target_leads} lead(s) com demanda quente estruturada", "info")
         self.emit_log("ManagerAgent", "start_scan", "="*60, "info")
         
         processed_leads = []
@@ -97,21 +105,21 @@ class ManagerAgent:
         # ==========================================
         # FASE 1: CAPTAÇÃO DE SINAIS ATIVOS NA CIDADE
         # ==========================================
-        self.emit_log("DemandScoutAgent", "Fase 1: Buscando atas de assembleia, editais e sinais de manutenção predial...", "working")
+        self.emit_log("DemandScoutAgent", f"Fase 1: Buscando atas de assembleia, editais e sinais nos pilares [{pilares}]...", "working")
         try:
-            sinais_demanda = await self.demand_scout.discover_active_demands(city)
+            sinais_demanda = await self.demand_scout.discover_active_demands(city, publico_alvo=pa, palavra_chave=pk, pilares=pilares)
             if sinais_demanda:
                 self.emit_log("DemandScoutAgent", "Fase 1: Sucesso", f"✅ Encontradas {len(sinais_demanda)} oportunidades quentes com demandas de pintura ativas em {city}!", "success")
                 for sinal in sinais_demanda:
                     self.emit_log("DemandScoutAgent", "sinal_captado", 
-                        f"🔥 SINAL DETECTADO: '{sinal.get('name')}' | Score Urgência: {sinal.get('score_urgencia')}/10 | {sinal.get('resumo_sinal')}", 
+                        f"🔥 SINAL DETECTADO: '{sinal.get('name')}' | Pilar: {sinal.get('pilar', 'A')} | Urgência: {sinal.get('score_urgencia')}/10 | {sinal.get('resumo_sinal')}", 
                         "info")
             else:
                 self.emit_log("DemandScoutAgent", "Fase 1: Atenção", "⚠️ Nenhum sinal ativo de cotação encontrado nos portais da cidade. Ativando mocks de alta fidelidade.", "warning")
-                sinais_demanda = self.demand_scout._get_mocked_demands(city)
+                sinais_demanda = await self.demand_scout._get_mocked_demands(city, publico_alvo=pa, palavra_chave=pk, pilares=pilares)
         except Exception as e:
             self.emit_log("DemandScoutAgent", "Fase 1: Erro", f"❌ Falha na Fase 1: {e}. Usando mock de contingência.", "error")
-            sinais_demanda = self.demand_scout._get_mocked_demands(city)
+            sinais_demanda = await self.demand_scout._get_mocked_demands(city, publico_alvo=pa, palavra_chave=pk, pilares=pilares)
 
         self.emit_log("ManagerAgent", "info", f"📊 Iniciando processamento reverso dos {min(target_leads, len(sinais_demanda))} melhores alvos...", "info")
         self.emit_log("ManagerAgent", "info", "-"*60, "info")
@@ -135,68 +143,45 @@ class ManagerAgent:
                     "link_fonte": sinal.get("link_fonte", "N/D"),
                     "score_urgencia": sinal.get("score_urgencia", 8),
                     "categoria_demanda": sinal.get("categoria_demanda", "pintura_fachada"),
-                    "tipo_entidade": sinal.get("tipo_entidade", "condominio"),
-                    "source": f"DemandScout ({sinal.get('tipo_entidade')})"
+                    "tipo_entidade": sinal.get("tipo_entidade", "predio"),
+                    "source": f"DemandScout ({sinal.get('tipo_entidade', 'predio')})",
+                    "pilar": sinal.get("pilar", "A")
                 }
 
                 # ==========================================
-                # FASE 2: MAPEAMENTO CADASTRAL E GEOGRÁFICO (REVERSO)
+                # FASE 2: MAPEAMENTO GEOGRÁFICO VIA GOOGLE MAPS (PLAYWRIGHT STEALTH)
+                # Sem Places API — navega como extensão de navegador real
                 # ==========================================
-                self.emit_log("BrowserScoutAgent", "Fase 2: Efetuando rastreamento geográfico e capturando fachada de '{name}'...", "working")
+                self.emit_log("BrowserScoutAgent", "Fase 2: Navegando no Google Maps como extensão real...", "working")
                 
-                # Tentar achar dados estruturados no Google Places primeiro
-                places_results = []
+                maps_leads = []
                 try:
-                    places_results = self.places.search_and_enrich(city, name)
-                except Exception as p_err:
-                    logger.warning(f"ManagerAgent: Places API falhou para '{name}': {p_err}")
+                    async for l in self.browser_scout.search_leads(f"{name} em {city}", limit=1):
+                        maps_leads.append(l)
+                except Exception as m_err:
+                    logger.error(f"ManagerAgent: Playwright Maps falhou para '{name}': {m_err}")
 
-                if places_results:
-                    places_lead = places_results[0]
-                    lead["address"] = places_lead.get("address", f"{city}, SP")
-                    lead["phone"] = places_lead.get("phone", "N/D")
-                    lead["website"] = places_lead.get("website", "N/D")
-                    lead["coords"] = places_lead.get("coords")
-                    lead["vision_image_url"] = places_lead.get("vision_image_url")
-                    lead["raw_text"] = places_lead.get("raw_text", "")
-                    self.emit_log("BrowserScoutAgent", "Fase 2: Sucesso", f"   📍 [Places API] Endereço e geolocalização capturados para '{name}'!", "success")
+                if maps_leads:
+                    m_lead = maps_leads[0]
+                    lead["address"] = m_lead.get("address", f"{city}, SP")
+                    lead["phone"] = m_lead.get("phone", "N/D")
+                    lead["website"] = m_lead.get("website", "N/D")
+                    lead["coords"] = m_lead.get("coords")
+                    lead["vision_image_url"] = m_lead.get("vision_image_url")
+                    lead["raw_text"] = m_lead.get("raw_text", "")
+                    self.emit_log("BrowserScoutAgent", "Fase 2: Sucesso", f"   📍 [Google Maps Stealth] Endereço, geolocalização e fachada capturados para '{name}'!", "success")
                 else:
-                    # Fallback para o BrowserScoutAgent pesquisando no Google Maps
-                    self.emit_log("BrowserScoutAgent", "Fase 2: Mapeamento", f"   ⚠️ Places API não retornou dados. Ativando Playwright Maps para '{name}'...", "warning")
-                    maps_leads = []
-                    try:
-                        async for l in self.browser_scout.search_leads(f"{name} em {city}", limit=1):
-                            maps_leads.append(l)
-                    except Exception as m_err:
-                        logger.error(f"ManagerAgent: Playwright Maps falhou para '{name}': {m_err}")
-
-                    if maps_leads:
-                        m_lead = maps_leads[0]
-                        lead["address"] = m_lead.get("address", f"{city}, SP")
-                        lead["phone"] = m_lead.get("phone", "N/D")
-                        lead["website"] = m_lead.get("website", "N/D")
-                        lead["coords"] = m_lead.get("coords")
-                        lead["vision_image_url"] = m_lead.get("vision_image_url")
-                        lead["raw_text"] = m_lead.get("raw_text", "")
-                        self.emit_log("BrowserScoutAgent", "Fase 2: Sucesso", f"   📍 [Playwright] Geolocalização e fachada capturadas!", "success")
+                    # Fallback de coordenadas estimadas quando Google Maps não retorna
+                    lead["address"] = sinal.get("address") or f"Região central, {city} - SP"
+                    lead["phone"] = sinal.get("phone", "N/D")
+                    lead["website"] = sinal.get("link_fonte", "N/D")
+                    # Coordenadas do fallback do sinal (já preenchidas nos pilares)
+                    if sinal.get("lat") and sinal.get("lng"):
+                        lead["coords"] = {"lat": sinal["lat"], "lng": sinal["lng"]}
                     else:
-                        # Fallback gratuito OSM / Estimado
-                        lead["address"] = f"Rua correspondente ao sinal, {city} - SP"
-                        lead["phone"] = "N/D"
-                        lead["website"] = "N/D"
-                        lead["coords"] = {"lat": -23.1857, "lng": -46.8978}
-                        
-                        # Atribuir imagem de fachada mockada
-                        vision_analyzer = VisionAnalyzer()
-                        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-                        img_dir = os.path.join(base_dir, "static", "vistorias")
-                        os.makedirs(img_dir, exist_ok=True)
-                        img_filename = f"facade_{time.time()}.jpg"
-                        img_path = os.path.join(img_dir, img_filename)
-                        vision_analyzer._get_mock_image(img_path)
-                        lead["vision_image_url"] = f"/static/vistorias/{img_filename}"
-                        lead["raw_text"] = ""
-                        self.emit_log("BrowserScoutAgent", "Fase 2: Fallback", "   📍 [OSM Fallback] Geradas coordenadas estimadas e fachada padrão.", "info")
+                        lead["coords"] = {"lat": -23.5505, "lng": -46.6333}
+                    lead["raw_text"] = ""
+                    self.emit_log("BrowserScoutAgent", "Fase 2: Fallback", "   📍 [Fallback] Coordenadas do sinal detectado preservadas.", "info")
 
                 # ==========================================
                 # FASE 3: DETETIVE DE DECISORES (CNPJ + ENTIDADES ADMINISTRADORAS)

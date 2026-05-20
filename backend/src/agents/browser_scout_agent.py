@@ -1,10 +1,29 @@
 import asyncio
 import re
+import random
 from playwright.async_api import async_playwright
 from src.utils.logger import logger
 import json
 import os
 from datetime import datetime
+
+# Perfis de stealth para simular usuário real (sem detecção de bot)
+STEALTH_USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6261.112 Safari/537.36",
+]
+STEALTH_VIEWPORTS = [
+    {"width": 1366, "height": 768},
+    {"width": 1440, "height": 900},
+    {"width": 1920, "height": 1080},
+]
+STEALTH_INIT_SCRIPT = """
+Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en-US', 'en'] });
+Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+window.chrome = { runtime: {} };
+"""
 
 class BrowserScoutAgent:
     """
@@ -205,31 +224,37 @@ class BrowserScoutAgent:
             try:
                 browser = await p.chromium.launch(
                     headless=self.headless,
-                    args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                    args=[
+                        "--no-sandbox",
+                        "--disable-setuid-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--disable-blink-features=AutomationControlled",
+                        "--disable-infobars",
+                    ]
                 )
             except Exception as launch_err:
                 if "playwright install" in str(launch_err) or "Executable doesn't exist" in str(launch_err):
-                    logger.warning("BrowserScoutAgent: Executável do navegador ausente na nuvem! Instalando Chromium sob demanda...")
-                    import subprocess
-                    import sys
-                    subprocess.run(
-                        [sys.executable, "-m", "playwright", "install", "chromium"],
-                        capture_output=True,
-                        text=True
-                    )
-                    logger.info("BrowserScoutAgent: Re-tentando abrir o navegador pós-instalação...")
+                    logger.warning("BrowserScoutAgent: Executável do navegador ausente! Instalando Chromium...")
+                    import subprocess, sys
+                    subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], capture_output=True)
                     browser = await p.chromium.launch(
                         headless=self.headless,
-                        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+                        args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"]
                     )
                 else:
                     raise launch_err
             
+            # Contexto stealth: simula usuário real do Windows
             context = await browser.new_context(
-                viewport={'width': 1280, 'height': 900},
-                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+                viewport=random.choice(STEALTH_VIEWPORTS),
+                user_agent=random.choice(STEALTH_USER_AGENTS),
+                locale="pt-BR",
+                timezone_id="America/Sao_Paulo",
             )
+            # Injeta script anti-detecção antes de qualquer página carregar
+            await context.add_init_script(STEALTH_INIT_SCRIPT)
             page = await context.new_page()
+
             
             try:
                 search_url = f"{self.base_url}/search/{query.replace(' ', '+')}"

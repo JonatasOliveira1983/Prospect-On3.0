@@ -22,7 +22,10 @@ import {
   ChevronRight,
   TrendingUp,
   XCircle,
-  Play
+  Play,
+  Building2,
+  ScrollText,
+  Briefcase
 } from 'lucide-react';
 import { api, WS_URL } from '@/lib/api';
 
@@ -61,6 +64,13 @@ export default function Dashboard() {
   const [targetLeads, setTargetLeads] = useState(5);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [filterByRegion, setFilterByRegion] = useState(false);
+  const [pilarTab, setPilarTab] = useState<'TODOS' | 'A' | 'B' | 'C'>('TODOS');
+
+  // Estado de seleção de pilares para varredura (toggle individual)
+  const [activePillars, setActivePillars] = useState<{ A: boolean; B: boolean; C: boolean }>({ A: true, B: true, C: true });
+  const togglePilar = (key: 'A' | 'B' | 'C') => setActivePillars(prev => ({ ...prev, [key]: !prev[key] }));
+  const anyPilarActive = Object.values(activePillars).some(Boolean);
+  const activePilarsString = Object.keys(activePillars).filter(k => activePillars[k as 'A' | 'B' | 'C']).join(',');
 
   // Estados do HUD Sniper Cyberpunk
   const [isScanning, setIsScanning] = useState(false);
@@ -85,7 +95,10 @@ export default function Dashboard() {
   const [scanMetrics, setScanMetrics] = useState({
     totalProcessed: 0,
     enrichedContacts: 0,
-    activeDemands: 0
+    activeDemands: 0,
+    pilarA: 0,
+    pilarB: 0,
+    pilarC: 0
   });
 
   const [scanFinished, setScanFinished] = useState(false);
@@ -132,7 +145,10 @@ export default function Dashboard() {
     setScanMetrics({
       totalProcessed: 0,
       enrichedContacts: 0,
-      activeDemands: 0
+      activeDemands: 0,
+      pilarA: 0,
+      pilarB: 0,
+      pilarC: 0
     });
     setCurrentLead(null);
 
@@ -234,9 +250,29 @@ export default function Dashboard() {
 
         // Extrai evidências de obras ou orçamentos aprovados
         if (msg.includes("🔥 SINAL DETECTADO") || msg.includes("🔥 OPORTUNIDADE ATIVA") || msg.includes("🔥 OPORTUNIDADE ATIVA IDENTIFICADA")) {
-          setScanMetrics(prev => ({ ...prev, activeDemands: prev.activeDemands + 1 }));
           const scoreMatch = msg.match(/Score\s*(?:Urgência:)?\s*(\d+)/i);
           const detailsMatch = msg.match(/(?:OPORTUNIDADE ATIVA IDENTIFICADA em|SINAL DETECTADO:|OPORTUNIDADE ATIVA!)\s*(?:.+?)\s*\|\s*(.+)/i);
+          
+          let pilarAInc = 0;
+          let pilarBInc = 0;
+          let pilarCInc = 0;
+          
+          if (msg.includes("Pilar: A")) {
+            pilarAInc = 1;
+          } else if (msg.includes("Pilar: B")) {
+            pilarBInc = 1;
+          } else if (msg.includes("Pilar: C")) {
+            pilarCInc = 1;
+          }
+
+          setScanMetrics(prev => ({ 
+            ...prev, 
+            activeDemands: prev.activeDemands + 1,
+            pilarA: prev.pilarA + pilarAInc,
+            pilarB: prev.pilarB + pilarBInc,
+            pilarC: prev.pilarC + pilarCInc
+          }));
+
           setCurrentLead(prev => {
             if (!prev) return null;
             return {
@@ -276,11 +312,11 @@ export default function Dashboard() {
   }
 
   async function handleTurboScan() {
+    if (!anyPilarActive) return;
     setTurboLoading(true);
     startWebSocketScan();
     try {
-      const combinedQuery = `${publicoAlvo} ${palavraChave}`.trim();
-      await api.scanStart(combinedQuery, regiao, targetLeads);
+      await api.scanStart("Condominios Residenciais", regiao, targetLeads, "Condominios", "Residenciais", activePilarsString);
     } catch (error) {
       console.error("Erro no Turbo Scan:", error);
       setTurboLoading(false);
@@ -316,6 +352,13 @@ export default function Dashboard() {
         return address.includes(regionQuery) || name.includes(regionQuery);
       })
     : leads;
+
+  const pilarFilteredLeads = pilarTab === 'TODOS'
+    ? filteredLeads
+    : filteredLeads.filter(lead => {
+        const p = (lead as any).pilar || 'A';
+        return p === pilarTab;
+      });
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8 pb-10">
@@ -498,6 +541,41 @@ export default function Dashboard() {
                       <span className="text-xl font-bold text-amber-400 font-mono">{scanMetrics.activeDemands}</span>
                     </div>
                   </div>
+
+                  {/* Monitoramento Triplo dos 3 Pilares em Tempo Real */}
+                  <div className="bg-slate-950/60 p-4 border border-white/5 rounded-2xl flex flex-col gap-3 mt-2">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-yellow-400/80 block border-b border-white/5 pb-1">
+                      Fluxo Ativo de Pilares Comerciais
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="bg-blue-500/5 border border-blue-500/10 p-2 text-center rounded-xl">
+                        <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
+                          <Building2 size={12} />
+                          <span className="text-[8px] font-bold uppercase tracking-wider">Pilar A</span>
+                        </div>
+                        <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarA}</span>
+                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Condomínios</span>
+                      </div>
+
+                      <div className="bg-emerald-500/5 border border-emerald-500/10 p-2 text-center rounded-xl">
+                        <div className="flex items-center justify-center gap-1 text-emerald-400 mb-1">
+                          <ScrollText size={12} />
+                          <span className="text-[8px] font-bold uppercase tracking-wider">Pilar B</span>
+                        </div>
+                        <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarB}</span>
+                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Públicos</span>
+                      </div>
+
+                      <div className="bg-purple-500/5 border border-purple-500/10 p-2 text-center rounded-xl">
+                        <div className="flex items-center justify-center gap-1 text-purple-400 mb-1">
+                          <Briefcase size={12} />
+                          <span className="text-[8px] font-bold uppercase tracking-wider">Pilar C</span>
+                        </div>
+                        <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarC}</span>
+                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Corporativo</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Lado Direito: Terminal de Logs & Lead Monitor */}
@@ -635,7 +713,7 @@ export default function Dashboard() {
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-yellow-400 font-black text-xs uppercase tracking-[0.3em]">
               <Zap size={14} className="fill-yellow-400" />
-              <span>Operação Sniper 4 Fases</span>
+              <span>Operação Sniper 3 Pilares Ativos</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-none">
               CRM <span className="text-yellow-400">Prospector</span>
@@ -651,107 +729,183 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Painel Sniper 4 Fases */}
+        {/* Painel Sniper 3 Pilares Ativos */}
         <div className="bg-slate-950/40 backdrop-blur-xl border border-yellow-400/10 p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] flex flex-col gap-5 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-64 h-64 bg-yellow-400/5 blur-[80px] rounded-full -ml-32 -mt-32 pointer-events-none" />
 
-          {/* Grid das Fases de Busca */}
+          <div className="flex flex-col gap-2 relative z-10 border-b border-white/5 pb-4">
+            <h2 className="text-lg font-black text-white uppercase tracking-wider">Tríplice Varredura Concorrente</h2>
+            <p className="text-xs text-slate-400 font-semibold leading-relaxed font-sans">
+              O sistema Otto v7.2 executa buscas e inteligência cibernética paralelamente em três pilares comerciais de alta conversão:
+            </p>
+          </div>
+
+          {/* Grid dos 3 Pilares — Cards Interativos com Toggle Cyberpunk */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
 
-            {/* FASE 1 */}
-            <div className="flex flex-col gap-2.5 p-4 sm:p-5 bg-slate-900/60 border border-white/5 rounded-2xl sm:rounded-3xl group hover:border-yellow-400/20 transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest bg-yellow-400/10 px-2.5 py-1 rounded-full border border-yellow-400/20">
-                  Fase 1
+            {/* PILAR A */}
+            <button
+              type="button"
+              onClick={() => togglePilar('A')}
+              aria-pressed={activePillars.A}
+              className={`relative flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left group cursor-pointer select-none focus:outline-none
+                ${ activePillars.A
+                  ? 'bg-blue-500/10 border-blue-400/50 shadow-[0_0_18px_rgba(96,165,250,0.25)] scale-[1.01]'
+                  : 'bg-slate-900/40 border-white/5 opacity-40 saturate-0 hover:opacity-60 hover:saturate-100 hover:border-blue-500/20'
+                }`}
+            >
+              {/* Badge ativo/inativo */}
+              <div className="absolute top-3 right-3">
+                <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border transition-all ${
+                  activePillars.A ? 'bg-blue-400/20 border-blue-400/40 text-blue-300' : 'bg-slate-800 border-white/5 text-slate-500'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${ activePillars.A ? 'bg-blue-400 animate-pulse' : 'bg-slate-600' }`} />
+                  {activePillars.A ? 'ATIVO' : 'OFF'}
                 </span>
-                <Users size={16} className="text-slate-500 group-hover:text-yellow-400 transition-colors" />
               </div>
-              <h3 className="text-sm font-black text-white uppercase tracking-wider">Público Alvo</h3>
-              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                Atividade Principal do Seu Cliente Ideal: Segmentação do Seu Cliente Ideal.
+              <div className="flex items-center justify-between pr-14">
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/20">
+                  Pilar A
+                </span>
+                <Building2 size={18} className={`transition-all ${ activePillars.A ? 'text-blue-400 group-hover:scale-110' : 'text-slate-600' }`} />
+              </div>
+              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.A ? 'text-white' : 'text-slate-500' }`}>Condomínios</h3>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                Varredura profunda de atas de assembleias, mapeamento de fachadas e prospecção de fundos de obras ativas em condomínios residenciais.
               </p>
-              <input
-                type="text"
-                value={publicoAlvo}
-                onChange={(e) => setPublicoAlvo(e.target.value)}
-                className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 sm:py-3.5 px-4 text-xs font-bold text-white outline-none focus:border-yellow-400 transition-colors mt-2"
-                placeholder="Ex: Condominios, Industrias, Lojas de"
-              />
-            </div>
+              {activePillars.A && (
+                <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-blue-400/40 rounded-full" />
+              )}
+            </button>
 
-            {/* FASE 2 */}
-            <div className="flex flex-col gap-2.5 p-4 sm:p-5 bg-slate-900/60 border border-white/5 rounded-2xl sm:rounded-3xl group hover:border-yellow-400/20 transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest bg-yellow-400/10 px-2.5 py-1 rounded-full border border-yellow-400/20">
-                  Fase 2
+            {/* PILAR B */}
+            <button
+              type="button"
+              onClick={() => togglePilar('B')}
+              aria-pressed={activePillars.B}
+              className={`relative flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left group cursor-pointer select-none focus:outline-none
+                ${ activePillars.B
+                  ? 'bg-emerald-500/10 border-emerald-400/50 shadow-[0_0_18px_rgba(52,211,153,0.25)] scale-[1.01]'
+                  : 'bg-slate-900/40 border-white/5 opacity-40 saturate-0 hover:opacity-60 hover:saturate-100 hover:border-emerald-500/20'
+                }`}
+            >
+              <div className="absolute top-3 right-3">
+                <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border transition-all ${
+                  activePillars.B ? 'bg-emerald-400/20 border-emerald-400/40 text-emerald-300' : 'bg-slate-800 border-white/5 text-slate-500'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${ activePillars.B ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600' }`} />
+                  {activePillars.B ? 'ATIVO' : 'OFF'}
                 </span>
-                <Search size={16} className="text-slate-500 group-hover:text-yellow-400 transition-colors" />
               </div>
-              <h3 className="text-sm font-black text-white uppercase tracking-wider">Palavra Chave</h3>
-              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                Palavras que Limitam o Interesse e o Perfil do Seu Cliente Ideal.
+              <div className="flex items-center justify-between pr-14">
+                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
+                  Pilar B
+                </span>
+                <ScrollText size={18} className={`transition-all ${ activePillars.B ? 'text-emerald-400 group-hover:scale-110' : 'text-slate-600' }`} />
+              </div>
+              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.B ? 'text-white' : 'text-slate-500' }`}>Editais Públicos</h3>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                Monitoramento de diários oficiais do estado e municípios, portais de compras governamentais e licitações para reforma e pintura de prédios públicos.
               </p>
-              <input
-                type="text"
-                value={palavraChave}
-                onChange={(e) => setPalavraChave(e.target.value)}
-                className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 sm:py-3.5 px-4 text-xs font-bold text-white outline-none focus:border-yellow-400 transition-colors mt-2"
-                placeholder="Ex: Residenciais, Quimicas em, Calcados em"
-              />
-            </div>
+              {activePillars.B && (
+                <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-emerald-400/40 rounded-full" />
+              )}
+            </button>
 
-            {/* FASE 3 */}
-            <div className="flex flex-col gap-2.5 p-4 sm:p-5 bg-slate-900/60 border border-white/5 rounded-2xl sm:rounded-3xl group hover:border-yellow-400/20 transition-all">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest bg-yellow-400/10 px-2.5 py-1 rounded-full border border-yellow-400/20">
-                  Fase 3
+            {/* PILAR C */}
+            <button
+              type="button"
+              onClick={() => togglePilar('C')}
+              aria-pressed={activePillars.C}
+              className={`relative flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left group cursor-pointer select-none focus:outline-none
+                ${ activePillars.C
+                  ? 'bg-purple-500/10 border-purple-400/50 shadow-[0_0_18px_rgba(192,132,252,0.25)] scale-[1.01]'
+                  : 'bg-slate-900/40 border-white/5 opacity-40 saturate-0 hover:opacity-60 hover:saturate-100 hover:border-purple-500/20'
+                }`}
+            >
+              <div className="absolute top-3 right-3">
+                <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border transition-all ${
+                  activePillars.C ? 'bg-purple-400/20 border-purple-400/40 text-purple-300' : 'bg-slate-800 border-white/5 text-slate-500'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${ activePillars.C ? 'bg-purple-400 animate-pulse' : 'bg-slate-600' }`} />
+                  {activePillars.C ? 'ATIVO' : 'OFF'}
                 </span>
-                <MapPin size={16} className="text-slate-500 group-hover:text-yellow-400 transition-colors" />
               </div>
-              <h3 className="text-sm font-black text-white uppercase tracking-wider">Região Segmentada</h3>
-              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                Começando de Baixo para Cima: segmentando Cidades Grandes na Busca.
+              <div className="flex items-center justify-between pr-14">
+                <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
+                  Pilar C
+                </span>
+                <Briefcase size={18} className={`transition-all ${ activePillars.C ? 'text-purple-400 group-hover:scale-110' : 'text-slate-600' }`} />
+              </div>
+              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.C ? 'text-white' : 'text-slate-500' }`}>Corporativo &amp; Facilities</h3>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                Varredura de sites corporativos, vagas de manutenção predial comercial, indústrias, shoppings e acordos diretos com grandes administradoras de condomínio.
               </p>
-              <input
-                type="text"
-                value={regiao}
-                onChange={(e) => setRegiao(e.target.value)}
-                className="w-full bg-slate-950 border border-white/10 rounded-xl py-3 sm:py-3.5 px-4 text-xs font-bold text-white outline-none focus:border-yellow-400 transition-colors mt-2"
-                placeholder="Ex: Jundiai - SP, Curitiba - PR"
-              />
-            </div>
+              {activePillars.C && (
+                <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-purple-400/40 rounded-full" />
+              )}
+            </button>
 
           </div>
 
-          {/* Rodapé de Ação */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-white/5 relative z-10">
-            <div className="flex items-center gap-4 w-full sm:w-auto">
-              <div className="flex items-center gap-2 bg-slate-950 border border-white/10 px-4 py-3 rounded-2xl w-full sm:w-44 group">
-                <Layers size={14} className="text-slate-500 group-focus-within:text-yellow-400" />
-                <input
-                  type="number"
-                  value={isNaN(targetLeads) ? "" : targetLeads}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value);
-                    setTargetLeads(isNaN(val) ? 0 : val);
-                  }}
-                  className="bg-transparent border-none text-xs font-black text-white outline-none w-full"
-                  placeholder="Qtd Leads"
-                />
+          {/* Rodapé de Ação com Configuração de Cidade e Quantidade de Leads */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 pt-5 border-t border-white/5 relative z-10">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              {/* INPUT: Cidade Alvo */}
+              <div className="flex items-center gap-2.5 bg-slate-950 border border-white/10 hover:border-yellow-400/30 focus-within:border-yellow-400 px-4 py-3 rounded-2xl flex-1 group transition-colors">
+                <MapPin size={16} className="text-slate-500 group-focus-within:text-yellow-400" />
+                <div className="flex flex-col flex-1">
+                  <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">Cidade Alvo</label>
+                  <input
+                    type="text"
+                    value={regiao}
+                    onChange={(e) => setRegiao(e.target.value)}
+                    className="bg-transparent border-none text-xs font-bold text-white outline-none w-full p-0"
+                    placeholder="Ex: Jundiai - SP, São Paulo - SP"
+                  />
+                </div>
               </div>
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest hidden md:inline">
-                Meta de Leads no Radar
-              </span>
+
+              {/* INPUT: Meta de Leads */}
+              <div className="flex items-center gap-2.5 bg-slate-950 border border-white/10 hover:border-yellow-400/30 focus-within:border-yellow-400 px-4 py-3 rounded-2xl sm:w-48 group transition-colors">
+                <Layers size={16} className="text-slate-500 group-focus-within:text-yellow-400" />
+                <div className="flex flex-col flex-1">
+                  <label className="text-[8px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">Meta de Leads</label>
+                  <input
+                    type="number"
+                    value={isNaN(targetLeads) ? "" : targetLeads}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      setTargetLeads(isNaN(val) ? 0 : val);
+                    }}
+                    className="bg-transparent border-none text-xs font-black text-white outline-none w-full p-0"
+                    placeholder="Qtd Alvos"
+                  />
+                </div>
+              </div>
             </div>
 
-            <button
-              onClick={handleTurboScan}
-              disabled={turboLoading}
-              className="w-full sm:w-auto bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black px-8 sm:px-12 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-[0_10px_25px_rgba(250,204,21,0.2)]"
-            >
-              {turboLoading ? <Loader2 className="animate-spin" size={18} /> : <Target size={18} />}
-              <span className="uppercase tracking-widest text-xs">Iniciar Sniper 4 Fases</span>
-            </button>
+            <div className="flex flex-col gap-1.5">
+              <button
+                onClick={handleTurboScan}
+                disabled={turboLoading || !anyPilarActive}
+                className={`font-black px-8 sm:px-12 py-4 rounded-2xl flex items-center justify-center gap-3 transition-all transform active:scale-95 whitespace-nowrap ${
+                  !anyPilarActive
+                    ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                    : 'bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 shadow-[0_10px_25px_rgba(250,204,21,0.2)]'
+                }`}
+              >
+                {turboLoading ? <Loader2 className="animate-spin" size={18} /> : <Target size={18} />}
+                <span className="uppercase tracking-widest text-xs">
+                  {anyPilarActive ? `Iniciar Sniper · ${activePilarsString} Pilares` : 'Selecione um Pilar'}
+                </span>
+              </button>
+              {!anyPilarActive && (
+                <p className="text-[9px] text-rose-400/80 font-bold uppercase tracking-widest text-center">
+                  ⚠ Ative ao menos 1 pilar para iniciar a varredura
+                </p>
+              )}
+            </div>
           </div>
 
         </div>
@@ -805,13 +959,50 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Seletor de Abas de Pilares Comerciais */}
+        <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8 border-b border-white/5 pb-4 z-10 relative">
+          {[
+            { id: 'TODOS', label: 'Todas as Obras', count: leads.length, desc: 'Todo o radar' },
+            { id: 'A', label: 'Pilar A: Condomínios', count: leads.filter(l => ((l as any).pilar || 'A') === 'A').length, desc: 'Atas e fachadas' },
+            { id: 'B', label: 'Pilar B: Públicos', count: leads.filter(l => (l as any).pilar === 'B').length, desc: 'Licitações gov' },
+            { id: 'C', label: 'Pilar C: Corporativo', count: leads.filter(l => (l as any).pilar === 'C').length, desc: 'Vagas e facilities' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setPilarTab(tab.id as any)}
+              className={`relative flex flex-col items-start px-5 py-3 rounded-2xl border transition-all text-left group ${
+                pilarTab === tab.id
+                  ? 'bg-yellow-400/10 border-yellow-400/30 text-yellow-400'
+                  : 'bg-slate-900/40 border-white/5 text-slate-400 hover:text-white hover:border-white/10'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black uppercase tracking-wider">{tab.label}</span>
+                <span className={`text-[10px] font-black font-mono px-2 py-0.5 rounded-md ${
+                  pilarTab === tab.id ? 'bg-yellow-400 text-slate-950' : 'bg-slate-800 text-slate-300'
+                }`}>
+                  {tab.count}
+                </span>
+              </div>
+              <span className="text-[9px] font-medium opacity-60 uppercase tracking-widest mt-0.5">{tab.desc}</span>
+              {pilarTab === tab.id && (
+                <motion.div
+                  layoutId="activeTabUnderline"
+                  className="absolute bottom-0 left-4 right-4 h-0.5 bg-yellow-400 rounded-full"
+                  transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <Loader2 className="animate-spin text-yellow-400" size={48} />
             <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Sincronizando Radar...</span>
           </div>
         ) : (
-          <LeadTable leads={filteredLeads} onSave={fetchLeads} />
+          <LeadTable leads={pilarFilteredLeads} onSave={fetchLeads} />
         )}
       </div>
     </div>
