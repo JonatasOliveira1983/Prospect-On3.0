@@ -12,7 +12,8 @@ import {
   Star,
   Building2,
   ScrollText,
-  Briefcase
+  Briefcase,
+  Lock
 } from "lucide-react";
 import LeadDetailModal from "./LeadDetailModal";
 
@@ -40,6 +41,9 @@ interface Lead {
   score_urgencia?: number;
   categoria_demanda?: string;
   pilar?: string;
+  reserved_by_user_id?: number;
+  reserved_by_name?: string;
+  reserved_by_email?: string;
 }
 
 const STATUS_DOT: Record<string, string> = {
@@ -68,13 +72,28 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
   const handleToggleFavorite = async (e: React.MouseEvent, lead: Lead) => {
     e.stopPropagation();
     if (readOnly) return;
+
+    // Se o lead já estiver reservado por outro usuário, bloquear ação
+    if (lead.reserved_by_user_id) {
+      alert(`⚠️ Bloqueio de Concorrência:\n\nEste lead já está sendo trabalhado pelo vendedor: ${lead.reserved_by_name} (${lead.reserved_by_email}).\n\nOutro vendedor não pode favoritar este mesmo lead.`);
+      return;
+    }
+
     const isCurrentlyFavorite = favorites[lead.name] || false;
     const nextFavorite = !isCurrentlyFavorite;
     setFavorites(prev => ({ ...prev, [lead.name]: nextFavorite }));
     try {
       const leadId = lead.id || lead.name.toLowerCase().replace(/\s+/g, "_").replace(/\//g, "-");
       const res = await api.favorite(leadId, nextFavorite);
-      if (!res.ok) setFavorites(prev => ({ ...prev, [lead.name]: isCurrentlyFavorite }));
+      if (!res.ok) {
+        setFavorites(prev => ({ ...prev, [lead.name]: isCurrentlyFavorite }));
+        try {
+          const errData = await res.json();
+          if (errData?.detail) {
+            alert(`⚠️ Falha ao favoritar:\n\n${errData.detail}`);
+          }
+        } catch {}
+      }
     } catch {
       setFavorites(prev => ({ ...prev, [lead.name]: isCurrentlyFavorite }));
     }
@@ -146,6 +165,12 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                           🔥 OPORTUNIDADE ATIVA
                         </span>
                       ) : null}
+
+                      {lead.reserved_by_user_id ? (
+                        <span className="bg-purple-500/10 border border-purple-500/25 text-purple-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                          <Lock size={8} /> Reservado por {lead.reserved_by_name}
+                        </span>
+                      ) : null}
                     </div>
                     <h4 className="text-white font-black text-sm leading-tight uppercase tracking-tight truncate">{lead.name}</h4>
                     <p className="text-slate-400 text-[10px] mt-0.5 flex items-center gap-1 truncate">
@@ -155,12 +180,20 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                 </div>
                 <button
                   onClick={(e) => handleToggleFavorite(e, lead)}
-                  className={`p-2 rounded-xl transition-all border shrink-0 ${isFav
-                    ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
-                    : 'bg-slate-900 border-white/5 text-slate-500 hover:text-white'
+                  className={`p-2 rounded-xl transition-all border shrink-0 ${
+                    lead.reserved_by_user_id
+                      ? 'bg-slate-900 border-purple-500/30 text-purple-400'
+                      : isFav
+                      ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
+                      : 'bg-slate-900 border-white/5 text-slate-500 hover:text-white'
                   }`}
+                  title={lead.reserved_by_user_id ? `Reservado por ${lead.reserved_by_name}` : undefined}
                 >
-                  <Star size={16} className={isFav ? "fill-yellow-400" : ""} />
+                  {lead.reserved_by_user_id ? (
+                    <Lock size={16} />
+                  ) : (
+                    <Star size={16} className={isFav ? "fill-yellow-400" : ""} />
+                  )}
                 </button>
               </div>
 
@@ -214,13 +247,26 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                   <td className="px-5 py-4 first:rounded-l-2xl w-16">
                     <button
                       onClick={(e) => handleToggleFavorite(e, lead)}
-                      className={`p-2 rounded-xl transition-all border hover:scale-105 active:scale-95 ${isFav
-                        ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400 shadow-md shadow-yellow-400/5'
-                        : 'bg-slate-900/40 border-white/5 text-slate-500 hover:text-white'
+                      className={`p-2 rounded-xl transition-all border hover:scale-105 active:scale-95 ${
+                        lead.reserved_by_user_id
+                          ? 'bg-slate-900 border-purple-500/30 text-purple-400 shadow-md shadow-purple-500/5'
+                          : isFav
+                          ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400 shadow-md shadow-yellow-400/5'
+                          : 'bg-slate-900/40 border-white/5 text-slate-500 hover:text-white'
                       }`}
-                      title={isFav ? "Remover dos Favoritos" : "Marcar como Lead Quente"}
+                      title={
+                        lead.reserved_by_user_id
+                          ? `Reservado por ${lead.reserved_by_name}`
+                          : isFav
+                          ? "Remover dos Favoritos"
+                          : "Marcar como Lead Quente"
+                      }
                     >
-                      <Star size={15} className={isFav ? "fill-yellow-400" : ""} />
+                      {lead.reserved_by_user_id ? (
+                        <Lock size={15} />
+                      ) : (
+                        <Star size={15} className={isFav ? "fill-yellow-400" : ""} />
+                      )}
                     </button>
                   </td>
 
@@ -261,6 +307,12 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                           {lead.intencao_ativa ? (
                             <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] whitespace-nowrap">
                               🔥 OPORTUNIDADE ATIVA
+                            </span>
+                          ) : null}
+
+                          {lead.reserved_by_user_id ? (
+                            <span className="bg-purple-500/10 border border-purple-500/25 text-purple-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
+                              <Lock size={8} /> Reservado por {lead.reserved_by_name}
                             </span>
                           ) : null}
                         </div>
@@ -333,7 +385,7 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
             setInspectingLead(null);
             if (onSave) onSave();
           }}
-          readOnly={readOnly}
+          readOnly={readOnly || !!inspectingLead.reserved_by_user_id}
         />
       )}
     </>

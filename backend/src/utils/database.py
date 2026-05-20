@@ -368,6 +368,27 @@ class Database:
             with self._get_connection() as conn:
                 # Se for favoritado, copiar para a tabela blindada com user_id
                 if fav_value == 1:
+                    # VERIFICAÇÃO DE EXCLUSIVIDADE: se já está favoritado por outro usuário
+                    if self.is_postgres:
+                        cur = conn.cursor()
+                        cur.execute("SELECT user_id FROM leads_quentes WHERE id = %s AND user_id != %s", (lead_id, user_id))
+                        other = cur.fetchone()
+                    else:
+                        other = conn.execute("SELECT user_id FROM leads_quentes WHERE id = ? AND user_id != ?", (lead_id, user_id)).fetchone()
+                    
+                    if other:
+                        other_uid = other[0]
+                        if self.is_postgres:
+                            cur.execute("SELECT name, email FROM users WHERE id = %s", (other_uid,))
+                            u_info = cur.fetchone()
+                        else:
+                            u_info = conn.execute("SELECT name, email FROM users WHERE id = ?", (other_uid,)).fetchone()
+                        
+                        name = u_info[0] if u_info else "Outro vendedor"
+                        email = u_info[1] if u_info else ""
+                        logger.warning(f"DB: Falha ao favoritar lead {lead_id}: Já reservado por {name} ({email})")
+                        raise ValueError(f"Este lead já foi reservado/favoritado por {name} ({email}).")
+
                     if self.is_postgres:
                         from psycopg2.extras import RealDictCursor
                         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -536,18 +557,24 @@ class Database:
             with self._get_connection() as conn:
                 if table == "leads" and user_id is not None:
                     # LEFT JOIN com leads_quentes para obter os dados comercializados e favoritos do usuário específico
+                    # e outro LEFT JOIN com leads_quentes para obter reservas de terceiros
                     query = """
                         SELECT l.*, 
                                CASE WHEN lq.id IS NOT NULL THEN 1 ELSE 0 END as is_favorite,
                                COALESCE(lq.interaction_notes, l.interaction_notes) as interaction_notes,
                                COALESCE(lq.return_date, l.return_date) as return_date,
                                COALESCE(lq.contact_status, l.contact_status) as contact_status,
-                               COALESCE(lq.email_sent_at, l.email_sent_at) as email_sent_at
+                               COALESCE(lq.email_sent_at, l.email_sent_at) as email_sent_at,
+                               lq_other.user_id as reserved_by_user_id,
+                               u_other.name as reserved_by_name,
+                               u_other.email as reserved_by_email
                         FROM leads l
                         LEFT JOIN leads_quentes lq ON l.id = lq.id AND lq.user_id = ?
+                        LEFT JOIN leads_quentes lq_other ON l.id = lq_other.id AND lq_other.user_id != ?
+                        LEFT JOIN users u_other ON lq_other.user_id = u_other.id
                         ORDER BY l.score DESC, l.name ASC
                     """
-                    params = (user_id,)
+                    params = (user_id, user_id)
                 elif table == "leads_quentes" and user_id is not None:
                     query = "SELECT * FROM leads_quentes WHERE user_id = ? ORDER BY score DESC, name ASC"
                     params = (user_id,)

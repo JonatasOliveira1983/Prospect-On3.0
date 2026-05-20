@@ -121,7 +121,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-start md:items-center justify-center p-3 sm:p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-[120] flex items-start md:items-center justify-center overflow-y-auto md:overflow-hidden">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -131,31 +131,31 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
           />
 
           <motion.div
-            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="bg-slate-900 border border-yellow-400/10 w-full max-w-6xl rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-2xl relative z-10 my-4 sm:my-8 flex flex-col md:flex-row gap-5 md:gap-8 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="bg-slate-950/95 backdrop-blur-xl border-0 w-screen h-screen fixed inset-0 max-w-none rounded-none p-4 sm:p-6 md:p-10 lg:p-14 shadow-2xl relative z-10 flex flex-col md:flex-row gap-6 md:gap-10 overflow-y-auto md:overflow-hidden"
           >
             {/* Warning Banner for ReadOnly */}
             {readOnly && (
-              <div className="absolute top-0 left-0 right-0 bg-yellow-400/10 border-b border-yellow-400/20 text-yellow-400 text-[10px] font-black uppercase tracking-[0.2em] py-2 px-6 rounded-t-2xl sm:rounded-t-[2.5rem] flex items-center gap-2">
+              <div className="fixed top-0 left-0 right-0 bg-yellow-400/10 border-b border-yellow-400/20 text-yellow-400 text-[10px] font-black uppercase tracking-[0.2em] py-2.5 px-6 flex items-center gap-2 z-[25]">
                 <ShieldAlert size={14} className="animate-pulse" />
-                <span>Modo de Visualização Administrativa — Somente Leitura</span>
+                <span>Modo de Visualização (Outro Vendedor Favoritou / Somente Leitura)</span>
               </div>
             )}
 
             {/* Close Button */}
             <button
               onClick={onClose}
-              className={`absolute p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all z-20 ${
-                readOnly ? "top-10 sm:top-12 right-4 sm:right-6" : "top-4 right-4 sm:top-6 sm:right-6"
-              }`}
+              className="fixed top-4 right-4 md:top-6 md:right-6 lg:top-10 lg:right-10 p-3 rounded-full bg-slate-900 border border-white/10 text-slate-400 hover:text-white hover:bg-slate-800 transition-all z-35 flex items-center gap-2 shadow-lg shadow-black/50"
+              title="Sair do CRM"
             >
-              <X size={18} />
+              <span className="text-[10px] font-black uppercase tracking-widest pl-1 hidden sm:inline">Sair do CRM</span>
+              <X size={16} />
             </button>
 
             {/* ── Coluna 1: Informações do Lead ── */}
-            <div className={`flex-1 flex flex-col gap-4 sm:gap-5 md:border-r md:border-white/5 md:pr-8 ${readOnly ? "pt-6" : ""}`}>
+            <div className={`flex-1 flex flex-col gap-4 sm:gap-5 md:border-r md:border-white/5 md:pr-8 md:overflow-y-auto md:max-h-full pr-2 scrollbar-thin ${readOnly ? "pt-10 md:pt-6" : "pt-8 md:pt-0"}`}>
               {/* Badges + Nome */}
               <div>
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -401,7 +401,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
             </div>
 
             {/* ── Coluna 2: CRM ── */}
-            <div className={`flex-1 flex flex-col gap-4 sm:gap-5 justify-between ${readOnly ? "pt-6" : ""}`}>
+            <div className={`flex-1 flex flex-col gap-4 sm:gap-5 justify-between md:overflow-y-auto md:max-h-full pr-2 scrollbar-thin ${readOnly ? "pt-10 md:pt-6" : "pt-8 md:pt-0"}`}>
               <div className="space-y-4 sm:space-y-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-1">CRM Otto Pinturas</h3>

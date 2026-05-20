@@ -434,6 +434,9 @@ async def toggle_lead_favorite(lead_id: str, data: FavoriteData, x_user_id: str 
             return {"success": True, "message": "Estado do favorito atualizado."}
         else:
             raise HTTPException(status_code=500, detail="Erro ao alternar favorito no banco de dados.")
+    except ValueError as ve:
+        logger.warning(f"API: Bloqueio de favorito para lead_id={lead_id}: {ve}")
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logger.error(f"API: Erro ao alternar favorito: {e}")
         raise HTTPException(status_code=500, detail=str(e))
