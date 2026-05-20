@@ -12,15 +12,42 @@ export default function HomeHeader() {
   const [error, setError] = useState("");
   const [isMobileFormOpen, setIsMobileFormOpen] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanUser = username.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    if (cleanUser === "adm" && cleanPass === "123") {
-      window.location.href = "/dashboard";
-    } else {
-      setError("Credenciais inválidas");
+    if (!cleanUser || !cleanPass) {
+      setError("Preencha todos os campos");
+      return;
+    }
+
+    try {
+      setError("");
+      const res = await fetch("http://localhost:8002/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: cleanUser, password: cleanPass }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.detail || "E-mail ou senha incorretos");
+        return;
+      }
+
+      const data = await res.json();
+      if (data.success && data.user) {
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
+        window.location.href = "/dashboard";
+      } else {
+        setError("Erro ao autenticar");
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Sem conexão com o servidor");
     }
   };
 

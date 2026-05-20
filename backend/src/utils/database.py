@@ -54,6 +54,57 @@ class Database:
 
     def _create_tables(self):
         with self._get_connection() as conn:
+            # 0. Tabela de Usuários (Controle de Acesso)
+            if self.is_postgres:
+                self._run_query(conn, """
+                    CREATE TABLE IF NOT EXISTS users (
+                        id SERIAL PRIMARY KEY,
+                        email VARCHAR(255) UNIQUE NOT NULL,
+                        password VARCHAR(255) NOT NULL,
+                        name VARCHAR(255) NOT NULL,
+                        role VARCHAR(50) NOT NULL,
+                        phone VARCHAR(50),
+                        document VARCHAR(50),
+                        created_at VARCHAR(100)
+                    )
+                """)
+            else:
+                self._run_query(conn, """
+                    CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        email TEXT UNIQUE NOT NULL,
+                        password TEXT NOT NULL,
+                        name TEXT NOT NULL,
+                        role TEXT NOT NULL,
+                        phone TEXT,
+                        document TEXT,
+                        created_at TEXT
+                    )
+                """)
+            
+            # Seed de administradores padrão
+            now_str = datetime.now().isoformat()
+            if self.is_postgres:
+                self._run_query(conn, """
+                    INSERT INTO users (email, password, name, role, phone, document, created_at)
+                    VALUES ('joao.ottopinturas@gmail.com', '123', 'João Otto', 'admin', '11999999999', 'N/D', %s)
+                    ON CONFLICT (email) DO NOTHING
+                """, (now_str,))
+                self._run_query(conn, """
+                    INSERT INTO users (email, password, name, role, phone, document, created_at)
+                    VALUES ('jonatasprojetos2013@gmail.com', '123', 'Jonatas Oliveira', 'admin', '11999999999', 'N/D', %s)
+                    ON CONFLICT (email) DO NOTHING
+                """, (now_str,))
+            else:
+                self._run_query(conn, """
+                    INSERT OR IGNORE INTO users (email, password, name, role, phone, document, created_at)
+                    VALUES ('joao.ottopinturas@gmail.com', '123', 'João Otto', 'admin', '11999999999', 'N/D', ?)
+                """, (now_str,))
+                self._run_query(conn, """
+                    INSERT OR IGNORE INTO users (email, password, name, role, phone, document, created_at)
+                    VALUES ('jonatasprojetos2013@gmail.com', '123', 'Jonatas Oliveira', 'admin', '11999999999', 'N/D', ?)
+                """, (now_str,))
+
             # 1. Tabela principal leads
             self._run_query(conn, """
                 CREATE TABLE IF NOT EXISTS leads (
@@ -97,10 +148,34 @@ class Database:
                 )
             """)
             
-            # 2. Tabela blindada leads_quentes
+            # 2. Tabela blindada leads_quentes (Migração para chave composta com user_id)
+            has_user_id = False
+            if not self.is_postgres:
+                try:
+                    cursor = conn.execute("PRAGMA table_info(leads_quentes)")
+                    columns = [row[1] for row in cursor.fetchall()]
+                    if columns and "user_id" in columns:
+                        has_user_id = True
+                    elif columns:
+                        logger.info("DB: Migrando leads_quentes para suportar chaves compostas e user_id...")
+                        conn.execute("ALTER TABLE leads_quentes RENAME TO leads_quentes_old")
+                except sqlite3.OperationalError:
+                    pass
+            else:
+                try:
+                    cur = conn.cursor()
+                    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='leads_quentes' AND column_name='user_id'")
+                    if cur.fetchone():
+                        has_user_id = True
+                    else:
+                        cur.execute("ALTER TABLE leads_quentes RENAME TO leads_quentes_old")
+                except Exception:
+                    pass
+
             self._run_query(conn, """
                 CREATE TABLE IF NOT EXISTS leads_quentes (
-                    id TEXT PRIMARY KEY,
+                    id TEXT,
+                    user_id INTEGER NOT NULL,
                     name TEXT NOT NULL,
                     address TEXT,
                     lat REAL,
@@ -136,11 +211,37 @@ class Database:
                     link_fonte TEXT,
                     score_urgencia INTEGER DEFAULT 0,
                     categoria_demanda TEXT,
-                    pilar TEXT DEFAULT 'A'
+                    pilar TEXT DEFAULT 'A',
+                    PRIMARY KEY (id, user_id),
+                    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
             """)
-            
-            # Migração de colunas apenas se for SQLite local
+
+            # Concluir migração SQLite se necessário
+            if not has_user_id and not self.is_postgres:
+                try:
+                    # Verificar se a tabela temporária velha realmente existe
+                    cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='leads_quentes_old'")
+                    if cursor.fetchone():
+                        # Obter id de joao.ottopinturas@gmail.com
+                        uid_row = conn.execute("SELECT id FROM users WHERE email = 'joao.ottopinturas@gmail.com'").fetchone()
+                        uid = uid_row[0] if uid_row else 1
+                        
+                        cols_str = "id, name, address, lat, lng, score, justification, category, responsavel_nome, responsavel_contato, vision_image_path, vision_image_url, satellite_image_path, vision_analysis_json, market_json, valuation_json, financial_health_json, demand_json, source, urgency_score, is_confirmed, email, social_url, booking_url, scanned_at, enriched_at, interaction_notes, return_date, email_sent_at, is_favorite, contact_status, intencao_ativa, resumo_sinal, link_fonte, score_urgencia, categoria_demanda, pilar"
+                        
+                        self._run_query(conn, f"""
+                            INSERT INTO leads_quentes (
+                                user_id, {cols_str}
+                            )
+                            SELECT ?, {cols_str} FROM leads_quentes_old
+                        """, (uid,))
+                        
+                        self._run_query(conn, "DROP TABLE leads_quentes_old")
+                        logger.info("DB: Migração de leads_quentes SQLite concluída com sucesso!")
+                except Exception as me:
+                    logger.error(f"DB: Erro na migração SQLite de leads_quentes: {me}")
+
+            # Migração de colunas na principal apenas se for SQLite local
             if not self.is_postgres:
                 cols = [
                     ("interaction_notes", "TEXT"), 
@@ -160,12 +261,8 @@ class Database:
                         conn.execute(f"ALTER TABLE leads ADD COLUMN {col} {col_type}")
                     except sqlite3.OperationalError:
                         pass
-                    try:
-                        conn.execute(f"ALTER TABLE leads_quentes ADD COLUMN {col} {col_type}")
-                    except sqlite3.OperationalError:
-                        pass
 
-            # Tabela de estatísticas de uso (IA)
+            # 3. Tabela de estatísticas de uso (IA)
             self._run_query(conn, """
                 CREATE TABLE IF NOT EXISTS usage_stats (
                     service TEXT PRIMARY KEY,
@@ -176,53 +273,100 @@ class Database:
             """)
             conn.commit()
 
-    def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None):
+    def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None, user_id=None):
         try:
             with self._get_connection() as conn:
-                for table in ["leads", "leads_quentes"]:
+                # 1. Atualizar na tabela leads principal
+                if email_sent_at and vision_image_url:
+                    self._run_query(conn, """
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?, vision_image_url = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, email_sent_at, vision_image_url, lead_id))
+                elif email_sent_at:
+                    self._run_query(conn, """
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, email_sent_at, lead_id))
+                elif vision_image_url:
+                    self._run_query(conn, """
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?, vision_image_url = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, vision_image_url, lead_id))
+                else:
+                    self._run_query(conn, """
+                        UPDATE leads 
+                        SET interaction_notes = ?, return_date = ?, contact_status = ?
+                        WHERE id = ?
+                    """, (notes, return_date, contact_status, lead_id))
+
+                # 2. Atualizar na tabela leads_quentes (filtrando por user_id se fornecido)
+                if user_id is not None:
                     if email_sent_at and vision_image_url:
-                        self._run_query(conn, f"""
-                            UPDATE {table} 
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?, vision_image_url = ?
+                            WHERE id = ? AND user_id = ?
+                        """, (notes, return_date, contact_status, email_sent_at, vision_image_url, lead_id, user_id))
+                    elif email_sent_at:
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
+                            WHERE id = ? AND user_id = ?
+                        """, (notes, return_date, contact_status, email_sent_at, lead_id, user_id))
+                    elif vision_image_url:
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?, vision_image_url = ?
+                            WHERE id = ? AND user_id = ?
+                        """, (notes, return_date, contact_status, vision_image_url, lead_id, user_id))
+                    else:
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?
+                            WHERE id = ? AND user_id = ?
+                        """, (notes, return_date, contact_status, lead_id, user_id))
+                else:
+                    # Caso não passe user_id, atualiza para todos (fallback)
+                    if email_sent_at and vision_image_url:
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
                             SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?, vision_image_url = ?
                             WHERE id = ?
                         """, (notes, return_date, contact_status, email_sent_at, vision_image_url, lead_id))
                     elif email_sent_at:
-                        self._run_query(conn, f"""
-                            UPDATE {table} 
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
                             SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
                             WHERE id = ?
                         """, (notes, return_date, contact_status, email_sent_at, lead_id))
                     elif vision_image_url:
-                        self._run_query(conn, f"""
-                            UPDATE {table} 
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
                             SET interaction_notes = ?, return_date = ?, contact_status = ?, vision_image_url = ?
                             WHERE id = ?
                         """, (notes, return_date, contact_status, vision_image_url, lead_id))
                     else:
-                        self._run_query(conn, f"""
-                            UPDATE {table} 
+                        self._run_query(conn, """
+                            UPDATE leads_quentes 
                             SET interaction_notes = ?, return_date = ?, contact_status = ?
                             WHERE id = ?
                         """, (notes, return_date, contact_status, lead_id))
+                
                 conn.commit()
-            logger.info(f"DB: Interação comercial salva para o lead {lead_id} em todas as tabelas | Status: {contact_status}")
+            logger.info(f"DB: Interação comercial salva para o lead {lead_id} | Status: {contact_status} | User: {user_id}")
             return True
         except Exception as e:
             logger.error(f"DB: Erro ao salvar interação para o lead {lead_id}: {e}")
             return False
 
-    def toggle_favorite(self, lead_id, is_favorite):
+    def toggle_favorite(self, lead_id, is_favorite, user_id=1):
         try:
             fav_value = 1 if is_favorite else 0
             with self._get_connection() as conn:
-                # 1. Atualizar na tabela leads principal
-                self._run_query(conn, """
-                    UPDATE leads 
-                    SET is_favorite = ?
-                    WHERE id = ?
-                """, (fav_value, lead_id))
-                
-                # 2. Se for favoritado, copiar para a tabela blindada
+                # Se for favoritado, copiar para a tabela blindada com user_id
                 if fav_value == 1:
                     if self.is_postgres:
                         from psycopg2.extras import RealDictCursor
@@ -248,21 +392,21 @@ class Database:
                         except Exception as je:
                             logger.warning(f"DB: Erro ao tratar JSON no toggle_favorite: {je}")
                         
-                        # Faz o upsert na tabela blindada leads_quentes
-                        self.upsert_lead(row_dict, table="leads_quentes")
+                        # Faz o upsert na tabela blindada leads_quentes passando o user_id
+                        self.upsert_lead(row_dict, table="leads_quentes", user_id=user_id)
                 else:
-                    # Se desfavoritado, deletar fisicamente de leads_quentes
-                    self._run_query(conn, "DELETE FROM leads_quentes WHERE id = ?", (lead_id,))
+                    # Se desfavoritado, deletar fisicamente de leads_quentes para o user_id específico
+                    self._run_query(conn, "DELETE FROM leads_quentes WHERE id = ? AND user_id = ?", (lead_id, user_id))
                 
                 conn.commit()
-            logger.info(f"DB: Favorito alterado para {fav_value} no lead {lead_id} e sincronizado com leads_quentes")
+            logger.info(f"DB: Favorito alterado para {fav_value} no lead {lead_id} para o usuário {user_id}")
             return True
         except Exception as e:
-            logger.error(f"DB: Erro ao alternar favorito para o lead {lead_id}: {e}")
+            logger.error(f"DB: Erro ao alternar favorito para o lead {lead_id} (user {user_id}): {e}")
             return False
 
-    def upsert_lead(self, lead_data, table="leads"):
-        """Insere ou atualiza um lead no banco de dados (v7.2 Postgres/SQLite)."""
+    def upsert_lead(self, lead_data, table="leads", user_id=None):
+        """Insere ou atualiza um lead no banco de dados (v8.0 Postgres/SQLite com isolamento de usuários)."""
         try:
             lead_id = lead_data.get('id') or lead_data['name'].lower().replace(" ", "_").replace("/", "-")
             
@@ -291,60 +435,135 @@ class Database:
                 fav_status = True if table == "leads_quentes" else False
 
             with self._get_connection() as conn:
-                self._run_query(conn, f"""
-                    INSERT INTO {table} (
-                        id, name, address, lat, lng, score, justification, category,
-                        responsavel_nome, responsavel_contato,
-                        vision_image_path, vision_image_url, satellite_image_path,
-                        vision_analysis_json, market_json, valuation_json, financial_health_json,
-                        demand_json, source, urgency_score,
-                        is_confirmed, email, social_url, booking_url, scanned_at,
-                        intencao_ativa, resumo_sinal, link_fonte, score_urgencia, categoria_demanda,
-                        pilar, is_favorite
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    ON CONFLICT(id) DO UPDATE SET
-                        name=excluded.name, address=excluded.address, lat=excluded.lat, lng=excluded.lng,
-                        score=excluded.score, justification=excluded.justification, category=excluded.category,
-                        responsavel_nome=excluded.responsavel_nome, responsavel_contato=excluded.responsavel_contato,
-                        vision_image_path=excluded.vision_image_path, vision_image_url=excluded.vision_image_url,
-                        satellite_image_path=excluded.satellite_image_path,
-                        vision_analysis_json=excluded.vision_analysis_json, market_json=excluded.market_json,
-                        valuation_json=excluded.valuation_json, financial_health_json=excluded.financial_health_json,
-                        demand_json=excluded.demand_json, source=excluded.source, urgency_score=excluded.urgency_score,
-                        is_confirmed=excluded.is_confirmed, email=excluded.email, social_url=excluded.social_url, 
-                        booking_url=excluded.booking_url, scanned_at=excluded.scanned_at,
-                        intencao_ativa=excluded.intencao_ativa, resumo_sinal=excluded.resumo_sinal,
-                        link_fonte=excluded.link_fonte, score_urgencia=excluded.score_urgencia,
-                        categoria_demanda=excluded.categoria_demanda, pilar=excluded.pilar, is_favorite=excluded.is_favorite
-                """, (
-                    lead_id, lead_data['name'], lead_data['address'], lat, lng,
-                    lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
-                    lead_data.get('responsavel_nome', ''), lead_data.get('responsavel_contato') or lead_data.get('whatsapp') or lead_data.get('phone', 'N/D'),
-                    vision_path, vision_url, satellite_path, vision_analysis,
-                    market, valuation, financial,
-                    demand, lead_data.get('source', 'Radar'), lead_data.get('urgency_score', 0),
-                    lead_data.get('is_confirmed', False), lead_data.get('email', 'N/D'), 
-                    lead_data.get('social_url', 'N/D'), lead_data.get('booking_url', 'N/D'), lead_data.get('scanned_at'),
-                    lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
-                    lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
-                    lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma'),
-                    lead_data.get('pilar', 'A'), 1 if fav_status else 0
-                ))
+                if table == "leads_quentes":
+                    # Tabela blindada precisa de user_id
+                    uid = user_id or lead_data.get('user_id')
+                    if uid is None:
+                        # Obter id de joao.ottopinturas@gmail.com
+                        uid_row = conn.execute("SELECT id FROM users WHERE email = 'joao.ottopinturas@gmail.com'").fetchone()
+                        uid = uid_row[0] if uid_row else 1
+
+                    self._run_query(conn, f"""
+                        INSERT INTO leads_quentes (
+                            id, user_id, name, address, lat, lng, score, justification, category,
+                            responsavel_nome, responsavel_contato,
+                            vision_image_path, vision_image_url, satellite_image_path,
+                            vision_analysis_json, market_json, valuation_json, financial_health_json,
+                            demand_json, source, urgency_score,
+                            is_confirmed, email, social_url, booking_url, scanned_at,
+                            intencao_ativa, resumo_sinal, link_fonte, score_urgencia, categoria_demanda,
+                            pilar, is_favorite, interaction_notes, return_date, contact_status, email_sent_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id, user_id) DO UPDATE SET
+                            name=excluded.name, address=excluded.address, lat=excluded.lat, lng=excluded.lng,
+                            score=excluded.score, justification=excluded.justification, category=excluded.category,
+                            responsavel_nome=excluded.responsavel_nome, responsavel_contato=excluded.responsavel_contato,
+                            vision_image_path=excluded.vision_image_path, vision_image_url=excluded.vision_image_url,
+                            satellite_image_path=excluded.satellite_image_path,
+                            vision_analysis_json=excluded.vision_analysis_json, market_json=excluded.market_json,
+                            valuation_json=excluded.valuation_json, financial_health_json=excluded.financial_health_json,
+                            demand_json=excluded.demand_json, source=excluded.source, urgency_score=excluded.urgency_score,
+                            is_confirmed=excluded.is_confirmed, email=excluded.email, social_url=excluded.social_url, 
+                            booking_url=excluded.booking_url, scanned_at=excluded.scanned_at,
+                            intencao_ativa=excluded.intencao_ativa, resumo_sinal=excluded.resumo_sinal,
+                            link_fonte=excluded.link_fonte, score_urgencia=excluded.score_urgencia,
+                            categoria_demanda=excluded.categoria_demanda, pilar=excluded.pilar, is_favorite=excluded.is_favorite,
+                            interaction_notes=excluded.interaction_notes, return_date=excluded.return_date,
+                            contact_status=excluded.contact_status, email_sent_at=excluded.email_sent_at
+                    """, (
+                        lead_id, uid, lead_data['name'], lead_data['address'], lat, lng,
+                        lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
+                        lead_data.get('responsavel_nome', ''), lead_data.get('responsavel_contato') or lead_data.get('whatsapp') or lead_data.get('phone', 'N/D'),
+                        vision_path, vision_url, satellite_path, vision_analysis,
+                        market, valuation, financial,
+                        demand, lead_data.get('source', 'Radar'), lead_data.get('urgency_score', 0),
+                        lead_data.get('is_confirmed', False), lead_data.get('email', 'N/D'), 
+                        lead_data.get('social_url', 'N/D'), lead_data.get('booking_url', 'N/D'), lead_data.get('scanned_at'),
+                        lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
+                        lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
+                        lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma'),
+                        lead_data.get('pilar', 'A'), 1 if fav_status else 0,
+                        lead_data.get('interaction_notes', ''), lead_data.get('return_date', ''),
+                        lead_data.get('contact_status', 'Aguardando Abordagem'), lead_data.get('email_sent_at')
+                    ))
+                else:
+                    # Tabela leads geral
+                    self._run_query(conn, f"""
+                        INSERT INTO leads (
+                            id, name, address, lat, lng, score, justification, category,
+                            responsavel_nome, responsavel_contato,
+                            vision_image_path, vision_image_url, satellite_image_path,
+                            vision_analysis_json, market_json, valuation_json, financial_health_json,
+                            demand_json, source, urgency_score,
+                            is_confirmed, email, social_url, booking_url, scanned_at,
+                            intencao_ativa, resumo_sinal, link_fonte, score_urgencia, categoria_demanda,
+                            pilar, is_favorite
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        ON CONFLICT(id) DO UPDATE SET
+                            name=excluded.name, address=excluded.address, lat=excluded.lat, lng=excluded.lng,
+                            score=excluded.score, justification=excluded.justification, category=excluded.category,
+                            responsavel_nome=excluded.responsavel_nome, responsavel_contato=excluded.responsavel_contato,
+                            vision_image_path=excluded.vision_image_path, vision_image_url=excluded.vision_image_url,
+                            satellite_image_path=excluded.satellite_image_path,
+                            vision_analysis_json=excluded.vision_analysis_json, market_json=excluded.market_json,
+                            valuation_json=excluded.valuation_json, financial_health_json=excluded.financial_health_json,
+                            demand_json=excluded.demand_json, source=excluded.source, urgency_score=excluded.urgency_score,
+                            is_confirmed=excluded.is_confirmed, email=excluded.email, social_url=excluded.social_url, 
+                            booking_url=excluded.booking_url, scanned_at=excluded.scanned_at,
+                            intencao_ativa=excluded.intencao_ativa, resumo_sinal=excluded.resumo_sinal,
+                            link_fonte=excluded.link_fonte, score_urgencia=excluded.score_urgencia,
+                            categoria_demanda=excluded.categoria_demanda, pilar=excluded.pilar, is_favorite=excluded.is_favorite
+                    """, (
+                        lead_id, lead_data['name'], lead_data['address'], lat, lng,
+                        lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
+                        lead_data.get('responsavel_nome', ''), lead_data.get('responsavel_contato') or lead_data.get('whatsapp') or lead_data.get('phone', 'N/D'),
+                        vision_path, vision_url, satellite_path, vision_analysis,
+                        market, valuation, financial,
+                        demand, lead_data.get('source', 'Radar'), lead_data.get('urgency_score', 0),
+                        lead_data.get('is_confirmed', False), lead_data.get('email', 'N/D'), 
+                        lead_data.get('social_url', 'N/D'), lead_data.get('booking_url', 'N/D'), lead_data.get('scanned_at'),
+                        lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
+                        lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
+                        lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma'),
+                        lead_data.get('pilar', 'A'), 1 if fav_status else 0
+                    ))
                 conn.commit()
         except Exception as e:
             logger.error(f"DB: Erro fatal no upsert_lead na tabela {table}: {e}")
 
-    def get_all_leads(self, table="leads"):
+    def get_all_leads(self, table="leads", user_id=None):
         try:
             with self._get_connection() as conn:
+                if table == "leads" and user_id is not None:
+                    # LEFT JOIN com leads_quentes para obter os dados comercializados e favoritos do usuário específico
+                    query = """
+                        SELECT l.*, 
+                               CASE WHEN lq.id IS NOT NULL THEN 1 ELSE 0 END as is_favorite,
+                               COALESCE(lq.interaction_notes, l.interaction_notes) as interaction_notes,
+                               COALESCE(lq.return_date, l.return_date) as return_date,
+                               COALESCE(lq.contact_status, l.contact_status) as contact_status,
+                               COALESCE(lq.email_sent_at, l.email_sent_at) as email_sent_at
+                        FROM leads l
+                        LEFT JOIN leads_quentes lq ON l.id = lq.id AND lq.user_id = ?
+                        ORDER BY l.score DESC, l.name ASC
+                    """
+                    params = (user_id,)
+                elif table == "leads_quentes" and user_id is not None:
+                    query = "SELECT * FROM leads_quentes WHERE user_id = ? ORDER BY score DESC, name ASC"
+                    params = (user_id,)
+                else:
+                    query = f"SELECT * FROM {table} ORDER BY score DESC, name ASC"
+                    params = ()
+
                 if self.is_postgres:
                     from psycopg2.extras import RealDictCursor
                     cur = conn.cursor(cursor_factory=RealDictCursor)
-                    cur.execute(f"SELECT * FROM {table} ORDER BY score DESC, name ASC")
+                    query_postgres = query.replace("?", "%s")
+                    cur.execute(query_postgres, params)
                     rows = [dict(row) for row in cur.fetchall()]
                 else:
                     conn.row_factory = sqlite3.Row
-                    rows = conn.execute(f"SELECT * FROM {table} ORDER BY score DESC, name ASC").fetchall()
+                    rows = conn.execute(query, params).fetchall()
                     rows = [dict(row) for row in rows]
                 
                 leads = []
@@ -373,8 +592,117 @@ class Database:
             logger.error(f"DB: Erro ao buscar leads da tabela {table}: {e}")
             return []
 
-    def get_all_leads_quentes(self):
-        return self.get_all_leads(table="leads_quentes")
+    def get_all_leads_quentes(self, user_id=None):
+        return self.get_all_leads(table="leads_quentes", user_id=user_id)
+
+    def get_user_by_email(self, email):
+        try:
+            with self._get_connection() as conn:
+                if self.is_postgres:
+                    from psycopg2.extras import RealDictCursor
+                    cur = conn.cursor(cursor_factory=RealDictCursor)
+                    cur.execute("SELECT * FROM users WHERE email = %s", (email,))
+                    row = cur.fetchone()
+                    return dict(row) if row else None
+                else:
+                    conn.row_factory = sqlite3.Row
+                    row = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+                    return dict(row) if row else None
+        except Exception as e:
+            logger.error(f"DB: Erro ao buscar usuário por email {email}: {e}")
+            return None
+
+    def get_user_by_id(self, user_id):
+        try:
+            with self._get_connection() as conn:
+                if self.is_postgres:
+                    from psycopg2.extras import RealDictCursor
+                    cur = conn.cursor(cursor_factory=RealDictCursor)
+                    cur.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+                    row = cur.fetchone()
+                    return dict(row) if row else None
+                else:
+                    conn.row_factory = sqlite3.Row
+                    row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+                    return dict(row) if row else None
+        except Exception as e:
+            logger.error(f"DB: Erro ao buscar usuário por id {user_id}: {e}")
+            return None
+
+    def get_all_users(self):
+        try:
+            with self._get_connection() as conn:
+                if self.is_postgres:
+                    from psycopg2.extras import RealDictCursor
+                    cur = conn.cursor(cursor_factory=RealDictCursor)
+                    cur.execute("SELECT id, email, password, name, role, phone, document, created_at FROM users ORDER BY name ASC")
+                    rows = cur.fetchall()
+                    return [dict(row) for row in rows]
+                else:
+                    conn.row_factory = sqlite3.Row
+                    rows = conn.execute("SELECT id, email, password, name, role, phone, document, created_at FROM users ORDER BY name ASC").fetchall()
+                    return [dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"DB: Erro ao listar usuários: {e}")
+            return []
+
+    def create_user(self, email, password, name, role, phone=None, document=None):
+        try:
+            now_str = datetime.now().isoformat()
+            with self._get_connection() as conn:
+                if self.is_postgres:
+                    cur = conn.cursor()
+                    cur.execute("""
+                        INSERT INTO users (email, password, name, role, phone, document, created_at)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                        RETURNING id
+                    """, (email, password, name, role, phone or '', document or '', now_str))
+                    user_id = cur.fetchone()[0]
+                else:
+                    cursor = conn.execute("""
+                        INSERT INTO users (email, password, name, role, phone, document, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """, (email, password, name, role, phone or '', document or '', now_str))
+                    user_id = cursor.lastrowid
+                conn.commit()
+            logger.info(f"DB: Usuário {email} criado com ID {user_id}")
+            return user_id
+        except Exception as e:
+            logger.error(f"DB: Erro ao criar usuário {email}: {e}")
+            return None
+
+    def update_user_profile(self, user_id, name, phone, document, password=None):
+        try:
+            with self._get_connection() as conn:
+                if password:
+                    self._run_query(conn, """
+                        UPDATE users
+                        SET name = ?, phone = ?, document = ?, password = ?
+                        WHERE id = ?
+                    """, (name, phone or '', document or '', password, user_id))
+                else:
+                    self._run_query(conn, """
+                        UPDATE users
+                        SET name = ?, phone = ?, document = ?
+                        WHERE id = ?
+                    """, (name, phone or '', document or '', user_id))
+                conn.commit()
+            logger.info(f"DB: Perfil do usuário {user_id} atualizado com sucesso.")
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao atualizar perfil do usuário {user_id}: {e}")
+            return False
+
+    def delete_user(self, user_id):
+        try:
+            with self._get_connection() as conn:
+                self._run_query(conn, "DELETE FROM users WHERE id = ?", (user_id,))
+                conn.commit()
+            logger.info(f"DB: Usuário {user_id} removido do sistema.")
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao remover usuário {user_id}: {e}")
+            return False
 
     def clear_all_leads(self):
         try:

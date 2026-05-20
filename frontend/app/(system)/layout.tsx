@@ -1,12 +1,57 @@
+"use client";
 import Sidebar from "../components/Sidebar";
 import Link from "next/link";
-import { LayoutDashboard, Target, Map as MapIcon, Database, Clock, Settings, Upload } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LayoutDashboard, Target, Users, User, Settings } from "lucide-react";
 
 export default function SystemLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const [authorized, setAuthorized] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    const userJson = localStorage.getItem("currentUser");
+    if (!userJson) {
+      router.push("/");
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userJson);
+      setCurrentUser(user);
+
+      // Proteção contra vendedor comum acessando áreas admin
+      if ((pathname === "/usuarios" || pathname === "/configuracoes") && user.role !== "admin") {
+        router.push("/dashboard");
+        return;
+      }
+
+      setAuthorized(true);
+    } catch (e) {
+      console.error(e);
+      router.push("/");
+    }
+  }, [pathname, router]);
+
+  if (!authorized) {
+    return (
+      <div className="bg-otto-blue min-h-screen flex items-center justify-center text-white">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+          <p className="font-bold text-sm tracking-widest text-yellow-400 uppercase">Autenticando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isAdmin = currentUser?.role === "admin";
+
   return (
     <div className="bg-otto-blue text-white min-h-screen">
       <div className="flex flex-col lg:flex-row">
@@ -16,35 +61,31 @@ export default function SystemLayout({
         </main>
       </div>
       
-      {/* Mobile Nav - Fully Functional & Aesthetic (Sticky Bottom) */}
+      {/* Mobile Nav - Limpa e Responsiva com base no Perfil */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-950/90 backdrop-blur-xl border-t border-yellow-400/20 z-50 flex items-center justify-around px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-        <Link href="/dashboard" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
+        <Link href="/dashboard" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/dashboard" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <LayoutDashboard size={20} />
           <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Cockpit</span>
         </Link>
-        <Link href="/leads-quentes" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
+        <Link href="/leads-quentes" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/leads-quentes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <Target size={20} />
           <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Elite</span>
         </Link>
-        <Link href="/mapa-radar" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
-          <MapIcon size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Radar</span>
-        </Link>
-        <Link href="/relatorios" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
-          <Database size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Leads</span>
-        </Link>
-        <Link href="/importar" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
-          <Upload size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Importar</span>
-        </Link>
-        <Link href="/comissoes" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
-          <Clock size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Ativo</span>
-        </Link>
-        <Link href="/configuracoes" className="p-2 text-slate-400 hover:text-yellow-400 active:scale-90 transition-all flex flex-col items-center justify-center">
-          <Settings size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Painel</span>
+        {isAdmin && (
+          <>
+            <Link href="/usuarios" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/usuarios" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+              <Users size={20} />
+              <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Vendedores</span>
+            </Link>
+            <Link href="/configuracoes" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/configuracoes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+              <Settings size={20} />
+              <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Painel</span>
+            </Link>
+          </>
+        )}
+        <Link href="/minha-conta" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/minha-conta" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+          <User size={20} />
+          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Perfil</span>
         </Link>
       </div>
     </div>

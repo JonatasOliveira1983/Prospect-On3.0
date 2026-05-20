@@ -9,8 +9,25 @@ if (rawBackend && !rawBackend.startsWith('http://') && !rawBackend.startsWith('h
 }
 export const BACKEND = rawBackend;
 
+function getUserIdHeader(): { [key: string]: string } {
+  if (typeof window !== "undefined") {
+    const userJson = localStorage.getItem("currentUser");
+    if (userJson) {
+      try {
+        const user = JSON.parse(userJson);
+        if (user && user.id) {
+          return { "X-User-Id": user.id.toString() };
+        }
+      } catch (e) {
+        console.error("Erro ao ler currentUser para header", e);
+      }
+    }
+  }
+  return {};
+}
+
 export const api = {
-  leads:        () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store' }),
+  leads:        () => fetch(`${BACKEND}/api/leads`, { cache: 'no-store', headers: { ...getUserIdHeader() } }),
   scanStart:    (query: string, city: string, target: number, publicoAlvo?: string, palavraChave?: string, pilares?: string) => {
     let url = `${BACKEND}/api/scan/start?query=${encodeURIComponent(query)}&city=${encodeURIComponent(city)}&target=${target}`;
     if (publicoAlvo) url += `&publico_alvo=${encodeURIComponent(publicoAlvo)}`;
@@ -19,23 +36,28 @@ export const api = {
     return fetch(url, { method: 'POST' });
   },
   sendToCRM:    (id: string) =>
-    fetch(`${BACKEND}/api/leads/${id}/crm`, { method: 'POST' }),
+    fetch(`${BACKEND}/api/leads/${id}/crm`, { method: 'POST', headers: { ...getUserIdHeader() } }),
   leadsClear:   () => fetch(`${BACKEND}/api/leads/clear`, { method: 'POST' }),
   usage:        () => fetch(`${BACKEND}/api/usage`, { cache: 'no-store' }),
   health:       () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
   analyzeLead:  (body: unknown) =>
     fetch(`${BACKEND}/api/analyze-lead`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
   favorite:     (id: string, is_favorite: boolean) =>
-    fetch(`${BACKEND}/api/leads/${id}/favorite`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ is_favorite }) }),
+    fetch(`${BACKEND}/api/leads/${id}/favorite`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getUserIdHeader() }, body: JSON.stringify({ is_favorite }) }),
   interaction:  (id: string, body: unknown) =>
-    fetch(`${BACKEND}/api/leads/${id}/interaction`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
+    fetch(`${BACKEND}/api/leads/${id}/interaction`, { method: 'POST', headers: { 'Content-Type': 'application/json', ...getUserIdHeader() }, body: JSON.stringify(body) }),
   leadBySlug:   (slug: string) => fetch(`${BACKEND}/api/leads/by-slug/${slug}`, { cache: 'no-store' }),
   status:       () => fetch(`${BACKEND}/api/system/health`, { cache: 'no-store' }),
   importLeads:  (leads: unknown[]) =>
     fetch(`${BACKEND}/api/leads/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leads }) }),
   scanPillars:  (city: string = "São Paulo", pilares: string = "A,B,C") =>
     fetch(`${BACKEND}/api/scan-pillars?city=${encodeURIComponent(city)}&pilares=${encodeURIComponent(pilares)}`, { cache: 'no-store' }),
-  leadsQuentes: () => fetch(`${BACKEND}/api/leads-quentes`, { cache: 'no-store' }),
+  leadsQuentes: (userId?: string | number) => {
+    const url = userId 
+      ? `${BACKEND}/api/admin/users/${userId}/leads-quentes` 
+      : `${BACKEND}/api/leads-quentes`;
+    return fetch(url, { cache: 'no-store', headers: { ...getUserIdHeader() } });
+  },
   getConfiguracoes: () => fetch(`${BACKEND}/api/configuracoes`, { cache: 'no-store' }),
   saveConfiguracoes: (config: { limite_leads: number, cidade_base: string, pilar_varredura: string }) =>
     fetch(`${BACKEND}/api/configuracoes`, {

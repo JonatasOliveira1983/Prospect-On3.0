@@ -23,7 +23,8 @@ import {
   AlertCircle,
   Building2,
   ScrollText,
-  Briefcase
+  Briefcase,
+  ShieldAlert
 } from "lucide-react";
 
 interface Lead {
@@ -56,9 +57,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSave: () => void;
+  readOnly?: boolean;
 }
 
-export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props) {
+export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnly = false }: Props) {
   const leadId = lead.id || lead.name.toLowerCase().replace(/\s+/g, "_").replace(/\//g, "-");
 
   const [notes, setNotes] = useState(lead.interaction_notes || "");
@@ -86,6 +88,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
   }
 
   async function handleSave() {
+    if (readOnly) return;
     setSaving(true);
     try {
       const body = {
@@ -133,16 +136,26 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
             className="bg-slate-900 border border-yellow-400/10 w-full max-w-6xl rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-2xl relative z-10 my-4 sm:my-8 flex flex-col md:flex-row gap-5 md:gap-8 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           >
+            {/* Warning Banner for ReadOnly */}
+            {readOnly && (
+              <div className="absolute top-0 left-0 right-0 bg-yellow-400/10 border-b border-yellow-400/20 text-yellow-400 text-[10px] font-black uppercase tracking-[0.2em] py-2 px-6 rounded-t-2xl sm:rounded-t-[2.5rem] flex items-center gap-2">
+                <ShieldAlert size={14} className="animate-pulse" />
+                <span>Modo de Visualização Administrativa — Somente Leitura</span>
+              </div>
+            )}
+
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all z-20"
+              className={`absolute p-2 rounded-full bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-all z-20 ${
+                readOnly ? "top-10 sm:top-12 right-4 sm:right-6" : "top-4 right-4 sm:top-6 sm:right-6"
+              }`}
             >
               <X size={18} />
             </button>
 
             {/* ── Coluna 1: Informações do Lead ── */}
-            <div className="flex-1 flex flex-col gap-4 sm:gap-5 md:border-r md:border-white/5 md:pr-8">
+            <div className={`flex-1 flex flex-col gap-4 sm:gap-5 md:border-r md:border-white/5 md:pr-8 ${readOnly ? "pt-6" : ""}`}>
               {/* Badges + Nome */}
               <div>
                 <div className="flex items-center gap-2 mb-2 flex-wrap">
@@ -192,16 +205,18 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                         (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=600&auto=format&fit=crop&q=80";
                       }}
                     />
-                  <button
-                    onClick={() => setFachadaInputVisible(v => !v)}
-                    className="absolute bottom-2 right-2 bg-slate-900/90 hover:bg-yellow-400 hover:text-slate-900 text-slate-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl border border-white/10 transition-all flex items-center gap-1.5 backdrop-blur-sm"
-                  >
-                    <ImageIcon size={10} /> Corrigir Foto
-                  </button>
+                  {!readOnly && (
+                    <button
+                      onClick={() => setFachadaInputVisible(v => !v)}
+                      className="absolute bottom-2 right-2 bg-slate-900/90 hover:bg-yellow-400 hover:text-slate-900 text-slate-300 text-[9px] font-black uppercase tracking-widest px-2.5 py-1.5 rounded-xl border border-white/10 transition-all flex items-center gap-1.5 backdrop-blur-sm"
+                    >
+                      <ImageIcon size={10} /> Corrigir Foto
+                    </button>
+                  )}
                 </div>
 
                 <AnimatePresence>
-                  {fachadaInputVisible && (
+                  {fachadaInputVisible && !readOnly && (
                     <motion.div
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
@@ -386,7 +401,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
             </div>
 
             {/* ── Coluna 2: CRM ── */}
-            <div className="flex-1 flex flex-col gap-4 sm:gap-5 justify-between">
+            <div className={`flex-1 flex flex-col gap-4 sm:gap-5 justify-between ${readOnly ? "pt-6" : ""}`}>
               <div className="space-y-4 sm:space-y-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-1">CRM Otto Pinturas</h3>
@@ -401,7 +416,8 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-3.5 text-sm font-bold text-white focus:outline-none focus:border-yellow-400 appearance-none cursor-pointer"
+                    disabled={readOnly}
+                    className="w-full bg-slate-950 border border-white/10 rounded-2xl p-3.5 text-sm font-bold text-white focus:outline-none focus:border-yellow-400 appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="Aguardando Abordagem">🟡 Aguardando Abordagem</option>
                     <option value="Contato Iniciado">🔵 Contato Iniciado (WhatsApp/Ligação)</option>
@@ -420,9 +436,10 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Notas rápidas: com quem falou, o que respondeu, proposta enviada, valor cobrado..."
+                    disabled={readOnly}
+                    placeholder={readOnly ? "Sem histórico registrado." : "Notas rápidas: com quem falou, o que respondeu, proposta enviada, valor cobrado..."}
                     rows={5}
-                    className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed"
+                    className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -435,29 +452,36 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                     type="datetime-local"
                     value={returnDate}
                     onChange={(e) => setReturnDate(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-2xl p-3.5 text-xs font-bold text-white outline-none transition-colors"
+                    disabled={readOnly}
+                    className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-2xl p-3.5 text-xs font-bold text-white outline-none transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
-              {/* Botão Salvar */}
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-yellow-400/10 mt-auto"
-              >
-                {saving ? (
-                  <>
-                    <Loader2 className="animate-spin" size={16} />
-                    <span className="uppercase tracking-widest text-xs">Salvando...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save size={16} />
-                    <span className="uppercase tracking-widest text-xs">Salvar Registro no CRM</span>
-                  </>
-                )}
-              </button>
+              {/* Botão Salvar ou Aviso de Somente Leitura */}
+              {readOnly ? (
+                <div className="w-full bg-slate-950 border border-white/5 text-slate-400 font-bold p-4 rounded-2xl text-center text-xs uppercase tracking-widest mt-auto">
+                  Apenas visualização do Gestor
+                </div>
+              ) : (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-yellow-400/10 mt-auto"
+                >
+                  {saving ? (
+                    <>
+                      <Loader2 className="animate-spin" size={16} />
+                      <span className="uppercase tracking-widest text-xs">Salvando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save size={16} />
+                      <span className="uppercase tracking-widest text-xs">Salvar Registro no CRM</span>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </motion.div>
         </div>

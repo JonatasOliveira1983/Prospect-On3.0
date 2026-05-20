@@ -50,7 +50,7 @@ const STATUS_DOT: Record<string, string> = {
   'Sem Interesse':     'bg-rose-500',
 };
 
-export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: () => void }) {
+export default function LeadTable({ leads, onSave, readOnly = false }: { leads: Lead[]; onSave?: () => void; readOnly?: boolean }) {
   const [inspectingLead, setInspectingLead] = useState<Lead | null>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
 
@@ -67,6 +67,7 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
 
   const handleToggleFavorite = async (e: React.MouseEvent, lead: Lead) => {
     e.stopPropagation();
+    if (readOnly) return;
     const isCurrentlyFavorite = favorites[lead.name] || false;
     const nextFavorite = !isCurrentlyFavorite;
     setFavorites(prev => ({ ...prev, [lead.name]: nextFavorite }));
@@ -332,6 +333,7 @@ export default function LeadTable({ leads, onSave }: { leads: Lead[]; onSave?: (
             setInspectingLead(null);
             if (onSave) onSave();
           }}
+          readOnly={readOnly}
         />
       )}
     </>

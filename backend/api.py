@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -114,6 +114,24 @@ class InteractionData(BaseModel):
 class FavoriteData(BaseModel):
     is_favorite: bool
 
+class UserLoginSchema(BaseModel):
+    email: str
+    password: str
+
+class UserProfileUpdateSchema(BaseModel):
+    name: str
+    phone: str = None
+    document: str = None
+    password: str = None
+
+class UserCreateSchema(BaseModel):
+    email: str
+    password: str
+    name: str
+    role: str
+    phone: str = None
+    document: str = None
+
 class ImportLeadItem(BaseModel):
     """
     Modelo flexível para importação de leads de extensões de navegador.
@@ -217,10 +235,127 @@ async def analyze_lead(lead: LeadData):
         logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=f"Erro no Motor 3.0: {str(e)}")
 
-@app.get("/api/leads")
-async def get_leads():
+@app.post("/api/auth/login")
+async def auth_login(data: UserLoginSchema):
+    user = db.get_user_by_email(data.email)
+    if not user or user["password"] != data.password:
+        raise HTTPException(status_code=401, detail="E-mail ou senha incorretos")
+    return {
+        "success": True,
+        "user": {
+            "id": user["id"],
+            "email": user["email"],
+            "name": user["name"],
+            "role": user["role"],
+            "phone": user.get("phone", ""),
+            "document": user.get("document", "")
+        }
+    }
+
+@app.get("/api/users/profile")
+async def get_user_profile(x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
     try:
-        leads = db.get_all_leads()
+        user_id = int(x_user_id)
+        user = db.get_user_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        return user
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuário inválido")
+
+@app.put("/api/users/profile")
+async def update_user_profile(data: UserProfileUpdateSchema, x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+    try:
+        user_id = int(x_user_id)
+        success = db.update_user_profile(user_id, data.name, data.phone, data.document, data.password)
+        if success:
+            updated_user = db.get_user_by_id(user_id)
+            return {"success": True, "user": updated_user}
+        raise HTTPException(status_code=500, detail="Erro ao atualizar perfil")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuário inválido")
+
+# Rotas Administrativas
+@app.get("/api/admin/users")
+async def get_admin_users(x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+    try:
+        caller = db.get_user_by_id(int(x_user_id))
+        if not caller or caller["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        return db.get_all_users()
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuário inválido")
+
+@app.post("/api/admin/users")
+async def admin_create_user(data: UserCreateSchema, x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+    try:
+        caller = db.get_user_by_id(int(x_user_id))
+        if not caller or caller["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        existing = db.get_user_by_email(data.email)
+        if existing:
+            raise HTTPException(status_code=400, detail="E-mail já cadastrado")
+        
+        user_id = db.create_user(data.email, data.password, data.name, data.role, data.phone, data.document)
+        if user_id:
+            return {"success": True, "id": user_id, "message": "Vendedor criado com sucesso!"}
+        raise HTTPException(status_code=500, detail="Erro ao criar vendedor")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuário inválido")
+
+@app.delete("/api/admin/users/{user_id}")
+async def admin_delete_user(user_id: int, x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+    try:
+        caller = db.get_user_by_id(int(x_user_id))
+        if not caller or caller["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        if caller["id"] == user_id:
+            raise HTTPException(status_code=400, detail="Você não pode excluir o seu próprio usuário administrador")
+        
+        success = db.delete_user(user_id)
+        if success:
+            return {"success": True, "message": "Vendedor excluído com sucesso!"}
+        raise HTTPException(status_code=500, detail="Erro ao excluir vendedor")
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuário inválido")
+
+@app.get("/api/admin/users/{user_id}/leads-quentes")
+async def get_seller_leads_quentes(user_id: int, x_user_id: str = Header(None)):
+    if not x_user_id:
+        raise HTTPException(status_code=401, detail="Não autorizado")
+    try:
+        caller = db.get_user_by_id(int(x_user_id))
+        if not caller or caller["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        leads = db.get_all_leads_quentes(user_id=user_id)
+        port = "8002"
+        base_url = f"http://localhost:{port}"
+        for lead in leads:
+            if lead.get('vision_image_url') and lead['vision_image_url'].startswith('/static'):
+                lead['vision_image_url'] = f"{base_url}{lead['vision_image_url']}"
+        return leads
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de usuário inválido")
+
+# Rotas de Leads com Isolamento
+@app.get("/api/leads")
+async def get_leads(x_user_id: str = Header(None)):
+    try:
+        user_id = int(x_user_id) if x_user_id else None
+        leads = db.get_all_leads(user_id=user_id)
         port = "8002"
         base_url = f"http://localhost:{port}"
         
@@ -235,9 +370,10 @@ async def get_leads():
         return []
 
 @app.get("/api/leads-quentes")
-async def get_leads_quentes():
+async def get_leads_quentes(x_user_id: str = Header(None)):
     try:
-        leads = db.get_all_leads_quentes()
+        user_id = int(x_user_id) if x_user_id else None
+        leads = db.get_all_leads_quentes(user_id=user_id)
         port = "8002"
         base_url = f"http://localhost:{port}"
         
@@ -273,11 +409,12 @@ async def get_lead_by_slug(slug: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/leads/{lead_id}/interaction")
-async def save_lead_interaction(lead_id: str, data: InteractionData):
-    """Salva a interação com o lead (anotações, retorno, status, data de email e URL de fachada)."""
+async def save_lead_interaction(lead_id: str, data: InteractionData, x_user_id: str = Header(None)):
+    """Salva a interação com o lead (anotações, retorno, status, data de email e URL de fachada) isolando por usuário."""
     try:
-        logger.info(f"API: Salvando interação comercial para lead_id={lead_id} | Status: {data.contact_status}")
-        success = db.save_interaction(lead_id, data.notes, data.return_date, data.contact_status, data.email_sent_at, data.vision_image_url)
+        user_id = int(x_user_id) if x_user_id else None
+        logger.info(f"API: Salvando interação comercial para lead_id={lead_id} | Status: {data.contact_status} | User: {user_id}")
+        success = db.save_interaction(lead_id, data.notes, data.return_date, data.contact_status, data.email_sent_at, data.vision_image_url, user_id=user_id)
         if success:
             return {"success": True, "message": "Interação comercial salva com sucesso."}
         else:
@@ -287,11 +424,12 @@ async def save_lead_interaction(lead_id: str, data: InteractionData):
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/leads/{lead_id}/favorite")
-async def toggle_lead_favorite(lead_id: str, data: FavoriteData):
-    """Marca ou desmarca um lead como favorito (Leads Quentes)."""
+async def toggle_lead_favorite(lead_id: str, data: FavoriteData, x_user_id: str = Header(None)):
+    """Marca ou desmarca um lead como favorito (Leads Quentes) isolando por usuário."""
     try:
-        logger.info(f"API: Alternando favorito para lead_id={lead_id} para {data.is_favorite}")
-        success = db.toggle_favorite(lead_id, data.is_favorite)
+        user_id = int(x_user_id) if x_user_id else 1
+        logger.info(f"API: Alternando favorito para lead_id={lead_id} para {data.is_favorite} | User: {user_id}")
+        success = db.toggle_favorite(lead_id, data.is_favorite, user_id=user_id)
         if success:
             return {"success": True, "message": "Estado do favorito atualizado."}
         else:
