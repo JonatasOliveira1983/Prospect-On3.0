@@ -1,21 +1,15 @@
 /**
  * Chama o backend FastAPI DIRETAMENTE do browser.
- * Elimina o layer de proxy Next.js (que causava 404 em produção).
- * BACKEND_URL é injetado em build-time via NEXT_PUBLIC_API_URL.
+ * Em produção (Railway), NEXT_PUBLIC_API_URL é injetado em build-time.
+ * Em desenvolvimento local, aponta para http://localhost:8002.
  */
 let rawBackend = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002';
 
-// Otimização inteligente para rede local (celular testando no computador)
-if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL) {
-  const hostname = window.location.hostname;
-  if (hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '') {
-    rawBackend = `http://${hostname}:8002`;
-  }
-}
-
+// Adicionar protocolo https:// se a URL vier sem protocolo (ex: do Railway env var)
 if (rawBackend && !rawBackend.startsWith('http://') && !rawBackend.startsWith('https://') && !rawBackend.startsWith('//')) {
   rawBackend = `https://${rawBackend}`;
 }
+
 export const BACKEND = rawBackend;
 
 function getUserIdHeader(): { [key: string]: string } {

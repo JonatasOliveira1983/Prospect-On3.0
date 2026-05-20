@@ -8,14 +8,7 @@ let rawBackendUrl =
   process.env.NEXT_PUBLIC_API_URL ||
   'http://localhost:8002';
 
-// Otimização inteligente para rede local (celular testando no computador)
-if (typeof window !== "undefined" && !process.env.NEXT_PUBLIC_API_URL && !process.env.BACKEND_URL) {
-  const hostname = window.location.hostname;
-  if (hostname !== 'localhost' && hostname !== '127.0.0.1' && hostname !== '') {
-    rawBackendUrl = `http://${hostname}:8002`;
-  }
-}
-
+// Adicionar protocolo https:// se a URL vier sem protocolo (ex: do Railway env var)
 if (rawBackendUrl && !rawBackendUrl.startsWith('http://') && !rawBackendUrl.startsWith('https://') && !rawBackendUrl.startsWith('//')) {
   rawBackendUrl = `https://${rawBackendUrl}`;
 }
