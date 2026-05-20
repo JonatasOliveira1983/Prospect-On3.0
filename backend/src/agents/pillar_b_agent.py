@@ -211,58 +211,7 @@ class PillarBHunterAgent:
         # Fallback de segurança com dados reais auditados (não mocks) de editais/licitações da região para lidar com bloqueios de bot
         if not results:
             logger.info("PillarBHunterAgent: Busca online vazia ou bloqueada. Ativando fallback de dados reais auditados.")
-            city_key = city_clean.lower()
-            if "são paulo" in city_key or "sao paulo" in city_key or "sp" in city_key:
-                results = [
-                    {
-                        "name": "Reitoria da USP - Universidade de São Paulo",
-                        "resumo_sinal": "Pregão Eletrônico USP - Contratação de empresa de engenharia especializada para prestação de serviços de pintura predial, lavagem e conservação de fachadas dos prédios da Reitoria.",
-                        "link_fonte": "https://www.usp.br/licitacoes",
-                        "score_urgencia": 8,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "publico",
-                        "pilar": "B",
-                        "address": "Rua da Reitoria, 374 - Cidade Universitária, São Paulo - SP, 05508-010",
-                        "phone": "(11) 3091-3300",
-                        "email": "licitacoes.reitoria@usp.br",
-                        "lat": -23.5594,
-                        "lng": -46.7269
-                    }
-                ]
-            elif "jundiaí" in city_key or "jundiai" in city_key:
-                results = [
-                    {
-                        "name": "Prefeitura Municipal de Jundiaí",
-                        "resumo_sinal": "Edital de licitação pública para contratação de empresa especializada em reforma, pintura e manutenção corretiva das escolas da rede municipal de ensino de Jundiaí.",
-                        "link_fonte": "https://www.jundiai.sp.gov.br",
-                        "score_urgencia": 9,
-                        "categoria_demanda": "reforma_geral",
-                        "tipo_entidade": "publico",
-                        "pilar": "B",
-                        "address": "Av. Liberdade, s/n - Jardim Botânico, Jundiaí - SP, 13214-900",
-                        "phone": "(11) 4589-8400",
-                        "email": "licitacoes@jundiai.sp.gov.br",
-                        "lat": -23.1783,
-                        "lng": -46.8837
-                    }
-                ]
-            else:
-                results = [
-                    {
-                        "name": "Reitoria da USP - Universidade de São Paulo",
-                        "resumo_sinal": "Pregão Eletrônico USP - Contratação de empresa de engenharia especializada para prestação de serviços de pintura predial, lavagem e conservação de fachadas dos prédios da Reitoria.",
-                        "link_fonte": "https://www.usp.br/licitacoes",
-                        "score_urgencia": 8,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "publico",
-                        "pilar": "B",
-                        "address": "Rua da Reitoria, 374 - Cidade Universitária, São Paulo - SP, 05508-010",
-                        "phone": "(11) 3091-3300",
-                        "email": "licitacoes.reitoria@usp.br",
-                        "lat": -23.5594,
-                        "lng": -46.7269
-                    }
-                ]
+            results = self._get_mocked_edital_demands(city_clean)
 
 
         logger.info(

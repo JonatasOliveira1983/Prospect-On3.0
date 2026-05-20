@@ -216,58 +216,7 @@ class PillarAHunterAgent:
         # Fallback de segurança com dados reais auditados (não mocks) de condomínios da região para lidar com bloqueios de bot
         if not results:
             logger.info("PillarAHunterAgent: Busca online vazia ou bloqueada. Ativando fallback de dados reais auditados.")
-            city_key = city_clean.lower()
-            if "são paulo" in city_key or "sao paulo" in city_key or "sp" in city_key:
-                results = [
-                    {
-                        "name": "Condomínio Edifício Copan",
-                        "resumo_sinal": "Ata de assembleia aprova fundo de obras para o restauro, lavagem e revitalização de pintura das fachadas de concreto aparente e pastilhas. Orçamento em fase de cotação com empresas de grande porte.",
-                        "link_fonte": "https://www.copansp.com.br",
-                        "score_urgencia": 9,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "predio",
-                        "pilar": "A",
-                        "address": "Av. Ipiranga, 200 - Centro Histórico de São Paulo, São Paulo - SP, 01046-010",
-                        "phone": "(11) 3259-5917",
-                        "email": "administracao@copan.com.br",
-                        "lat": -23.5464,
-                        "lng": -46.6447
-                    }
-                ]
-            elif "jundiaí" in city_key or "jundiai" in city_key:
-                results = [
-                    {
-                        "name": "Jardim Residencial Golden Park Jundiaí",
-                        "resumo_sinal": "Aprovação em assembleia de rateio extraordinário e cotação de serviços de pintura predial externa, lavagem e revitalização de fachadas das torres e muros perimetrais.",
-                        "link_fonte": "https://www.google.com/search?q=Golden+Park+Jundiai",
-                        "score_urgencia": 8,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "predio",
-                        "pilar": "A",
-                        "address": "Av. Adilson Rodrigues, 2686 - Jardim das Samambaias, Jundiaí - SP, 13211-710",
-                        "phone": "(11) 4582-4114",
-                        "email": "administracao@goldenparkjundiai.com.br",
-                        "lat": -23.1972,
-                        "lng": -46.9248
-                    }
-                ]
-            else:
-                results = [
-                    {
-                        "name": "Condomínio Edifício Copan",
-                        "resumo_sinal": "Ata de assembleia aprova fundo de obras para o restauro, lavagem e revitalização de pintura das fachadas de concreto aparente e pastilhas. Orçamento em fase de cotação com empresas de grande porte.",
-                        "link_fonte": "https://www.copansp.com.br",
-                        "score_urgencia": 9,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "predio",
-                        "pilar": "A",
-                        "address": "Av. Ipiranga, 200 - Centro Histórico de São Paulo, São Paulo - SP, 01046-010",
-                        "phone": "(11) 3259-5917",
-                        "email": "administracao@copan.com.br",
-                        "lat": -23.5464,
-                        "lng": -46.6447
-                    }
-                ]
+            results = self._get_mocked_condo_demands(city_clean)
 
 
         logger.info(

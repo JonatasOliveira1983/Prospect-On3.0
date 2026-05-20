@@ -211,58 +211,7 @@ class PillarCHunterAgent:
         # Fallback de segurança com dados reais auditados (não mocks) corporativos/facilities da região para lidar com bloqueios de bot
         if not results:
             logger.info("PillarCHunterAgent: Busca online vazia ou bloqueada. Ativando fallback de dados reais auditados.")
-            city_key = city_clean.lower()
-            if "são paulo" in city_key or "sao paulo" in city_key or "sp" in city_key:
-                results = [
-                    {
-                        "name": "Shopping Center 3 (Avenida Paulista)",
-                        "resumo_sinal": "Cotação privada e chamamento de fornecedores via facilities para serviços de pintura das fachadas comerciais externas, marquises e renovação das portas metálicas das garagens.",
-                        "link_fonte": "https://www.shoppingcenter3.com.br",
-                        "score_urgencia": 8,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "comercial",
-                        "pilar": "C",
-                        "address": "Av. Paulista, 2064 - Cerqueira César, São Paulo - SP, 01310-928",
-                        "phone": "(11) 3285-2458",
-                        "email": "comercial@shoppingcenter3.com.br",
-                        "lat": -23.5583,
-                        "lng": -46.6611
-                    }
-                ]
-            elif "jundiaí" in city_key or "jundiai" in city_key:
-                results = [
-                    {
-                        "name": "Hospital Paulo Sacramento Jundiaí",
-                        "resumo_sinal": "Processo de cotação corporativo da rede de saúde NotreDame Intermédica para reforma predial, lavagem técnica e pintura de fachada do bloco principal do hospital.",
-                        "link_fonte": "https://www.gndi.com.br",
-                        "score_urgencia": 9,
-                        "categoria_demanda": "reforma_geral",
-                        "tipo_entidade": "comercial",
-                        "pilar": "C",
-                        "address": "Rua XV de Novembro, 865 - Centro, Jundiaí - SP, 13201-005",
-                        "phone": "(11) 4527-6000",
-                        "email": "facilities.jundiai@gndi.com.br",
-                        "lat": -23.1895,
-                        "lng": -46.8842
-                    }
-                ]
-            else:
-                results = [
-                    {
-                        "name": "Shopping Center 3 (Avenida Paulista)",
-                        "resumo_sinal": "Cotação privada e chamamento de fornecedores via facilities para serviços de pintura das fachadas comerciais externas, marquises e renovação das portas metálicas das garagens.",
-                        "link_fonte": "https://www.shoppingcenter3.com.br",
-                        "score_urgencia": 8,
-                        "categoria_demanda": "pintura_fachada",
-                        "tipo_entidade": "comercial",
-                        "pilar": "C",
-                        "address": "Av. Paulista, 2064 - Cerqueira César, São Paulo - SP, 01310-928",
-                        "phone": "(11) 3285-2458",
-                        "email": "comercial@shoppingcenter3.com.br",
-                        "lat": -23.5583,
-                        "lng": -46.6611
-                    }
-                ]
+            results = self._get_mocked_corp_demands(city_clean)
 
 
         logger.info(
