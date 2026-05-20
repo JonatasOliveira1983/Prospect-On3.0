@@ -234,6 +234,23 @@ async def get_leads():
         logger.error(f"Erro ao buscar leads no DB: {e}")
         return []
 
+@app.get("/api/leads-quentes")
+async def get_leads_quentes():
+    try:
+        leads = db.get_all_leads_quentes()
+        port = "8002"
+        base_url = f"http://localhost:{port}"
+        
+        # Converter URLs relativas para absolutas para o frontend
+        for lead in leads:
+            if lead.get('vision_image_url') and lead['vision_image_url'].startswith('/static'):
+                lead['vision_image_url'] = f"{base_url}{lead['vision_image_url']}"
+        
+        return leads
+    except Exception as e:
+        logger.error(f"Erro ao buscar leads quentes no DB: {e}")
+        return []
+
 @app.get("/api/leads/by-slug/{slug}")
 async def get_lead_by_slug(slug: str):
     """Busca um lead pelo slug (nome sanitizado)."""
@@ -458,6 +475,62 @@ async def start_extension_scan(query: str = "Condominios", city: str = "São Pau
         return {"success": True, "message": "Navegador Sniper aberto com a extensão carregada."}
     except Exception as e:
         logger.error(f"Erro ao lançar extensão: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "data", "system_config.json")
+
+def load_system_config():
+    if os.path.exists(CONFIG_PATH):
+        try:
+            with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logger.error(f"Erro ao ler system_config.json: {e}")
+    return {
+        "limite_leads": 50,
+        "cidade_base": "São Paulo, SP",
+        "motor_busca": "Google Search (Playwright Stealth)",
+        "motor_mapas": "Google Maps (Playwright Stealth)",
+        "motor_ia": "DeepSeek Chat",
+        "delay_stealth": "2.0s – 3.5s (aleatório)",
+        "pilares_ativos": "A (Condomínios) · B (Editais) · C (Corporativo)",
+        "pilar_varredura": "Todos"
+    }
+
+def save_system_config(config_data):
+    try:
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+            json.dump(config_data, f, ensure_ascii=False, indent=4)
+        return True
+    except Exception as e:
+        logger.error(f"Erro ao salvar system_config.json: {e}")
+        return False
+
+class SystemConfigSchema(BaseModel):
+    limite_leads: int
+    cidade_base: str
+    pilar_varredura: str = "Todos"
+
+@app.get("/api/configuracoes")
+async def get_configuracoes():
+    try:
+        return load_system_config()
+    except Exception as e:
+        logger.error(f"Erro ao buscar configurações: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/configuracoes")
+async def post_configuracoes(config: SystemConfigSchema):
+    try:
+        current = load_system_config()
+        current.update(config.model_dump())
+        success = save_system_config(current)
+        if success:
+            return {"success": True, "config": current}
+        raise HTTPException(status_code=500, detail="Erro ao salvar arquivo de configurações.")
+    except Exception as e:
+        logger.error(f"Erro ao salvar configurações: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/system/health")

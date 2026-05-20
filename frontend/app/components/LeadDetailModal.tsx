@@ -131,7 +131,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-            className="bg-slate-900 border border-yellow-400/10 w-full max-w-4xl rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-2xl relative z-10 my-4 sm:my-8 flex flex-col md:flex-row gap-5 md:gap-8 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
+            className="bg-slate-900 border border-yellow-400/10 w-full max-w-6xl rounded-2xl sm:rounded-[2.5rem] p-4 sm:p-6 lg:p-8 shadow-2xl relative z-10 my-4 sm:my-8 flex flex-col md:flex-row gap-5 md:gap-8 max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
           >
             {/* Close Button */}
             <button
@@ -237,6 +237,17 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                 </AnimatePresence>
               </div>
 
+              {/* Destaque do Telefone Neon Cyberpunk */}
+              <div className="bg-slate-950/80 border border-yellow-400/20 p-4 rounded-2xl flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(250,204,21,0.05)] relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/0 via-yellow-400/5 to-yellow-400/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
+                  <Phone size={12} className="text-yellow-400 animate-pulse" /> LINHA DE CONTATO SNIPER
+                </span>
+                <span className="text-2xl sm:text-3xl font-black text-yellow-400 font-mono tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]">
+                  {phoneRaw || 'TELEFONE NÃO CADASTRADO'}
+                </span>
+              </div>
+
               {/* Botões de Ação: WhatsApp e E-mail */}
               <div className="flex flex-col sm:flex-row gap-3">
                 {whatsappUrl ? (
@@ -316,19 +327,6 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                         {lead.resumo_sinal}
                       </p>
                     </div>
-                    {lead.link_fonte && lead.link_fonte !== "N/D" && (
-                      <div className="flex items-center justify-between text-xs pt-1">
-                        <span className="text-slate-400">Fonte Pública</span>
-                        <a
-                          href={lead.link_fonte}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-bold text-rose-400 hover:text-rose-300 hover:underline flex items-center gap-1 truncate max-w-[180px]"
-                        >
-                          Acessar Fonte <ExternalLink size={9} />
-                        </a>
-                      </div>
-                    )}
                   </div>
                 </div>
               ) : null}
@@ -364,6 +362,27 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave }: Props
                   ) : <span className="font-bold text-slate-600">N/D</span>}
                 </div>
               </div>
+
+              {/* Seção Premium de Origem do Lead */}
+              {lead.link_fonte && lead.link_fonte !== "N/D" && (
+                <div className="bg-gradient-to-r from-blue-950/40 to-slate-950/60 p-4 rounded-2xl border border-blue-500/20 space-y-2 relative overflow-hidden group shrink-0">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full blur-xl pointer-events-none" />
+                  <h4 className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1 flex items-center gap-1.5">
+                    <Globe size={12} className="text-blue-400" /> Origem do Alvo / Link de Captação
+                  </h4>
+                  <p className="text-xs text-slate-400 leading-normal">
+                    Este lead foi capturado através do mapeamento de inteligência ativa da Otto.
+                  </p>
+                  <a
+                    href={lead.link_fonte}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-1 inline-flex items-center gap-2 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 hover:border-blue-500/50 text-blue-300 font-bold px-3 py-2 rounded-xl text-xs transition-all w-full justify-center group-hover:scale-[1.01]"
+                  >
+                    Acessar Canal de Origem <ExternalLink size={12} />
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* ── Coluna 2: CRM ── */}

@@ -54,6 +54,7 @@ class Database:
 
     def _create_tables(self):
         with self._get_connection() as conn:
+            # 1. Tabela principal leads
             self._run_query(conn, """
                 CREATE TABLE IF NOT EXISTS leads (
                     id TEXT PRIMARY KEY,
@@ -96,9 +97,52 @@ class Database:
                 )
             """)
             
+            # 2. Tabela blindada leads_quentes
+            self._run_query(conn, """
+                CREATE TABLE IF NOT EXISTS leads_quentes (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    address TEXT,
+                    lat REAL,
+                    lng REAL,
+                    score REAL,
+                    justification TEXT,
+                    category TEXT,
+                    responsavel_nome TEXT,
+                    responsavel_contato TEXT,
+                    vision_image_path TEXT,
+                    vision_image_url TEXT,
+                    satellite_image_path TEXT,
+                    vision_analysis_json TEXT,
+                    market_json TEXT,
+                    valuation_json TEXT,
+                    financial_health_json TEXT,
+                    demand_json TEXT, 
+                    source TEXT,      
+                    urgency_score REAL, 
+                    is_confirmed BOOLEAN DEFAULT FALSE,
+                    email TEXT,
+                    social_url TEXT,
+                    booking_url TEXT,
+                    scanned_at TEXT,
+                    enriched_at TEXT,
+                    interaction_notes TEXT,
+                    return_date TEXT,
+                    email_sent_at TEXT,
+                    is_favorite BOOLEAN DEFAULT TRUE,
+                    contact_status TEXT DEFAULT 'Aguardando Abordagem',
+                    intencao_ativa BOOLEAN DEFAULT FALSE,
+                    resumo_sinal TEXT,
+                    link_fonte TEXT,
+                    score_urgencia INTEGER DEFAULT 0,
+                    categoria_demanda TEXT,
+                    pilar TEXT DEFAULT 'A'
+                )
+            """)
+            
             # Migração de colunas apenas se for SQLite local
             if not self.is_postgres:
-                for col, col_type in [
+                cols = [
                     ("interaction_notes", "TEXT"), 
                     ("return_date", "TEXT"), 
                     ("email_sent_at", "TEXT"),
@@ -110,9 +154,14 @@ class Database:
                     ("score_urgencia", "INTEGER DEFAULT 0"),
                     ("categoria_demanda", "TEXT"),
                     ("pilar", "TEXT DEFAULT 'A'")
-                ]:
+                ]
+                for col, col_type in cols:
                     try:
                         conn.execute(f"ALTER TABLE leads ADD COLUMN {col} {col_type}")
+                    except sqlite3.OperationalError:
+                        pass
+                    try:
+                        conn.execute(f"ALTER TABLE leads_quentes ADD COLUMN {col} {col_type}")
                     except sqlite3.OperationalError:
                         pass
 
@@ -130,32 +179,33 @@ class Database:
     def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None):
         try:
             with self._get_connection() as conn:
-                if email_sent_at and vision_image_url:
-                    self._run_query(conn, """
-                        UPDATE leads 
-                        SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?, vision_image_url = ?
-                        WHERE id = ?
-                    """, (notes, return_date, contact_status, email_sent_at, vision_image_url, lead_id))
-                elif email_sent_at:
-                    self._run_query(conn, """
-                        UPDATE leads 
-                        SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
-                        WHERE id = ?
-                    """, (notes, return_date, contact_status, email_sent_at, lead_id))
-                elif vision_image_url:
-                    self._run_query(conn, """
-                        UPDATE leads 
-                        SET interaction_notes = ?, return_date = ?, contact_status = ?, vision_image_url = ?
-                        WHERE id = ?
-                    """, (notes, return_date, contact_status, vision_image_url, lead_id))
-                else:
-                    self._run_query(conn, """
-                        UPDATE leads 
-                        SET interaction_notes = ?, return_date = ?, contact_status = ?
-                        WHERE id = ?
-                    """, (notes, return_date, contact_status, lead_id))
+                for table in ["leads", "leads_quentes"]:
+                    if email_sent_at and vision_image_url:
+                        self._run_query(conn, f"""
+                            UPDATE {table} 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?, vision_image_url = ?
+                            WHERE id = ?
+                        """, (notes, return_date, contact_status, email_sent_at, vision_image_url, lead_id))
+                    elif email_sent_at:
+                        self._run_query(conn, f"""
+                            UPDATE {table} 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?, email_sent_at = ?
+                            WHERE id = ?
+                        """, (notes, return_date, contact_status, email_sent_at, lead_id))
+                    elif vision_image_url:
+                        self._run_query(conn, f"""
+                            UPDATE {table} 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?, vision_image_url = ?
+                            WHERE id = ?
+                        """, (notes, return_date, contact_status, vision_image_url, lead_id))
+                    else:
+                        self._run_query(conn, f"""
+                            UPDATE {table} 
+                            SET interaction_notes = ?, return_date = ?, contact_status = ?
+                            WHERE id = ?
+                        """, (notes, return_date, contact_status, lead_id))
                 conn.commit()
-            logger.info(f"DB: Interação comercial salva para o lead {lead_id} | Status: {contact_status}")
+            logger.info(f"DB: Interação comercial salva para o lead {lead_id} em todas as tabelas | Status: {contact_status}")
             return True
         except Exception as e:
             logger.error(f"DB: Erro ao salvar interação para o lead {lead_id}: {e}")
@@ -163,20 +213,55 @@ class Database:
 
     def toggle_favorite(self, lead_id, is_favorite):
         try:
+            fav_value = 1 if is_favorite else 0
             with self._get_connection() as conn:
+                # 1. Atualizar na tabela leads principal
                 self._run_query(conn, """
                     UPDATE leads 
                     SET is_favorite = ?
                     WHERE id = ?
-                """, (is_favorite, lead_id))
+                """, (fav_value, lead_id))
+                
+                # 2. Se for favoritado, copiar para a tabela blindada
+                if fav_value == 1:
+                    if self.is_postgres:
+                        from psycopg2.extras import RealDictCursor
+                        cur = conn.cursor(cursor_factory=RealDictCursor)
+                        cur.execute("SELECT * FROM leads WHERE id = %s", (lead_id,))
+                        row = cur.fetchone()
+                        row_dict = dict(row) if row else None
+                    else:
+                        conn.row_factory = sqlite3.Row
+                        row = conn.execute("SELECT * FROM leads WHERE id = ?", (lead_id,)).fetchone()
+                        row_dict = dict(row) if row else None
+                        
+                    if row_dict:
+                        # Tratar campos JSON para o formato python do upsert_lead
+                        try:
+                            row_dict['vision_analysis'] = json.loads(row_dict.pop('vision_analysis_json') or '{}')
+                            row_dict['market'] = json.loads(row_dict.pop('market_json') or '{}')
+                            row_dict['valuation'] = json.loads(row_dict.pop('valuation_json') or '{}')
+                            row_dict['financial_health'] = json.loads(row_dict.pop('financial_health_json') or '{}')
+                            row_dict['demand'] = json.loads(row_dict.pop('demand_json') or '{}')
+                            row_dict['coords'] = {'lat': row_dict.get('lat') or 0, 'lng': row_dict.get('lng') or 0}
+                            row_dict['is_favorite'] = True
+                        except Exception as je:
+                            logger.warning(f"DB: Erro ao tratar JSON no toggle_favorite: {je}")
+                        
+                        # Faz o upsert na tabela blindada leads_quentes
+                        self.upsert_lead(row_dict, table="leads_quentes")
+                else:
+                    # Se desfavoritado, deletar fisicamente de leads_quentes
+                    self._run_query(conn, "DELETE FROM leads_quentes WHERE id = ?", (lead_id,))
+                
                 conn.commit()
-            logger.info(f"DB: Favorito alterado para {is_favorite} no lead {lead_id}")
+            logger.info(f"DB: Favorito alterado para {fav_value} no lead {lead_id} e sincronizado com leads_quentes")
             return True
         except Exception as e:
             logger.error(f"DB: Erro ao alternar favorito para o lead {lead_id}: {e}")
             return False
 
-    def upsert_lead(self, lead_data):
+    def upsert_lead(self, lead_data, table="leads"):
         """Insere ou atualiza um lead no banco de dados (v7.2 Postgres/SQLite)."""
         try:
             lead_id = lead_data.get('id') or lead_data['name'].lower().replace(" ", "_").replace("/", "-")
@@ -201,9 +286,13 @@ class Database:
             else:
                 vision_url = lead_data.get('vision_image_url')
 
+            fav_status = lead_data.get('is_favorite')
+            if fav_status is None:
+                fav_status = True if table == "leads_quentes" else False
+
             with self._get_connection() as conn:
-                self._run_query(conn, """
-                    INSERT INTO leads (
+                self._run_query(conn, f"""
+                    INSERT INTO {table} (
                         id, name, address, lat, lng, score, justification, category,
                         responsavel_nome, responsavel_contato,
                         vision_image_path, vision_image_url, satellite_image_path,
@@ -211,8 +300,8 @@ class Database:
                         demand_json, source, urgency_score,
                         is_confirmed, email, social_url, booking_url, scanned_at,
                         intencao_ativa, resumo_sinal, link_fonte, score_urgencia, categoria_demanda,
-                        pilar
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        pilar, is_favorite
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ON CONFLICT(id) DO UPDATE SET
                         name=excluded.name, address=excluded.address, lat=excluded.lat, lng=excluded.lng,
                         score=excluded.score, justification=excluded.justification, category=excluded.category,
@@ -226,7 +315,7 @@ class Database:
                         booking_url=excluded.booking_url, scanned_at=excluded.scanned_at,
                         intencao_ativa=excluded.intencao_ativa, resumo_sinal=excluded.resumo_sinal,
                         link_fonte=excluded.link_fonte, score_urgencia=excluded.score_urgencia,
-                        categoria_demanda=excluded.categoria_demanda, pilar=excluded.pilar
+                        categoria_demanda=excluded.categoria_demanda, pilar=excluded.pilar, is_favorite=excluded.is_favorite
                 """, (
                     lead_id, lead_data['name'], lead_data['address'], lat, lng,
                     lead_data.get('score', 0), lead_data.get('justification', ''), lead_data.get('category', ''),
@@ -239,23 +328,23 @@ class Database:
                     lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
                     lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
                     lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma'),
-                    lead_data.get('pilar', 'A')
+                    lead_data.get('pilar', 'A'), 1 if fav_status else 0
                 ))
                 conn.commit()
         except Exception as e:
-            logger.error(f"DB: Erro fatal no upsert_lead: {e}")
+            logger.error(f"DB: Erro fatal no upsert_lead na tabela {table}: {e}")
 
-    def get_all_leads(self):
+    def get_all_leads(self, table="leads"):
         try:
             with self._get_connection() as conn:
                 if self.is_postgres:
                     from psycopg2.extras import RealDictCursor
                     cur = conn.cursor(cursor_factory=RealDictCursor)
-                    cur.execute("SELECT * FROM leads ORDER BY score DESC, name ASC")
+                    cur.execute(f"SELECT * FROM {table} ORDER BY score DESC, name ASC")
                     rows = [dict(row) for row in cur.fetchall()]
                 else:
                     conn.row_factory = sqlite3.Row
-                    rows = conn.execute("SELECT * FROM leads ORDER BY score DESC, name ASC").fetchall()
+                    rows = conn.execute(f"SELECT * FROM {table} ORDER BY score DESC, name ASC").fetchall()
                     rows = [dict(row) for row in rows]
                 
                 leads = []
@@ -281,8 +370,11 @@ class Database:
                     leads.append(lead)
                 return leads
         except Exception as e:
-            logger.error(f"DB: Erro ao buscar leads: {e}")
+            logger.error(f"DB: Erro ao buscar leads da tabela {table}: {e}")
             return []
+
+    def get_all_leads_quentes(self):
+        return self.get_all_leads(table="leads_quentes")
 
     def clear_all_leads(self):
         try:

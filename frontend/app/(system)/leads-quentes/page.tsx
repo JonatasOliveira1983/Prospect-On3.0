@@ -33,12 +33,10 @@ export default function LeadsQuentes() {
 
   async function fetchLeads() {
     try {
-      const res = await api.leads();
+      const res = await api.leadsQuentes();
       const data = await res.json();
       if (Array.isArray(data)) {
-        // Filtrar apenas favoritos (Leads Quentes selecionados pelo usuário)
-        const hot = data.filter(l => l.is_favorite === 1 || l.is_favorite === true);
-        setLeads(hot);
+        setLeads(data);
       }
     } catch (error) {
       console.error("Falha ao carregar leads quentes:", error);

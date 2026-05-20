@@ -35,6 +35,14 @@ export const api = {
     fetch(`${BACKEND}/api/leads/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leads }) }),
   scanPillars:  (city: string = "São Paulo", pilares: string = "A,B,C") =>
     fetch(`${BACKEND}/api/scan-pillars?city=${encodeURIComponent(city)}&pilares=${encodeURIComponent(pilares)}`, { cache: 'no-store' }),
+  leadsQuentes: () => fetch(`${BACKEND}/api/leads-quentes`, { cache: 'no-store' }),
+  getConfiguracoes: () => fetch(`${BACKEND}/api/configuracoes`, { cache: 'no-store' }),
+  saveConfiguracoes: (config: { limite_leads: number, cidade_base: string, pilar_varredura: string }) =>
+    fetch(`${BACKEND}/api/configuracoes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(config)
+    }),
 };
 
 export const WS_URL = BACKEND

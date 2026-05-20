@@ -21,6 +21,7 @@ class HealthAgent:
                 "overpass_osm": self._check_overpass(),
                 "google_maps": self._check_google_maps(),
                 "deepseek_api": self._check_deepseek(),
+                "gemini_api": self._check_gemini(),
                 "brasil_api": self._check_brasil_api()
             },
             "status": "Healthy",
@@ -33,6 +34,12 @@ class HealthAgent:
             health_report["status"] = "Warning" if len(critical_failures) < 2 else "Critical"
 
         return health_report
+
+    def _check_gemini(self):
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if not gemini_key:
+            return {"status": "Missing Key", "latency": "N/A"}
+        return {"status": "Online", "latency": "N/A"}
 
     def _check_overpass(self):
         try:
