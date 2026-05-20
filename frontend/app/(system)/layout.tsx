@@ -56,8 +56,17 @@ export default function SystemLayout({
     <div className="bg-otto-blue text-white min-h-screen">
       <div className="flex flex-col lg:flex-row">
         <Sidebar />
-        <main className="flex-1 min-h-screen p-4 lg:p-10 lg:ml-72 pb-24 lg:pb-10 transition-all duration-300">
-          {children}
+        <main className="flex-1 flex flex-col min-h-screen lg:ml-72 transition-all duration-300">
+          <div className="flex-1 p-4 lg:p-10 pb-24 lg:pb-10">
+            {children}
+          </div>
+          <footer className="w-full bg-slate-950/30 border-t border-white/5 py-6 px-4 text-center text-slate-500 text-xs mt-auto pb-24 lg:pb-6">
+            <p className="mb-2">&copy; {new Date().getFullYear()} Otto Pinturas. Todos os direitos reservados. Motor de Inteligência <span className="text-otto-yellow font-black tracking-widest text-[9px] border border-otto-yellow/30 px-1 rounded">PROSPECT-ON</span></p>
+            <div className="flex justify-center gap-6 mt-3">
+              <Link href="/politica-privacidade" className="hover:text-otto-yellow transition-colors">Política de Privacidade</Link>
+              <Link href="/termos-uso" className="hover:text-otto-yellow transition-colors">Termos de Uso</Link>
+            </div>
+          </footer>
         </main>
       </div>
       

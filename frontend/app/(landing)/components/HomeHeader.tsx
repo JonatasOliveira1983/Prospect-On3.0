@@ -61,8 +61,8 @@ export default function HomeHeader() {
         <Image 
           src="/AquivosOtto/Logo/Img001 logo Otto.png"
           alt="Logo Otto Pinturas"
-          width={64}
-          height={64}
+          width={120}
+          height={120}
           className="object-contain hover:scale-105 transition-transform duration-300"
           priority
         />

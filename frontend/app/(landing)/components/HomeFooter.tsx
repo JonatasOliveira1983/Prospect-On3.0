@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Phone, Mail, MapPin, ArrowUp } from "lucide-react";
 
 export default function HomeFooter() {
@@ -15,8 +16,8 @@ export default function HomeFooter() {
               <Image 
                 src="/AquivosOtto/Logo/Img001 logo Otto.png"
                 alt="Logo Otto Pinturas"
-                width={80}
-                height={80}
+                width={140}
+                height={140}
                 className="object-contain hover:scale-105 transition-transform duration-300"
               />
             </div>
@@ -50,27 +51,17 @@ export default function HomeFooter() {
           </div>
 
           <div>
-            <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-otto-yellow">Nossos Serviços</h4>
+            <h4 className="font-black text-xs uppercase tracking-[0.2em] mb-6 text-otto-yellow">Legal / Privacidade</h4>
             <ul className="space-y-3 text-slate-400 font-light text-xs">
               <li>
-                <a href="https://ottopinturas.com.br/pintura-de-condominios/" target="_blank" rel="noopener noreferrer" className="hover:text-otto-yellow transition-colors cursor-pointer">
-                  Pintura de Condomínios
-                </a>
+                <Link href="/politica-privacidade" className="hover:text-otto-yellow transition-colors cursor-pointer">
+                  Política de Privacidade
+                </Link>
               </li>
               <li>
-                <a href="https://ottopinturas.com.br/pintura-de-fachadas/" target="_blank" rel="noopener noreferrer" className="hover:text-otto-yellow transition-colors cursor-pointer">
-                  Pintura de Fachadas
-                </a>
-              </li>
-              <li>
-                <a href="https://ottopinturas.com.br/pintura-de-galpoes-e-hangares/" target="_blank" rel="noopener noreferrer" className="hover:text-otto-yellow transition-colors cursor-pointer">
-                  Galpões e Hangares
-                </a>
-              </li>
-              <li>
-                <a href="https://ottopinturas.com.br/pinturas-industriais/" target="_blank" rel="noopener noreferrer" className="hover:text-otto-yellow transition-colors cursor-pointer">
-                  Pinturas Industriais
-                </a>
+                <Link href="/termos-uso" className="hover:text-otto-yellow transition-colors cursor-pointer">
+                  Termos de Uso
+                </Link>
               </li>
             </ul>
           </div>
