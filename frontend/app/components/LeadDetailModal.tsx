@@ -121,7 +121,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[120] flex items-start md:items-center justify-center overflow-y-auto md:overflow-hidden">
+        <div className="fixed inset-0 z-[99999] flex items-start md:items-center justify-center overflow-y-auto md:overflow-hidden">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

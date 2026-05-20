@@ -576,7 +576,7 @@ class Database:
                     """
                     params = (user_id, user_id)
                 elif table == "leads_quentes" and user_id is not None:
-                    query = "SELECT * FROM leads_quentes WHERE user_id = ? ORDER BY score DESC, name ASC"
+                    query = "SELECT *, 1 as is_favorite FROM leads_quentes WHERE user_id = ? ORDER BY score DESC, name ASC"
                     params = (user_id,)
                 else:
                     query = f"SELECT * FROM {table} ORDER BY score DESC, name ASC"

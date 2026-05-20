@@ -170,6 +170,10 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                         <span className="bg-purple-500/10 border border-purple-500/25 text-purple-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                           <Lock size={8} /> Reservado por {lead.reserved_by_name}
                         </span>
+                      ) : isFav ? (
+                        <span className="bg-yellow-400/15 border border-yellow-400/30 text-yellow-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0 animate-pulse shadow-[0_0_8px_rgba(250,204,21,0.2)]">
+                          <Lock size={8} /> Reservado por Você
+                        </span>
                       ) : null}
                     </div>
                     <h4 className="text-white font-black text-sm leading-tight uppercase tracking-tight truncate">{lead.name}</h4>
@@ -184,15 +188,22 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                     lead.reserved_by_user_id
                       ? 'bg-slate-900 border-purple-500/30 text-purple-400'
                       : isFav
-                      ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400'
+                      ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400 shadow-md shadow-yellow-400/5'
                       : 'bg-slate-900 border-white/5 text-slate-500 hover:text-white'
                   }`}
-                  title={lead.reserved_by_user_id ? `Reservado por ${lead.reserved_by_name}` : undefined}
+                  title={lead.reserved_by_user_id ? `Reservado por ${lead.reserved_by_name}` : isFav ? "Você reservou este lead (Clique para remover)" : "Favoritar lead"}
                 >
                   {lead.reserved_by_user_id ? (
                     <Lock size={16} />
+                  ) : isFav ? (
+                    <div className="relative">
+                      <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                      <div className="absolute -bottom-1.5 -right-1.5 bg-slate-950 rounded-full p-[1px] border border-yellow-400/50">
+                        <Lock size={8} className="text-yellow-400" />
+                      </div>
+                    </div>
                   ) : (
-                    <Star size={16} className={isFav ? "fill-yellow-400" : ""} />
+                    <Star size={16} />
                   )}
                 </button>
               </div>
@@ -251,21 +262,28 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                         lead.reserved_by_user_id
                           ? 'bg-slate-900 border-purple-500/30 text-purple-400 shadow-md shadow-purple-500/5'
                           : isFav
-                          ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400 shadow-md shadow-yellow-400/5'
+                          ? 'bg-yellow-400/15 border-yellow-400/30 text-yellow-400 shadow-md shadow-yellow-400/10'
                           : 'bg-slate-900/40 border-white/5 text-slate-500 hover:text-white'
                       }`}
                       title={
                         lead.reserved_by_user_id
                           ? `Reservado por ${lead.reserved_by_name}`
                           : isFav
-                          ? "Remover dos Favoritos"
+                          ? "Você reservou este lead (Clique para remover)"
                           : "Marcar como Lead Quente"
                       }
                     >
                       {lead.reserved_by_user_id ? (
                         <Lock size={15} />
+                      ) : isFav ? (
+                        <div className="relative">
+                          <Star size={15} className="fill-yellow-400 text-yellow-400" />
+                          <div className="absolute -bottom-1.5 -right-1.5 bg-slate-950 rounded-full p-[1px] border border-yellow-400/50">
+                            <Lock size={7} className="text-yellow-400" />
+                          </div>
+                        </div>
                       ) : (
-                        <Star size={15} className={isFav ? "fill-yellow-400" : ""} />
+                        <Star size={15} />
                       )}
                     </button>
                   </td>
@@ -313,6 +331,10 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                           {lead.reserved_by_user_id ? (
                             <span className="bg-purple-500/10 border border-purple-500/25 text-purple-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
                               <Lock size={8} /> Reservado por {lead.reserved_by_name}
+                            </span>
+                          ) : isFav ? (
+                            <span className="bg-yellow-400/10 border border-yellow-400/25 text-yellow-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap animate-pulse shadow-[0_0_6px_rgba(250,204,21,0.15)]">
+                              <Lock size={8} /> Reservado por Você
                             </span>
                           ) : null}
                         </div>
