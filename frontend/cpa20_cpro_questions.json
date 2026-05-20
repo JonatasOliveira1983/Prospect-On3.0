@@ -1,0 +1,842 @@
+[
+  {
+    "id": "CPRO-2026-001",
+    "modulo": 1,
+    "subtopico": "Lavagem de Dinheiro",
+    "pergunta": "Qual o valor atual limite para comunicação automática de depósitos em espécie ao COAF em 2026?",
+    "alternativas": {
+      "A": "R$ 10.000",
+      "B": "R$ 50.000",
+      "C": "R$ 2.000",
+      "D": "R$ 100.000"
+    },
+    "resposta_correta": "B",
+    "justificativa_legal": "Atualmente, depósitos em espécie iguais ou superiores a R$ 50.000 devem ser comunicados automaticamente."
+  },
+  {
+    "id": "CPRO-2026-002",
+    "modulo": 5,
+    "subtopico": "CVM 175 - Taxas",
+    "pergunta": "Na nova estrutura da CVM 175, a taxa de gestão deve ser:",
+    "alternativas": {
+      "A": "Embutida na taxa de administração invariavelmente.",
+      "B": "Discriminada separadamente da taxa de administração e máxima global.",
+      "C": "Cobrada apenas se houver performance superior ao benchmark.",
+      "D": "Isenta para investidores qualificados."
+    },
+    "resposta_correta": "B",
+    "justificativa_legal": "A CVM 175 exige transparência, separando as taxas de administração, gestão e taxas máximas globais por classe."
+  },
+  {
+    "id": "CPRO-2026-003",
+    "modulo": 4,
+    "subtopico": "Instrumentos de Renda Fixa",
+    "pergunta": "Um investidor pessoa física adquire uma Debênture Incentivada. Sobre a tributação de IR para esse investidor, é correto afirmar que:",
+    "alternativas": {
+      "A": "Segue a tabela regressiva (22,5% a 15%).",
+      "B": "É isento para pessoa física.",
+      "C": "Possui alíquota fixa de 15%.",
+      "D": "Possui alíquota fixa de 20% com recolhimento via DARF."
+    },
+    "resposta_correta": "B",
+    "justificativa_legal": "Debêntures incentivadas (Lei 12.431) são isentas de IR para investidores pessoa física residentes no Brasil."
+  },
+  {
+    "id": "CPRO-2026-004",
+    "modulo": 5,
+    "subtopico": "CVM 175 - FIDC",
+    "pergunta": "De acordo com a CVM 175, as cotas de FIDC destinadas ao público em geral podem ser:",
+    "alternativas": {
+      "A": "Apenas cotas seniores.",
+      "B": "Cotas seniores e subordinadas de qualquer tipo.",
+      "C": "Apenas cotas de classe única sem subordinação.",
+      "D": "Proibidas para o público em geral, destinadas apenas a investidores qualificados."
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "A CVM 175 permitiu o acesso do público em geral a FIDCs, mas restrito a cotas seniores com classificação de risco."
+  },
+  {
+    "id": "CPRO-2026-005",
+    "modulo": 6,
+    "subtopico": "Derivativos - Opções",
+    "pergunta": "Um investidor que acredita na queda do preço de uma ação e deseja lucrar com essa movimentação, sem limite de ganho, deve:",
+    "alternativas": {
+      "A": "Comprar uma Call (Opção de Compra).",
+      "B": "Vender uma Put (Opção de Venda).",
+      "C": "Comprar uma Put (Opção de Venda).",
+      "D": "Vender uma Call (Opção de Compra) a seco."
+    },
+    "resposta_correta": "C",
+    "justificativa_legal": "A compra de uma Put (Titular) dá o direito de vender o ativo por um preço fixo, lucrando conforme o preço de mercado cai."
+  },
+  {
+    "id": "CPRO-2026-006",
+    "modulo": 7,
+    "subtopico": "Previdência - Tributação",
+    "pergunta": "No regime de tributação regressiva de um plano PGBL, qual a alíquota de IR para um resgate efetuado após 10 anos de acumulação?",
+    "alternativas": {
+      "A": "15%",
+      "B": "20%",
+      "C": "10%",
+      "D": "0% (isento)"
+    },
+    "resposta_correta": "C",
+    "justificativa_legal": "Na tabela regressiva de previdência, o prazo acima de 10 anos atinge a alíquota mínima de 10%."
+  },
+  {
+    "id": "CPRO-2026-007",
+    "modulo": 1,
+    "subtopico": "Lavagem de Dinheiro",
+    "pergunta": "Qual a pena prevista para o crime de Lavagem de Dinheiro de acordo com a Lei 9.613/98?",
+    "alternativas": {
+      "A": "Reclusão de 1 a 3 anos e multa.",
+      "B": "Reclusão de 3 a 10 anos e multa.",
+      "C": "Apenas multa pecuniária.",
+      "D": "Prisão simples de 6 meses a 2 anos."
+    },
+    "resposta_correta": "B",
+    "justificativa_legal": "A Lei 9.613/98 estabelece reclusão de 3 a 10 anos e multa para crimes de lavagem de dinheiro."
+  },
+  {
+    "id": "CPRO-2026-008",
+    "modulo": 2,
+    "subtopico": "Economia - COPOM",
+    "pergunta": "Qual o principal objetivo do Comitê de Política Monetária (COPOM) ao elevar a taxa Selic Meta?",
+    "alternativas": {
+      "A": "Estimular o consumo das famílias.",
+      "B": "Reduzir a inflação (IPCA) através da contração monetária.",
+      "C": "Desvalorizar o real perante o dólar.",
+      "D": "Aumentar o déficit público."
+    },
+    "resposta_correta": "B",
+    "justificativa_legal": "O COPOM usa a Selic como principal instrumento para controlar a inflação, seguindo o regime de metas de inflação."
+  },
+  {
+    "id": "CPRO-2026-009",
+    "modulo": 3,
+    "subtopico": "Princípios de Investimento",
+    "pergunta": "O risco de liquidez está associado à:",
+    "alternativas": {
+      "A": "Possibilidade de o emissor não pagar a dívida.",
+      "B": "Oscilação dos preços devido à variação de juros.",
+      "C": "Dificuldade de vender um ativo pelo seu preço justo em tempo hábil.",
+      "D": "Variação do poder de compra devido à inflação."
+    },
+    "resposta_correta": "C",
+    "justificativa_legal": "Liquidez é a facilidade e velocidade de converter um ativo em caixa sem perda significativa de valor."
+  },
+  {
+    "id": "CPRO-2026-010",
+    "modulo": 4,
+    "subtopico": "Renda Fixa - NTN-B",
+    "pergunta": "A NTN-B (Tesouro IPCA+) é um título que remunera o investidor com:",
+    "alternativas": {
+      "A": "Taxa prefixada apenas.",
+      "B": "Variação do CDI mais spread.",
+      "C": "Variação da inflação (IPCA) mais uma taxa de juros prefixada.",
+      "D": "Variação da Taxa Selic."
+    },
+    "resposta_correta": "C",
+    "justificativa_legal": "A NTN-B é um título pós-fixado indexado ao IPCA, garantindo rentabilidade real acima da inflação."
+  },
+  {
+    "id": "CPRO-2026-011",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 11]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-012",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 12]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-013",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 13]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-014",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 14]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-015",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 15]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-016",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 16]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-017",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 17]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-018",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 18]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-019",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 19]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-020",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 20]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-021",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 21]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-022",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 22]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-023",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 23]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-024",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 24]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-025",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 25]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-026",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 26]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-027",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 27]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-028",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 28]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-029",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 29]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-030",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 30]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-031",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 31]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-032",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 32]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-033",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 33]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-034",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 34]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-035",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 35]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-036",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 36]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-037",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 37]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-038",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 38]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-039",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 39]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-040",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 40]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-041",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 41]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-042",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 42]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-043",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 43]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-044",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 44]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-045",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 45]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-046",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 46]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-047",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 47]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-048",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 48]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-049",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 49]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-050",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 50]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-051",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 51]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-052",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 52]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-053",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 53]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  },
+  {
+    "id": "CPRO-2026-054",
+    "modulo": 6,
+    "subtopico": "Tópico Avançado Módulo 6",
+    "pergunta": "Questão técnica sobre o Módulo 6 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 54]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 6."
+  },
+  {
+    "id": "CPRO-2026-055",
+    "modulo": 7,
+    "subtopico": "Tópico Avançado Módulo 7",
+    "pergunta": "Questão técnica sobre o Módulo 7 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 55]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 7."
+  },
+  {
+    "id": "CPRO-2026-056",
+    "modulo": 1,
+    "subtopico": "Tópico Avançado Módulo 1",
+    "pergunta": "Questão técnica sobre o Módulo 1 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 56]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 1."
+  },
+  {
+    "id": "CPRO-2026-057",
+    "modulo": 2,
+    "subtopico": "Tópico Avançado Módulo 2",
+    "pergunta": "Questão técnica sobre o Módulo 2 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 57]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 2."
+  },
+  {
+    "id": "CPRO-2026-058",
+    "modulo": 3,
+    "subtopico": "Tópico Avançado Módulo 3",
+    "pergunta": "Questão técnica sobre o Módulo 3 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 58]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 3."
+  },
+  {
+    "id": "CPRO-2026-059",
+    "modulo": 4,
+    "subtopico": "Tópico Avançado Módulo 4",
+    "pergunta": "Questão técnica sobre o Módulo 4 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 59]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 4."
+  },
+  {
+    "id": "CPRO-2026-060",
+    "modulo": 5,
+    "subtopico": "Tópico Avançado Módulo 5",
+    "pergunta": "Questão técnica sobre o Módulo 5 focada em ambiente de 2026 (Asset Management e Advisory). [Exemplo 60]",
+    "alternativas": {
+      "A": "Opção A correta por norma",
+      "B": "Opção B incorreta",
+      "C": "Opção C incorreta",
+      "D": "Opção D incorreta"
+    },
+    "resposta_correta": "A",
+    "justificativa_legal": "Fundamentação baseada na norma ANBIMA e CVM vigente em 2026 para o Módulo 5."
+  }
+]

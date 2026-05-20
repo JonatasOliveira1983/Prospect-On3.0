@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html class="dark" lang="pt-BR">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        name="viewport" />
+    <script>
+        // V90.1: EMERGENCY SERVICE WORKER NUKE
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('SW Unregistered ✅');
+                }
+            });
+        }
+    </script>
+    <title>Sniper V110.125 — ELITE COMMAND</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="https://raw.githubusercontent.com/JonatasOliveira1983/10DBybityREAL/main/frontend/logo10D.png?v=2">
+    <link rel="shortcut icon" type="image/png" href="https://raw.githubusercontent.com/JonatasOliveira1983/10DBybityREAL/main/frontend/logo10D.png?v=2">
+    <meta name="theme-color" content="#000000">
+    <meta name="description"
+        content="Central de Comando Sniper para Trading de Elite. Monitore operações, radar de sinais e o Vault da Jornada em tempo real.">
+    <meta name="author" content="1CRYPTEN">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="1CRYPTEN SPACE — Command Center">
+    <meta property="og:description"
+        content="Central de Comando Sniper para Trading de Elite. Monitore operações, radar de sinais e o Vault da Jornada.">
+    <meta property="og:image" content="logo10D.png">
+    <meta property="og:locale" content="pt_BR">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="1CRYPTEN SPACE">
+    <meta name="twitter:description" content="Central de Comando Sniper para Trading de Elite.">
+    <meta name="twitter:image" content="logo10D.png">
+    <!-- PWA iOS -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="1CRYPTEN">
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/JonatasOliveira1983/10DBybityREAL/main/frontend/logo10D.png?v=2">
+
+    <!-- Ultra Cache-Busting (V110.15.1) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- Libraries (CDN High Availability v110.15.1) -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/history@5.3.0/umd/history.production.min.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@remix-run/router@1.16.1/dist/router.umd.min.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-router@6.23.1/dist/umd/react-router.production.min.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-router-dom@6.23.1/dist/umd/react-router-dom.production.min.js?v=110.15.1"></script>
+    
+    
+    <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.1/dist/lightweight-charts.standalone.production.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/framer-motion@11.2.6/dist/framer-motion.js?v=110.15.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Firebase Libraries (Official GStatic v9.23.0) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js?v=110.15.1"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js?v=110.15.1"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js?v=110.15.1"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet" />
+
+    
+    
+
+    <link rel="stylesheet" href="dist/styles.css">
+    <script defer src="dist/app.js"></script>
+</head>
+
+<body>
+    <!-- V110.100: ULTIMATE CACHE BREAKER BANNER -->
+
+    <div id="boot-shield">
+        <div class="boot-logo-container">
+            <div class="boot-ring"></div>
+            <div class="boot-ring"></div>
+            <div class="boot-ring"></div>
+            <div class="boot-scanner"></div>
+            <img src="https://raw.githubusercontent.com/JonatasOliveira1983/10DBybityREAL/main/frontend/logo10D.png?v=2" class="boot-logo" alt="10D Logo">
+        </div>
+        
+        <div style="color:#ffffff; font-size:14px; font-weight:900; letter-spacing:8px; text-transform:uppercase; font-family:'JetBrains Mono', monospace; text-shadow: 0 0 10px rgba(255,255,255,0.5);">
+            NEURAL INTERFACE</div>
+            
+        <div class="boot-progress-container">
+            <div class="boot-progress-bar" id="boot-progress"></div>
+        </div>
+
+        <div style="color:rgba(255,255,255,0.5); font-size:9px; margin-top:16px; font-family:'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 2px;"
+            id="boot-status">Initializing System Core...</div>
+            
+        <div style="position: absolute; bottom: 40px; color: rgba(255,255,255,0.2); font-size:8px; letter-spacing: 4px; text-transform: uppercase;">
+            Protocol V110.171 • Secure Connection Active
+        </div>
+    </div>
+
+    <div id="root"></div>
+    <div class="stars-bg"></div>
+
+    
+
+    
+</body>
+</html>

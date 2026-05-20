@@ -1,0 +1,9 @@
+                            <Route path="/" element={<Page10D />} />
+
+                            <Route path="/10d" element={<Page10D />} />
+
+                            <Route path="/chat" element={<LogsPage />} />
+
+                            <Route path="/config" element={<SettingsPage onLogout={handleLogout} theme={theme} setTheme={setTheme} />} />
+
+                            <Route path="/estudo-cpro" element={<CPROStudyPage />} />

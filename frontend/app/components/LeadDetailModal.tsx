@@ -1,7 +1,8 @@
 "use client";
 import { api, resolveLeadImageUrl } from '@/lib/api';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
@@ -61,6 +62,12 @@ interface Props {
 }
 
 export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnly = false }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   const leadId = lead.id || lead.name.toLowerCase().replace(/\s+/g, "_").replace(/\//g, "-");
 
   const [notes, setNotes] = useState(lead.interaction_notes || "");
@@ -118,7 +125,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
     setFachadaInputVisible(false);
   }
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <div className="fixed inset-0 z-[99999] flex items-start md:items-center justify-center overflow-y-auto md:overflow-hidden">
@@ -488,4 +495,8 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(modalContent, document.body);
 }

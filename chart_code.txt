@@ -1,0 +1,60 @@
+const InteractiveBacktestChart = ({ klines, trades, ghostInsights, qualitySeal, dnaTags, equityCurve, srZones, height = 450 }) => {
+            const chartContainerRef = React.useRef(null);
+            const equityContainerRef = React.useRef(null);
+            const chartRef = React.useRef(null);
+            const equityChartRef = React.useRef(null);
+            const tooltipRef = React.useRef(null);
+            const [eagleMode, setEagleMode] = React.useState(() => {
+                try { return localStorage.getItem('eagle_vision_mode') !== 'simple'; } catch(e) { return true; }
+            });
+
+            // Persist vision mode
+            React.useEffect(() => {
+                try { localStorage.setItem('eagle_vision_mode', eagleMode ? 'analytic' : 'simple'); } catch(e) {}
+            }, [eagleMode]);
+
+            React.useEffect(() => {
+                if (!klines || klines.length === 0) return;
+
+                // === MAIN CHART ===
+                const chart = LightweightCharts.createChart(chartContainerRef.current, {
+                    height: height,
+                    layout: { 
+                        background: { color: 'rgba(0,0,0,0)' }, 
+                        textColor: '#94a3b8',
+                        fontFamily: 'JetBrains Mono'
+                    },
+                    grid: { 
+                        vertLines: { color: 'rgba(255,255,255,0.03)' }, 
+                        horzLines: { color: 'rgba(255,255,255,0.03)' } 
+                    },
+                    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+                    priceScale: { borderColor: 'rgba(255,255,255,0.1)' },
+                    timeScale: { borderColor: 'rgba(255,255,255,0.1)', timeVisible: true },
+                });
+
+                // 1. Candlestick Series
+                const candlestickSeries = chart.addCandlestickSeries({
+                    upColor: '#10b981', downColor: '#ef4444', borderVisible: false,
+                    wickUpColor: '#10b981', wickDownColor: '#ef4444'
+                });
+                candlestickSeries.setData(klines);
+
+                // 2. Volume Series (Eagle Vision only)
+                let volumeSeries = null;
+                if (eagleMode) {
+                    volumeSeries = chart.addHistogramSeries({
+                        color: '#26a69a',
+                        priceFormat: { type: 'volume' },
+                        priceScaleId: '',
+                    });
+                    volumeSeries.priceScale().applyOptions({
+                        scaleMargins: { top: 0.8, bottom: 0 },
+                    });
+                    volumeSeries.setData(calculateVolumes(klines));
+                }
+
+                // 3. Bollinger Bands (Eagle Vision only)
+                if (eagleMode) {
+                    const bb = calculateBollingerBands(klines, 20, 2);
+                    const bbStyle = { lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Solid, crosshairMarkerVisible: false, priceLineVisible: false, lastValueVisible: false };
