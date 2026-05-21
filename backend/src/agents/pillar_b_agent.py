@@ -86,7 +86,7 @@ class PillarBHunterAgent:
             {
                 "name": "Hospital das Clínicas da FMUSP",
                 "resumo_sinal": "Processo de licitação pública publicado no Diário Oficial do Estado de São Paulo visando contratação de serviços de pintura predial externa e interna dos blocos do complexo HC. Edital nº 045/2026 - Pregão Eletrônico. Valor estimado: R$ 3.2 milhões.",
-                "link_fonte": "https://www.bec.sp.gov.br/BECSP/Default.aspx?q=pintura+predial",
+                "link_fonte": "https://www.doe.sp.gov.br/",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -95,7 +95,7 @@ class PillarBHunterAgent:
             {
                 "name": "Escola Estadual Caetano de Campos",
                 "resumo_sinal": "Edital aberto no portal de licitações da FDE (Fundação para o Desenvolvimento da Educação) visando reforma predial com manutenção corretiva das fachadas, reparo de rebocos e pintura geral. Prazo para propostas: 15 dias.",
-                "link_fonte": "https://www.bec.sp.gov.br/BECSP/Default.aspx?q=pintura",
+                "link_fonte": "https://www.imprensaoficial.com.br/",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -113,7 +113,7 @@ class PillarBHunterAgent:
             {
                 "name": "Prefeitura Municipal de São Paulo — Secretaria de Educação",
                 "resumo_sinal": "Chamamento público para credenciamento de empresas de pintura predial para manutenção da rede municipal de ensino. Contrato guarda-chuva de R$ 8 milhões para 2026-2027.",
-                "link_fonte": "https://www.prefeitura.sp.gov.br/cidade/secretarias/licitacoes/",
+                "link_fonte": "https://www.gov.br/pncp/pt-br",
                 "score_urgencia": 10,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -358,7 +358,7 @@ Se não houver NENHUM edital relevante, retorne um array vazio: []
                     f"Oficial do Estado. Destinação para pintura de quadras poliesportivas, salas "
                     f"de aula e fachadas externas da rede estadual em {city_clean}."
                 ),
-                "link_fonte": "https://www.gov.br/compras/pt-br",
+                "link_fonte": "https://www.gov.br/compras/pt-br/sistemas",
                 "score_urgencia": 7,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -371,7 +371,7 @@ Se não houver NENHUM edital relevante, retorne um array vazio: []
                     f"para serviços de manutenção predial corretiva incluindo pintura geral, "
                     f"impermeabilização e lavagem de pastilhas do Fórum de {city_clean}."
                 ),
-                "link_fonte": "https://www.gov.br/compras/pt-br/",
+                "link_fonte": "https://www.imprensaoficial.com.br/",
                 "score_urgencia": 9,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -397,7 +397,7 @@ Se não houver NENHUM edital relevante, retorne um array vazio: []
                     f"predial dos blocos acadêmicos e administrativos da Universidade Federal "
                     f"de {city_clean}. Valor estimado: R$ 1.5 milhão."
                 ),
-                "link_fonte": "https://www.gov.br/compras/pt-br/",
+                "link_fonte": "https://www.gov.br/compras/pt-br/sistemas",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",

@@ -101,7 +101,7 @@ class DemandScoutAgent:
         if not url.startswith(("http://", "https://")):
             return ""
 
-        # Lista de domínios conhecidos inválidos (inventados por IA / fallbacks antigos)
+        # Lista de domínios conhecidos inválidos (inventados por IA / plataformas offline / bloqueadas)
         INVALID_DOMAINS = [
             "google.com",            # Google search — já filtrado acima, redundância
             "bing.com",              # Bing search
@@ -109,6 +109,10 @@ class DemandScoutAgent:
             "seudominio.com.br",     # Placeholder
             ".gov.br/site",          # URL malformada
             ".jus.br/site",          # URL malformada
+            "habitissimo.com.br",    # Plataforma offline (DNS não resolve mais)
+            "cenu.com.br",           # Plataforma offline (conexão recusada)
+            "bec.sp.gov.br",         # Portal BEC-SP offline (timeout)
+            "ucondo.com.br",         # Cloudflare bloqueia scraping (403 permanente)
         ]
 
         from urllib.parse import urlparse

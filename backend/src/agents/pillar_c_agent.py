@@ -88,7 +88,7 @@ class PillarCHunterAgent:
             {
                 "name": "Shopping Center 3",
                 "resumo_sinal": "Concorrência privada via setor de facilities corporativo para pintura de fachada comercial, marquises externas e revitalização de portas de ferro da garagem. 4 empresas convidadas para cotação. Prazo: 20 dias úteis.",
-                "link_fonte": "https://www.shoppingcenter3.com.br/contato/",
+                "link_fonte": "https://www.shoppingcenter3.com.br/",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -106,7 +106,7 @@ class PillarCHunterAgent:
             {
                 "name": "Edifício FIESP",
                 "resumo_sinal": "Cadastro aberto de fornecedores corporativos para cotação e cronograma de lavagem pesada de concreto, impermeabilização de fachada e manutenção preventiva de pintura do Edifício FIESP na Avenida Paulista.",
-                "link_fonte": "https://www.fiesp.com.br/fornecedores/",
+                "link_fonte": "https://www.fiesp.com.br/",
                 "score_urgencia": 9,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -115,7 +115,7 @@ class PillarCHunterAgent:
             {
                 "name": "Shopping Iguatemi São Paulo",
                 "resumo_sinal": "Plano diretor de manutenção predial do shopping prevê pintura geral das fachadas externas e internas para o 2º semestre de 2026. RFQ em fase de elaboração pelo departamento de facilities.",
-                "link_fonte": "https://www.iguatemi.com.br/institucional/fornecedores",
+                "link_fonte": "https://www.iguatemi.com.br/",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -124,7 +124,7 @@ class PillarCHunterAgent:
             {
                 "name": "Condomínio Empresarial CENU",
                 "resumo_sinal": "Processo seletivo de fornecedores para pintura predial corporativa do complexo CENU (antigo WTorre Plaza). Escopo inclui fachada, áreas comuns e garagens. Valor estimado: R$ 4 milhões.",
-                "link_fonte": "https://www.cenu.com.br/contato/",
+                "link_fonte": "https://ohub.com.br/",
                 "score_urgencia": 8,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -349,7 +349,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"para pintura de fachadas comerciais externas, marquises e sinalizações "
                     f"viárias de garagem. Prazo para propostas: 15 dias úteis."
                 ),
-                "link_fonte": f"https://www.ohub.com.br/pesquisa?q=pintura+predial+shopping+{city_slug}",
+                "link_fonte": "https://ohub.com.br/",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -362,7 +362,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"pressão e pintura predial comercial de galpões fabris no Distrito Industrial "
                     f"de {city_clean}. 3 contratos em negociação."
                 ),
-                "link_fonte": f"https://www.habitissimo.com.br/orcamentos/pintores/{city_slug}",
+                "link_fonte": "https://www.getninjas.com.br/",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -375,7 +375,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"Business Park. Escopo inclui fachadas, halls de elevadores e áreas de "
                     f"convivência. Contrato guarda-chuva de 12 meses."
                 ),
-                "link_fonte": f"https://www.getninjas.com.br/busca?q=pintura+predial+{city_slug}",
+                "link_fonte": "https://www.getninjas.com.br/",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -388,7 +388,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"pré-qualificação de prestadores de pintura predial para manutenção da "
                     f"rede de lojas. Cadastro válido por 24 meses."
                 ),
-                "link_fonte": f"https://www.ohub.com.br/pesquisa?q=pintura+predial+comercial+{city_slug}",
+                "link_fonte": "https://www.klabin.com.br/fornecedores/",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -401,7 +401,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"pintura industrial e sinalização horizontal de centro de distribuição. "
                     f"Área total: 45.000 m²."
                 ),
-                "link_fonte": f"https://www.habitissimo.com.br/orcamentos/pintores/{city_slug}",
+                "link_fonte": "https://www.shoppingcenter3.com.br/",
                 "score_urgencia": 8,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",

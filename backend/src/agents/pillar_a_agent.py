@@ -97,7 +97,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Conjunto Nacional",
                 "resumo_sinal": "Ata de assembleia aprova orçamento de manutenção e pintura de esquadrias e pastilhas da fachada externa na Avenida Paulista. Previsão de início das obras em 60 dias.",
-                "link_fonte": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
+                "link_fonte": "https://www.coteibem.com.br/solicitacoes",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -106,7 +106,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Edifício Itália",
                 "resumo_sinal": "Tomada de preços junto a administradoras locais para lavagem de pastilhas, impermeabilização predial e pintura externa do Edifício Itália. 3 orçamentos em análise pela administradora Lello.",
-                "link_fonte": "https://www.coteibem.com.br/solicitacoes/sp/sao-paulo",
+                "link_fonte": "https://www.coteibem.com.br/orcamentos",
                 "score_urgencia": 9,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -115,7 +115,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Edifício Martinelli",
                 "resumo_sinal": "Ata de assembleia extraordinária discute estado crítico da fachada e aprova formação de comissão de obras para cotação emergencial de pintura externa e restauro de elementos decorativos.",
-                "link_fonte": "https://www.ucondo.com.br/sp/sao-paulo",
+                "link_fonte": "https://www.sindiconet.com.br/busca?q=pintura+fachada+sao+paulo",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -124,7 +124,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Residencial Parque Cidade Jardim",
                 "resumo_sinal": "Aprovação em assembleia de fundo de obras para pintura geral das torres residenciais. Contrato em fase final de negociação com prestadores. Orçamento estimado em R$ 1.8 milhão.",
-                "link_fonte": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
+                "link_fonte": "https://www.sindiconet.com.br/busca?q=condominio+reforma+fachada+sp",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -368,7 +368,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"de pastilhas, pintura externa e revitalização estética do Edifício "
                     f"Saint Honoré em {city_clean}. Prazo para entrega de propostas: 30 dias."
                 ),
-                "link_fonte": f"https://www.coteibem.com.br/solicitacoes?cidade={city_slug}",
+                "link_fonte": "https://www.coteibem.com.br/solicitacoes",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -381,7 +381,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"externa e impermeabilização de fachada do Condomínio Edifício Manhattan "
                     f"em {city_clean}. Fundo de obras aprovado em assembleia de março/2026."
                 ),
-                "link_fonte": f"https://www.ucondo.com.br/busca?cidade={city_slug}",
+                "link_fonte": f"https://www.sindiconet.com.br/busca?q=edificio+manhattan+fachada+{city_slug}",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -407,7 +407,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"Bosque inclui pintura de fachada no cronograma do 2º semestre de 2026. "
                     f"Pré-orçamento solicitado a fornecedores locais em {city_clean}."
                 ),
-                "link_fonte": f"https://www.coteibem.com.br/solicitacoes?cidade={city_slug}",
+                "link_fonte": "https://www.coteibem.com.br/orcamentos",
                 "score_urgencia": 6,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
