@@ -271,6 +271,25 @@ class Database:
                     last_used TEXT
                 )
             """)
+            
+            # 4. Tabela de Histórico de Buscas
+            self._run_query(conn, """
+                CREATE TABLE IF NOT EXISTS search_history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    user_name TEXT NOT NULL,
+                    user_email TEXT NOT NULL,
+                    city TEXT NOT NULL,
+                    pilares TEXT NOT NULL,
+                    total_leads INTEGER NOT NULL,
+                    leads_a INTEGER DEFAULT 0,
+                    leads_b INTEGER DEFAULT 0,
+                    leads_c INTEGER DEFAULT 0,
+                    leads_json TEXT,
+                    searched_at TEXT NOT NULL,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            """)
             conn.commit()
 
     def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None, user_id=None):
@@ -741,6 +760,50 @@ class Database:
         except Exception as e:
             logger.error(f"DB: Erro ao limpar leads: {e}")
             return False
+
+    def save_search_history(self, user_id, user_name, user_email, city, pilares, total_leads, leads_a, leads_b, leads_c, leads_json):
+        try:
+            now_str = datetime.now().isoformat()
+            with self._get_connection() as conn:
+                self._run_query(conn, """
+                    INSERT INTO search_history (user_id, user_name, user_email, city, pilares, total_leads, leads_a, leads_b, leads_c, leads_json, searched_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (user_id, user_name, user_email, city, pilares, total_leads, leads_a, leads_b, leads_c, json.dumps(leads_json, ensure_ascii=False), now_str))
+                conn.commit()
+            logger.info(f"DB: Histórico salvo para usuário {user_email} — {city} — {total_leads} leads")
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao salvar histórico: {e}")
+            return False
+
+    def get_search_history(self, user_id=None):
+        try:
+            with self._get_connection() as conn:
+                if self.is_postgres:
+                    from psycopg2.extras import RealDictCursor
+                    cur = conn.cursor(cursor_factory=RealDictCursor)
+                    if user_id:
+                        cur.execute("SELECT * FROM search_history WHERE user_id = %s ORDER BY searched_at DESC LIMIT 50", (user_id,))
+                    else:
+                        cur.execute("SELECT * FROM search_history ORDER BY searched_at DESC LIMIT 50")
+                    rows = [dict(row) for row in cur.fetchall()]
+                else:
+                    conn.row_factory = sqlite3.Row
+                    if user_id:
+                        rows = conn.execute("SELECT * FROM search_history WHERE user_id = ? ORDER BY searched_at DESC LIMIT 50", (user_id,)).fetchall()
+                    else:
+                        rows = conn.execute("SELECT * FROM search_history ORDER BY searched_at DESC LIMIT 50").fetchall()
+                    rows = [dict(row) for row in rows]
+                
+                for row in rows:
+                    try:
+                        row['leads_json'] = json.loads(row.get('leads_json') or '{}')
+                    except:
+                        row['leads_json'] = {}
+                return rows
+        except Exception as e:
+            logger.error(f"DB: Erro ao buscar histórico: {e}")
+            return []
 
     def import_from_json(self, json_path):
         if not os.path.exists(json_path):

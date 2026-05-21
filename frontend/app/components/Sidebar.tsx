@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Settings, Target, Users, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Settings, Target, Users, User, LogOut, History } from "lucide-react";
 import UsageIndicator from "./UsageIndicator";
 
 export default function Sidebar() {
@@ -31,6 +31,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: "Cockpit", href: "/dashboard" },
     { icon: Target, label: "Leads Elite", href: "/leads-quentes" },
+    { icon: History, label: "Histórico de Buscas", href: "/historico-buscas" },
     ...(isAdmin ? [
       { icon: Users, label: "Usuários", href: "/usuarios" },
       { icon: Settings, label: "Ajustes", href: "/configuracoes" }

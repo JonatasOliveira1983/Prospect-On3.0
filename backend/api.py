@@ -719,7 +719,7 @@ async def get_image(filename: str):
     raise HTTPException(status_code=404, detail="Imagem não encontrada")
 
 @app.get("/api/scan-pillars")
-async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C"):
+async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C", x_user_id: str = Header(None)):
     """
     Varredura completa de demanda nos 3 Pilares (A/B/C) em paralelo.
     
@@ -730,6 +730,14 @@ async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C"):
     Retorna leads organizados por pilar com metadados visuais para o frontend.
     """
     try:
+        # Identificar usuário
+        user = None
+        if x_user_id:
+            try:
+                user = db.get_user_by_id(int(x_user_id))
+            except:
+                user = db.get_user_by_email(x_user_id)
+        
         logger.info(f"API: 🔍 Iniciando varredura de Pilares para '{city}' com pilares='{pilares}'...")
         result = await demand_scout.scan_all_pillars(city, pilares=pilares)
         logger.info(
@@ -738,9 +746,55 @@ async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C"):
             f"B={len(result['pilares']['B']['leads'])} "
             f"C={len(result['pilares']['C']['leads'])})"
         )
+        
+        # Salvar no histórico
+        if user:
+            db.save_search_history(
+                user_id=user['id'],
+                user_name=user.get('name', 'N/D'),
+                user_email=user.get('email', 'N/D'),
+                city=city,
+                pilares=pilares,
+                total_leads=result['total_leads'],
+                leads_a=len(result['pilares']['A']['leads']),
+                leads_b=len(result['pilares']['B']['leads']),
+                leads_c=len(result['pilares']['C']['leads']),
+                leads_json=result
+            )
+        
         return {"success": True, **result}
     except Exception as e:
         logger.error(f"API: Erro na varredura de Pilares: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/search-history")
+async def get_search_history(x_user_id: str = Header(None)):
+    """
+    Retorna o histórico de buscas do usuário autenticado (ou todas se admin).
+    """
+    try:
+        if not x_user_id:
+            raise HTTPException(status_code=401, detail="Usuário não autenticado")
+        
+        try:
+            user = db.get_user_by_id(int(x_user_id))
+        except:
+            user = db.get_user_by_email(x_user_id)
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuário não encontrado")
+        
+        # Admin vê tudo, vendedor vê só as próprias buscas
+        if user.get('role') == 'admin':
+            history = db.get_search_history()
+        else:
+            history = db.get_search_history(user_id=user['id'])
+        
+        return {"success": True, "history": history, "user": {"id": user['id'], "name": user.get('name'), "email": user.get('email')}}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"API: Erro ao buscar histórico: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws/logs")

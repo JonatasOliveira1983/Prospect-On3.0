@@ -4,7 +4,7 @@ PillarAHunterAgent — Caçador de Sinais de Pintura em Condomínios (Pilar A).
 Busca atas de assembleia, fundos de obra de fachada e cotações de reforma
 para condomínios residenciais e comerciais na cidade alvo.
 
-Fontes: Bing Search com queries específicas para assembleias, cotações e reformas.
+Fontes: Google Search com queries específicas para assembleias, cotações e reformas.
 Qualificação: DeepSeek avalia relevância e urgência de cada sinal.
 """
 import os
@@ -59,9 +59,20 @@ def extract_text_from_html(html: str) -> str:
 
 
 def extract_links_from_html(html: str) -> list:
+    """Extrai links do HTML, incluindo redirects /url?q= do Google."""
     if not html:
         return []
-    return re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
+    links = re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
+    # Resolve redirects do Google (/url?q=URL_REAL&...)
+    resolved = []
+    for link in links:
+        if "/url?q=" in link and "google.com" in link:
+            m = re.search(r'/url\?q=(https?://[^&"\' ]+)', link)
+            if m:
+                resolved.append(unquote(m.group(1)))
+        elif "google.com" not in link and link.startswith("http"):
+            resolved.append(link)
+    return resolved
 
 
 class PillarAHunterAgent:
@@ -71,12 +82,13 @@ class PillarAHunterAgent:
     e cotações de pintura/reforma em condomínios.
     """
 
+    # Fallback de SP: links apontam para portais reais de condomínio (sindiconet, coteibem, ucondo)
     BRAZILIAN_CONDOS_MOCK = {
         "são paulo": [
             {
                 "name": "Condomínio Edifício Copan",
                 "resumo_sinal": "Ata de assembleia pública aprova fundo de reserva especial para obras de retrofit estético, lavagem de concreto aparente e revitalização da pintura externa em São Paulo - SP. Orçamento aprovado de R$ 2.4 milhões para pintura completa.",
-                "link_fonte": "https://www.copan-sp.com.br",
+                "link_fonte": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -85,7 +97,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Conjunto Nacional",
                 "resumo_sinal": "Ata de assembleia aprova orçamento de manutenção e pintura de esquadrias e pastilhas da fachada externa na Avenida Paulista. Previsão de início das obras em 60 dias.",
-                "link_fonte": "https://www.ccn.com.br",
+                "link_fonte": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -94,7 +106,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Edifício Itália",
                 "resumo_sinal": "Tomada de preços junto a administradoras locais para lavagem de pastilhas, impermeabilização predial e pintura externa do Edifício Itália. 3 orçamentos em análise pela administradora Lello.",
-                "link_fonte": "https://www.edificioitalia.com.br",
+                "link_fonte": "https://www.coteibem.com.br/solicitacoes/sp/sao-paulo",
                 "score_urgencia": 9,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -103,7 +115,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Edifício Martinelli",
                 "resumo_sinal": "Ata de assembleia extraordinária discute estado crítico da fachada e aprova formação de comissão de obras para cotação emergencial de pintura externa e restauro de elementos decorativos.",
-                "link_fonte": "https://www.prediomartinelli.com.br",
+                "link_fonte": "https://www.ucondo.com.br/sp/sao-paulo",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -112,7 +124,7 @@ class PillarAHunterAgent:
             {
                 "name": "Condomínio Residencial Parque Cidade Jardim",
                 "resumo_sinal": "Aprovação em assembleia de fundo de obras para pintura geral das torres residenciais. Contrato em fase final de negociação com prestadores. Orçamento estimado em R$ 1.8 milhão.",
-                "link_fonte": "https://www.parquecidadejardim.com.br",
+                "link_fonte": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -185,14 +197,10 @@ class PillarAHunterAgent:
 
                         raw_text = extract_text_from_html(html_content)
                         links = extract_links_from_html(html_content)
-                        filtered_links = [
-                            h for h in links
-                            if h.startswith("http") and "google.com" not in h
-                        ]
 
                         # Qualifica os resultados com DeepSeek
                         parsed = await self._parse_pillar_a_results(
-                            raw_text, filtered_links, city_clean
+                            raw_text, links, city_clean
                         )
                         for item in parsed:
                             if item and item not in results:
@@ -259,7 +267,7 @@ class PillarAHunterAgent:
         links_str = "\n".join(links[:10])
         prompt = f"""
 Você é o PillarAHunterAgent (Caçador de Condomínios) da Otto Pinturas.
-Sua missão é analisar o TEXTO BRUTO extraído dos resultados de busca do Bing
+Sua missão é analisar o TEXTO BRUTO extraído dos resultados de busca do Google
 e identificar condomínios com sinais ATIVOS de demanda por pintura, reforma
 ou manutenção de fachada na cidade de {city}.
 
@@ -282,14 +290,15 @@ REGRAS DE EXTRAÇÃO:
    - 1-4: Menção genérica a manutenção
 4. categoria_demanda: "pintura_fachada", "lavagem_pastilhas" ou "reforma_geral"
 5. Extraia um resumo em português do Brasil com o sinal encontrado.
-6. Associe o link mais relevante como link_fonte.
+6. IMPORTANTE: Use APENAS URLs reais da lista LINKS ENCONTRADOS como link_fonte.
+   NUNCA invente ou gere URLs. Se não houver link real, use uma string vazia "".
 
 Retorne APENAS um array JSON (sem marcação markdown, sem texto extra):
 [
   {{
     "name": "Nome do Condomínio",
     "resumo_sinal": "Resumo do sinal de pintura encontrado",
-    "link_fonte": "URL mais relevante",
+    "link_fonte": "URL real da lista de links ou '' se não houver",
     "score_urgencia": 8,
     "categoria_demanda": "pintura_fachada",
     "tipo_entidade": "predio",
@@ -323,7 +332,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
             return []
 
     def _get_mocked_condo_demands(self, city_clean: str) -> list[dict]:
-        """Retorna mocks realistas de condomínios para a cidade alvo."""
+        """Retorna fallback com links para portais reais de condomínio (sindiconet, coteibem, ucondo)."""
         is_sp = any(
             term in city_clean.lower()
             for term in ["são paulo", "sao paulo", "sp"]
@@ -336,7 +345,8 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
         if is_sp and "são paulo" in self.BRAZILIAN_CONDOS_MOCK:
             return self.BRAZILIAN_CONDOS_MOCK["são paulo"]
 
-        # Mocks genéricos para outras cidades
+        # Fallback genérico para outras cidades com links para portais reais de condomínio
+        city_slug = city_clean.lower().replace(' ', '-')
         return [
             {
                 "name": f"Condomínio Residencial Parque {city_clean}",
@@ -345,7 +355,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"aprova fundo de reserva para pintura externa geral das torres residenciais. "
                     f"Orçamento em fase de cotação com 3 empresas especializadas."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=condominio+parque+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.sindiconet.com.br/busca?q=condominio+parque+{city_slug}",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -358,7 +368,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"de pastilhas, pintura externa e revitalização estética do Edifício "
                     f"Saint Honoré em {city_clean}. Prazo para entrega de propostas: 30 dias."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=saint+honore+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.coteibem.com.br/solicitacoes?cidade={city_slug}",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -371,7 +381,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"externa e impermeabilização de fachada do Condomínio Edifício Manhattan "
                     f"em {city_clean}. Fundo de obras aprovado em assembleia de março/2026."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=manhattan+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.ucondo.com.br/busca?cidade={city_slug}",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -384,7 +394,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"da fachada após último verão. Aprovada formação de comissão para cotação "
                     f"de pintura completa e tratamento de infiltrações em {city_clean}."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=villa+deste+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.sindiconet.com.br/busca?q=villa+deste+{city_slug}",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -397,7 +407,7 @@ Se não houver NENHUM sinal relevante, retorne um array vazio: []
                     f"Bosque inclui pintura de fachada no cronograma do 2º semestre de 2026. "
                     f"Pré-orçamento solicitado a fornecedores locais em {city_clean}."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=torres+do+bosque+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.coteibem.com.br/solicitacoes?cidade={city_slug}",
                 "score_urgencia": 6,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",

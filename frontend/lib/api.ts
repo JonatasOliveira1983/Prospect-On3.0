@@ -54,7 +54,9 @@ export const api = {
   importLeads:  (leads: unknown[]) =>
     fetch(`${BACKEND}/api/leads/import`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ leads }) }),
   scanPillars:  (city: string = "São Paulo", pilares: string = "A,B,C") =>
-    fetch(`${BACKEND}/api/scan-pillars?city=${encodeURIComponent(city)}&pilares=${encodeURIComponent(pilares)}`, { cache: 'no-store' }),
+    fetch(`${BACKEND}/api/scan-pillars?city=${encodeURIComponent(city)}&pilares=${encodeURIComponent(pilares)}`, { cache: 'no-store', headers: { ...getUserIdHeader() } }),
+  searchHistory: () =>
+    fetch(`${BACKEND}/api/search-history`, { cache: 'no-store', headers: { ...getUserIdHeader() } }),
   leadsQuentes: (userId?: string | number) => {
     const url = userId 
       ? `${BACKEND}/api/admin/users/${userId}/leads-quentes` 

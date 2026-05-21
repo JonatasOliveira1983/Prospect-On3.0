@@ -81,11 +81,78 @@ class DemandScoutAgent:
         self.pillar_b = PillarBHunterAgent(headless=headless)
         self.pillar_c = PillarCHunterAgent(headless=headless)
 
+    @staticmethod
+    def _validate_link_fonte(url: str) -> str:
+        """
+        Valida e sanitiza um link_fonte.
+        Rejeita URLs do Google Search, links inválidos ou inventados,
+        domínios inexistentes gerados por IA e strings não-URL.
+        Retorna string vazia se o link for inválido.
+        """
+        if not url or not isinstance(url, str):
+            return ""
+
+        # Rejeita Google Search URLs — não são links de origem real
+        if "google.com/search" in url or "google.com/search?q=" in url:
+            logger.debug(f"DemandScoutAgent: Removendo link Google Search inválido: {url[:80]}")
+            return ""
+
+        # Rejeita URLs que não começam com http/https
+        if not url.startswith(("http://", "https://")):
+            return ""
+
+        # Lista de domínios conhecidos inválidos (inventados por IA / fallbacks antigos)
+        INVALID_DOMAINS = [
+            "google.com",            # Google search — já filtrado acima, redundância
+            "bing.com",              # Bing search
+            "example.com",           # Domínio de exemplo
+            "seudominio.com.br",     # Placeholder
+            ".gov.br/site",          # URL malformada
+            ".jus.br/site",          # URL malformada
+        ]
+
+        from urllib.parse import urlparse
+        try:
+            parsed = urlparse(url)
+            domain = parsed.netloc.lower()
+
+            # Rejeita domínios sem ponto (inválidos) ou muito curtos
+            if "." not in domain or len(domain) < 5:
+                logger.debug(f"DemandScoutAgent: Domínio inválido/muito curto: {domain}")
+                return ""
+
+            # Rejeita domínios da lista negra
+            for invalid in INVALID_DOMAINS:
+                if invalid in domain or invalid in url.lower():
+                    logger.debug(f"DemandScoutAgent: Domínio bloqueado: {domain}")
+                    return ""
+
+            # Rejeita URLs que são claramente placeholders ou inventadas:
+            # - Terminam com .gov.br/site (URL malformada de fallback antigo)
+            # - Contêm "seudominio" ou "meusite"
+            suspicious_patterns = [
+                r'\.gov\.br/site$',
+                r'\.jus\.br/site$',
+                r'seudominio',
+                r'meusite',
+                r'\.com\.br/site$',
+            ]
+            for pattern in suspicious_patterns:
+                if re.search(pattern, url, re.IGNORECASE):
+                    logger.debug(f"DemandScoutAgent: URL suspeita (placeholder): {url[:80]}")
+                    return ""
+
+        except Exception:
+            return ""
+
+        return url
+
     def _normalize_lead(self, raw: dict, pilar: str, idx: int, city_clean: str) -> dict:
         """
         Normaliza um lead bruto do hunter para o formato esperado pelo frontend.
         Converte campos em inglês (name, resumo_sinal, categoria_demanda, etc.)
         para português (nome, resumo, tag, etc.) e adiciona campos auxiliares.
+        Valida e sanitiza link_fonte para rejeitar URLs inválidas.
         """
         # Gera um ID estável baseado no nome + pilar + índice
         raw_id = raw.get("name") or raw.get("nome") or f"lead-{idx}"
@@ -103,6 +170,10 @@ class DemandScoutAgent:
         else:
             status_label = "👀 Observado"
 
+        # Valida e sanitiza o link_fonte
+        raw_link = raw.get("link_fonte") or raw.get("site", "")
+        validated_link = self._validate_link_fonte(raw_link)
+
         return {
             "id": hash_id,
             "nome": raw.get("name") or raw.get("nome", f"Lead {idx}"),
@@ -113,7 +184,7 @@ class DemandScoutAgent:
             "contato": raw.get("contato", ""),
             "telefone": raw.get("phone") or raw.get("telefone", ""),
             "email": raw.get("email", ""),
-            "site": raw.get("site") or raw.get("link_fonte", ""),
+            "site": validated_link if validated_link else raw.get("site") or raw.get("link_fonte", ""),
             "status": status_label,
             "resumo": raw.get("resumo_sinal") or raw.get("resumo", ""),
             "data_publicacao": raw.get("data_publicacao", ""),
@@ -122,7 +193,7 @@ class DemandScoutAgent:
             "tag": raw.get("categoria_demanda") or raw.get("tag", "manutencao"),
             "pilar": raw.get("pilar", pilar),
             "score_urgencia": urg,
-            "link_fonte": raw.get("link_fonte") or raw.get("site", ""),
+            "link_fonte": validated_link,
         }
 
     async def scan_all_pillars(self, city: str, pilares: str = "A,B,C") -> dict:

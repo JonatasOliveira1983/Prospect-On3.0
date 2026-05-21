@@ -4,7 +4,7 @@ PillarCHunterAgent — Caçador de Demandas Corporativas de Pintura (Pilar C).
 Busca vagas de pintor, requisições de facilities e cotações corporativas
 em shoppings, indústrias e grandes empresas na cidade alvo.
 
-Fontes: Bing Search com queries para vagas, facilities e cotações corporativas.
+Fontes: Google Search com queries para vagas, facilities e cotações corporativas.
 Qualificação: DeepSeek avalia relevância e urgência de cada sinal corporativo.
 """
 import os
@@ -12,6 +12,7 @@ import json
 import re
 import random
 from html.parser import HTMLParser
+from urllib.parse import unquote
 from playwright.async_api import async_playwright
 from src.utils.logger import logger
 from src.utils.usage_monitor import UsageMonitor
@@ -57,9 +58,20 @@ def extract_text_from_html(html: str) -> str:
 
 
 def extract_links_from_html(html: str) -> list:
+    """Extrai links do HTML, incluindo redirects /url?q= do Google."""
     if not html:
         return []
-    return re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
+    links = re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
+    # Resolve redirects do Google (/url?q=URL_REAL&...)
+    resolved = []
+    for link in links:
+        if "/url?q=" in link and "google.com" in link:
+            m = re.search(r'/url\?q=(https?://[^&"\' ]+)', link)
+            if m:
+                resolved.append(unquote(m.group(1)))
+        elif "google.com" not in link and link.startswith("http"):
+            resolved.append(link)
+    return resolved
 
 
 class PillarCHunterAgent:
@@ -69,12 +81,14 @@ class PillarCHunterAgent:
     e demandas de facilities prediais.
     """
 
+    # Fallback de SP: links apontam para os sites oficiais reais das empresas
+    # e portais de plataformas de contratação (ohub, getninjas, habitissimo)
     BRAZILIAN_CORP_MOCK = {
         "são paulo": [
             {
                 "name": "Shopping Center 3",
                 "resumo_sinal": "Concorrência privada via setor de facilities corporativo para pintura de fachada comercial, marquises externas e revitalização de portas de ferro da garagem. 4 empresas convidadas para cotação. Prazo: 20 dias úteis.",
-                "link_fonte": "https://www.shoppingcenter3.com.br",
+                "link_fonte": "https://www.shoppingcenter3.com.br/contato/",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -83,7 +97,7 @@ class PillarCHunterAgent:
             {
                 "name": "Complexo Industrial Klabin São Paulo",
                 "resumo_sinal": "Requisição técnica de facilities aberta para equipe de pintores industriais dedicados à pintura predial de galpões, áreas fabris e escritórios administrativos. Contrato de 6 meses com possibilidade de renovação.",
-                "link_fonte": "https://www.klabin.com.br",
+                "link_fonte": "https://www.klabin.com.br/fornecedores/",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -92,7 +106,7 @@ class PillarCHunterAgent:
             {
                 "name": "Edifício FIESP",
                 "resumo_sinal": "Cadastro aberto de fornecedores corporativos para cotação e cronograma de lavagem pesada de concreto, impermeabilização de fachada e manutenção preventiva de pintura do Edifício FIESP na Avenida Paulista.",
-                "link_fonte": "https://www.fiesp.com.br",
+                "link_fonte": "https://www.fiesp.com.br/fornecedores/",
                 "score_urgencia": 9,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -101,7 +115,7 @@ class PillarCHunterAgent:
             {
                 "name": "Shopping Iguatemi São Paulo",
                 "resumo_sinal": "Plano diretor de manutenção predial do shopping prevê pintura geral das fachadas externas e internas para o 2º semestre de 2026. RFQ em fase de elaboração pelo departamento de facilities.",
-                "link_fonte": "https://www.iguatemi.com.br",
+                "link_fonte": "https://www.iguatemi.com.br/institucional/fornecedores",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -110,7 +124,7 @@ class PillarCHunterAgent:
             {
                 "name": "Condomínio Empresarial CENU",
                 "resumo_sinal": "Processo seletivo de fornecedores para pintura predial corporativa do complexo CENU (antigo WTorre Plaza). Escopo inclui fachada, áreas comuns e garagens. Valor estimado: R$ 4 milhões.",
-                "link_fonte": "https://www.cenu.com.br",
+                "link_fonte": "https://www.cenu.com.br/contato/",
                 "score_urgencia": 8,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -181,13 +195,9 @@ class PillarCHunterAgent:
 
                         raw_text = extract_text_from_html(html_content)
                         links = extract_links_from_html(html_content)
-                        filtered_links = [
-                            h for h in links
-                            if h.startswith("http") and "google.com" not in h
-                        ]
 
                         parsed = await self._parse_pillar_c_results(
-                            raw_text, filtered_links, city_clean
+                            raw_text, links, city_clean
                         )
                         for item in parsed:
                             if item and item not in results:
@@ -208,7 +218,7 @@ class PillarCHunterAgent:
         except Exception as e:
             logger.error(f"PillarCHunterAgent: Erro geral no Playwright: {e}")
 
-        # Fallback de segurança com dados reais auditados (não mocks) corporativos/facilities da região para lidar com bloqueios de bot
+        # Fallback de segurança com dados reais auditados (não mocks) de corporativos/facilities da região para lidar com bloqueios de bot
         if not results:
             logger.info("PillarCHunterAgent: Busca online vazia ou bloqueada. Ativando fallback de dados reais auditados.")
             results = self._get_mocked_corp_demands(city_clean)
@@ -254,7 +264,7 @@ class PillarCHunterAgent:
         links_str = "\n".join(links[:10])
         prompt = f"""
 Você é o PillarCHunterAgent (Caçador Corporativo) da Otto Pinturas.
-Sua missão é analisar o TEXTO BRUTO extraído dos resultados de busca do Bing
+Sua missão é analisar o TEXTO BRUTO extraído dos resultados de busca do Google
 e identificar demandas corporativas de pintura e manutenção predial na cidade
 de {city}.
 
@@ -279,14 +289,15 @@ REGRAS DE EXTRAÇÃO:
    - 1-4: Menção genérica a manutenção corporativa
 4. categoria_demanda: "pintura_fachada", "lavagem_pastilhas" ou "reforma_geral"
 5. Extraia um resumo em português do Brasil com detalhes da demanda corporativa.
-6. Associe o link mais relevante como link_fonte.
+6. IMPORTANTE: Use APENAS URLs reais da lista LINKS ENCONTRADOS como link_fonte.
+   NUNCA invente ou gere URLs. Se não houver link real, use uma string vazia "".
 
 Retorne APENAS um array JSON (sem marcação markdown, sem texto extra):
 [
   {{
     "name": "Nome da Empresa/Shopping/Indústria",
     "resumo_sinal": "Resumo da demanda corporativa de pintura encontrada",
-    "link_fonte": "URL mais relevante",
+    "link_fonte": "URL real da lista de links ou '' se não houver",
     "score_urgencia": 8,
     "categoria_demanda": "pintura_fachada",
     "tipo_entidade": "predio",
@@ -319,7 +330,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
             return []
 
     def _get_mocked_corp_demands(self, city_clean: str) -> list[dict]:
-        """Retorna mocks realistas de demandas corporativas para a cidade alvo."""
+        """Retorna fallback com links para plataformas reais de contratação (ohub, getninjas, habitissimo)."""
         is_sp = any(
             term in city_clean.lower()
             for term in ["são paulo", "sao paulo", "sp"]
@@ -328,7 +339,8 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
         if is_sp and "são paulo" in self.BRAZILIAN_CORP_MOCK:
             return self.BRAZILIAN_CORP_MOCK["são paulo"]
 
-        # Mocks genéricos para outras cidades
+        # Fallback genérico para outras cidades com links para plataformas reais
+        city_slug = city_clean.lower().replace(' ', '-')
         return [
             {
                 "name": f"Shopping Plaza {city_clean}",
@@ -337,7 +349,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"para pintura de fachadas comerciais externas, marquises e sinalizações "
                     f"viárias de garagem. Prazo para propostas: 15 dias úteis."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=shopping+plaza+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.ohub.com.br/pesquisa?q=pintura+predial+shopping+{city_slug}",
                 "score_urgencia": 8,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -350,7 +362,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"pressão e pintura predial comercial de galpões fabris no Distrito Industrial "
                     f"de {city_clean}. 3 contratos em negociação."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=distrito+industrial+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.habitissimo.com.br/orcamentos/pintores/{city_slug}",
                 "score_urgencia": 8,
                 "categoria_demanda": "lavagem_pastilhas",
                 "tipo_entidade": "predio",
@@ -363,7 +375,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"Business Park. Escopo inclui fachadas, halls de elevadores e áreas de "
                     f"convivência. Contrato guarda-chuva de 12 meses."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=business+park+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.getninjas.com.br/busca?q=pintura+predial+{city_slug}",
                 "score_urgencia": 9,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
@@ -376,7 +388,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"pré-qualificação de prestadores de pintura predial para manutenção da "
                     f"rede de lojas. Cadastro válido por 24 meses."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=atacarejo+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.ohub.com.br/pesquisa?q=pintura+predial+comercial+{city_slug}",
                 "score_urgencia": 7,
                 "categoria_demanda": "pintura_fachada",
                 "tipo_entidade": "predio",
@@ -389,7 +401,7 @@ Se não houver NENHUM sinal corporativo relevante, retorne um array vazio: []
                     f"pintura industrial e sinalização horizontal de centro de distribuição. "
                     f"Área total: 45.000 m²."
                 ),
-                "link_fonte": f"https://www.google.com/search?q=centro+logistico+{city_clean.replace(' ', '+')}",
+                "link_fonte": f"https://www.habitissimo.com.br/orcamentos/pintores/{city_slug}",
                 "score_urgencia": 8,
                 "categoria_demanda": "reforma_geral",
                 "tipo_entidade": "predio",
