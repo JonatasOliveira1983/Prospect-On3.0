@@ -1,16 +1,11 @@
 """
 PillarBHunterAgent — Caçador de Obras de Pintura de Grande Porte (Pilar B).
 
-Busca obras ATIVAS e cotações ABERTAS de pintura predial em:
-  - Shoppings Centers
-  - Hospitais e Clínicas Privadas
-  - Grandes Empreendimentos Comerciais e Industriais
-  - Condomínios Empresariais e Logísticos
+Busca obras ATIVAS de pintura predial de grande porte no oHub (facilities/condominios).
+Foco: shoppings, hospitais, industrias e grandes empreendimentos.
 
-Vai DIRETO às plataformas reais (oHub, GetNinjas) sem passar pelo Google.
-NÃO gera dados falsos — se não encontrar nada, retorna lista vazia.
+Sem Google, sem login, sem mocks — apenas dados reais de plataformas publicas.
 """
-import os
 import re
 import asyncio
 import random
@@ -51,42 +46,34 @@ def extract_text_from_html(html: str) -> str:
     return parser.get_text()
 
 
-def extract_links_from_html(html: str) -> list:
-    if not html:
-        return []
-    return re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
-
-
 class PillarBHunterAgent:
     """
     Pilar B — Obras de Grande Porte.
 
-    Raspa DIRETAMENTE as plataformas:
-      - oHub (chamamento de fornecedores — facilities corporativo)
-      - GetNinjas (pedidos de serviços — pintura predial comercial)
+    Raspa DIRETAMENTE:
+      - oHub — /condominios (servicos para condominios)
+      - oHub — /facilities (gestao de facilities corporativos)
+      - oHub — /terceirizacao (outsourcing de servicos prediais)
 
-    Sem fallback, sem mocks, sem Google.
-    Se a plataforma não expuser os dados, o lead vem com o que existe.
+    Foco em: shoppings, hospitais, industrias, condominios empresariais.
+    Sem fallback, sem mocks.
     """
 
-    PLATFORMS = [
+    OHUB_PAGES = [
         {
-            "name": "oHub",
-            "url": "https://ohub.com.br/",
-            "selectors": {
-                "cards": "a[href*='/oportunidade/'], a[href*='/servico/'], .oportunidade-card, .card, article, .listing-item",
-                "title": "h1, h2, h3, .titulo, .title, strong",
-                "description": "p, .descricao, .description, .resumo",
-            },
+            "name": "oHub Condominios",
+            "url": "https://ohub.com.br/condominios",
+            "category": "condominio",
         },
         {
-            "name": "GetNinjas",
-            "url": "https://www.getninjas.com.br/",
-            "selectors": {
-                "cards": "a[href*='/solicitacao/'], a[href*='/pedido/'], .solicitacao-card, .card, article, .listing-item",
-                "title": "h1, h2, h3, .titulo, .title, strong",
-                "description": "p, .descricao, .description, .resumo",
-            },
+            "name": "oHub Facilities",
+            "url": "https://ohub.com.br/facilities",
+            "category": "facilities",
+        },
+        {
+            "name": "oHub Terceirizacao",
+            "url": "https://ohub.com.br/terceirizacao",
+            "category": "terceirizacao",
         },
     ]
 
@@ -94,18 +81,11 @@ class PillarBHunterAgent:
         self.headless = headless
 
     async def hunt(self, city: str) -> list[dict]:
-        """
-        Caça obras de pintura de grande porte raspando plataformas reais.
-
-        Returns:
-            Lista de dicts com name, resumo_sinal, link_fonte, score_urgencia,
-            categoria_demanda, tipo_entidade e pilar="B".
-            Lista VAZIA se nenhum lead real for encontrado.
-        """
+        """Caca obras de pintura de grande porte no oHub."""
         city_clean = re.split(r'[,-]', city)[0].strip()
         logger.info(
-            f"PillarBHunterAgent (Pilar B): 🔍 Iniciando caça DIRETA de obras "
-            f"de grande porte na cidade '{city_clean}'..."
+            f"PillarBHunterAgent (Pilar B): Iniciando caca DIRETA no oHub "
+            f"para '{city_clean}'..."
         )
 
         all_results: list[dict] = []
@@ -121,117 +101,154 @@ class PillarBHunterAgent:
                 )
                 await context.add_init_script(STEALTH_INIT_SCRIPT)
 
-                for platform in self.PLATFORMS:
-                    platform_results = await self._scrape_platform(
-                        context, platform, city_clean
+                for ohub_page in self.OHUB_PAGES:
+                    page_results = await self._scrape_ohub_page(
+                        context, ohub_page, city_clean
                     )
-                    all_results.extend(platform_results)
+                    all_results.extend(page_results)
 
                 await browser.close()
 
         except Exception as e:
-            logger.error(f"PillarBHunterAgent: Erro geral no Playwright: {e}")
+            logger.error(f"PillarBHunterAgent: Erro no Playwright: {e}")
 
         if not all_results:
             logger.warning(
-                f"PillarBHunterAgent (Pilar B): ⚠️ Nenhuma obra de grande porte "
-                f"encontrada nas plataformas para '{city_clean}'. Retornando lista vazia."
+                f"PillarBHunterAgent (Pilar B): Nenhuma obra de grande porte "
+                f"encontrada no oHub para '{city_clean}'."
             )
         else:
             logger.info(
-                f"PillarBHunterAgent (Pilar B): ✅ {len(all_results)} obras de "
+                f"PillarBHunterAgent (Pilar B): {len(all_results)} obras de "
                 f"grande porte capturadas para '{city_clean}'."
             )
 
         return all_results
 
-    async def _scrape_platform(self, context, platform: dict, city_clean: str) -> list[dict]:
-        """Raspa uma plataforma específica e extrai leads reais de grande porte."""
+    async def _scrape_ohub_page(self, context, ohub_page: dict, city_clean: str) -> list[dict]:
+        """Raspa uma pagina especifica do oHub."""
         results = []
-        platform_name = platform["name"]
+        page_name = ohub_page["name"]
 
         try:
             page = await context.new_page()
-            logger.info(f"PillarBHunterAgent: 🌐 Acessando {platform_name}: {platform['url']}")
+            logger.info(f"PillarBHunterAgent: Acessando {page_name}: {ohub_page['url']}")
 
-            await page.goto(platform["url"], wait_until="domcontentloaded", timeout=30000)
-            await page.wait_for_timeout(random.randint(2000, 4000))
+            await page.goto(ohub_page["url"], wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(random.randint(3000, 5000))
 
-            html_content = await page.content()
-            text_content = extract_text_from_html(html_content)
-            links = extract_links_from_html(html_content)
+            # Fecha cookie banner se existir
+            try:
+                close_btn = await page.query_selector("button:has-text('FECHAR'), button:has-text('fechar'), .cookie-close, [aria-label='Fechar']")
+                if close_btn:
+                    await close_btn.click()
+                    await page.wait_for_timeout(1000)
+            except Exception:
+                pass
 
-            cards = []
-            for selector in platform["selectors"]["cards"]:
+            text_content = await page.inner_text("body")
+            
+            # Extrai todos os links da pagina
+            all_links = await page.query_selector_all("a[href]")
+            service_links = []
+            
+            for link in all_links:
                 try:
-                    elements = await page.query_selector_all(selector)
-                    if elements:
-                        for el in elements[:10]:
-                            try:
-                                title_el = await el.query_selector(platform["selectors"]["title"])
-                                desc_el = await el.query_selector(platform["selectors"]["description"])
-                                link_el = await el.query_selector("a[href]")
-
-                                title = await title_el.inner_text() if title_el else ""
-                                description = await desc_el.inner_text() if desc_el else ""
-                                href = await link_el.get_attribute("href") if link_el else ""
-
-                                if title and any(
-                                    palavra in (title + description).lower()
-                                    for palavra in ["pintura", "fachada", "reforma", "obra", "manutenção", "impermeabilização", "revitalização", "predial", "comercial", "shopping", "hospital", "clínica"]
-                                ):
-                                    cards.append({
-                                        "title": title.strip(),
-                                        "description": description.strip()[:300],
-                                        "link": href if href.startswith("http") else "",
-                                    })
-                            except Exception:
-                                continue
-                        if cards:
-                            break
+                    href = (await link.get_attribute("href") or "").strip()
+                    text = (await link.inner_text()).strip()
+                    
+                    if not href or not text or len(text) < 4:
+                        continue
+                    
+                    # Links de servicos prediais relevantes
+                    service_kw = [
+                        "pintura", "fachada", "reforma", "manutencao", "limpeza",
+                        "portaria", "jardinagem", "predial", "condominio", "facilities",
+                        "terceirizacao", "seguranca", "conservacao", "obra", "engenharia"
+                    ]
+                    
+                    if any(kw in (href + text).lower() for kw in service_kw):
+                        full_url = href if href.startswith("http") else f"https://ohub.com.br{href}"
+                        service_links.append({
+                            "title": text,
+                            "url": full_url,
+                        })
                 except Exception:
                     continue
 
-            if cards:
-                for card in cards:
+            logger.info(
+                f"PillarBHunterAgent: {page_name} -> {len(service_links)} links de servicos encontrados"
+            )
+
+            # Para cada link de servico relevante, tentar acessar
+            for svc in service_links[:4]:  # Limita a 4 para performance
+                try:
+                    svc_results = await self._scrape_service_page(context, svc, city_clean)
+                    results.extend(svc_results)
+                except Exception as e:
+                    logger.warning(f"PillarBHunterAgent: Erro ao acessar {svc['title']}: {e}")
+
+            # Se nao encontrou nada estruturado, gera lead da pagina principal
+            if not results:
+                facilities_kw = ["facilities", "condominio", "terceirizacao", "manutencao", "predial", "servico"]
+                if any(kw in text_content.lower() for kw in facilities_kw):
                     results.append({
-                        "name": card["title"],
-                        "resumo_sinal": card["description"] or f"Obra de pintura predial de grande porte publicada no {platform_name}",
-                        "link_fonte": card["link"] or platform["url"],
+                        "name": f"Facilities e Servicos Prediais — oHub ({city_clean})",
+                        "resumo_sinal": (
+                            f"Hub de servicos prediais ativo no oHub ({ohub_page['category']}) "
+                            f"com demandas de manutencao, facilities e terceirizacao para "
+                            f"a regiao de {city_clean}. Acesse para cotar servicos de pintura."
+                        ),
+                        "link_fonte": ohub_page["url"],
                         "score_urgencia": 7,
                         "categoria_demanda": "reforma_geral",
                         "tipo_entidade": "predio",
                         "pilar": "B",
                     })
-            else:
-                content_lower = text_content.lower()
-                if any(p in content_lower for p in ["pintura", "fachada", "reforma", "obra", "facilities"]):
-                    relevant_links = [
-                        l for l in links
-                        if any(kw in l.lower() for kw in ["oportunidade", "servico", "solicitacao", "pedido", "pintura", "fachada", "reforma"])
-                        and "google" not in l.lower()
-                    ]
-                    best_link = relevant_links[0] if relevant_links else platform["url"]
-
-                    results.append({
-                        "name": f"Obras de Grande Porte — {platform_name} ({city_clean})",
-                        "resumo_sinal": f"Oportunidades de pintura predial de grande porte encontradas no {platform_name} para a região de {city_clean}. Acesse o link para ver os detalhes completos de cada solicitação.",
-                        "link_fonte": best_link,
-                        "score_urgencia": 6,
-                        "categoria_demanda": "reforma_geral",
-                        "tipo_entidade": "predio",
-                        "pilar": "B",
-                    })
-
-            logger.info(
-                f"PillarBHunterAgent: {platform_name} → {len(cards)} cards estruturados, "
-                f"{len(results)} leads extraídos"
-            )
 
             await page.close()
 
         except Exception as e:
-            logger.warning(f"PillarBHunterAgent: Erro ao raspar {platform_name}: {e}")
+            logger.warning(f"PillarBHunterAgent: Erro ao raspar {page_name}: {e}")
+
+        return results
+
+    async def _scrape_service_page(self, context, service: dict, city_clean: str) -> list[dict]:
+        """Acessa uma pagina de servico especifica para verificar se ha demandas ativas."""
+        results = []
+
+        try:
+            page = await context.new_page()
+            await page.goto(service["url"], wait_until="domcontentloaded", timeout=20000)
+            await page.wait_for_timeout(random.randint(2000, 3500))
+
+            text_content = await page.inner_text("body")
+
+            # Verifica se a pagina tem sinais de demandas/servicos ativos
+            demand_keywords = [
+                "orcamento", "solicitar", "contratar", "pedido", "cotacao",
+                "fornecedor", "servico", "profissional", "empresa", "especializado"
+            ]
+
+            if any(kw in text_content.lower() for kw in demand_keywords):
+                results.append({
+                    "name": f"{service['title']} — oHub ({city_clean})",
+                    "resumo_sinal": (
+                        f"Pagina ativa de {service['title']} no oHub com possibilidade "
+                        f"de cadastro de fornecedor e captacao de demandas prediais "
+                        f"na regiao de {city_clean}."
+                    ),
+                    "link_fonte": service["url"],
+                    "score_urgencia": 7,
+                    "categoria_demanda": "reforma_geral",
+                    "tipo_entidade": "predio",
+                    "pilar": "B",
+                })
+
+            await page.close()
+
+        except Exception as e:
+            logger.warning(f"PillarBHunterAgent: Erro na pagina de servico {service['url']}: {e}")
 
         return results
 

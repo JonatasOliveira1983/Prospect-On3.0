@@ -254,6 +254,21 @@ class DemandScoutAgent:
         normalized_a = [self._normalize_lead(r, "A", i, city_clean) for i, r in enumerate(results_a if isinstance(results_a, list) else [])]
         normalized_b = [self._normalize_lead(r, "B", i, city_clean) for i, r in enumerate(results_b if isinstance(results_b, list) else [])]
 
+        # Deduplica por link_fonte (remove duplicatas e URLs invalidas como #)
+        seen_urls = set()
+        def deduplicate(leads):
+            unique = []
+            for lead in leads:
+                url = lead.get("link_fonte") or lead.get("site", "")
+                if not url or url == "#" or url.endswith("#") or url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                unique.append(lead)
+            return unique
+
+        normalized_a = deduplicate(normalized_a)
+        normalized_b = deduplicate(normalized_b)
+
         total_leads = len(normalized_a) + len(normalized_b)
 
         logger.info(
