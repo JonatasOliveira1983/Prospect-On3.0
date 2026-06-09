@@ -97,8 +97,7 @@ export default function Dashboard() {
     enrichedContacts: 0,
     activeDemands: 0,
     pilarA: 0,
-    pilarB: 0,
-    pilarC: 0
+    pilarB: 0
   });
 
   const [scanFinished, setScanFinished] = useState(false);
@@ -147,8 +146,7 @@ export default function Dashboard() {
       enrichedContacts: 0,
       activeDemands: 0,
       pilarA: 0,
-      pilarB: 0,
-      pilarC: 0
+      pilarB: 0
     });
     setCurrentLead(null);
 
@@ -255,22 +253,18 @@ export default function Dashboard() {
           
           let pilarAInc = 0;
           let pilarBInc = 0;
-          let pilarCInc = 0;
           
           if (msg.includes("Pilar: A")) {
             pilarAInc = 1;
           } else if (msg.includes("Pilar: B")) {
             pilarBInc = 1;
-          } else if (msg.includes("Pilar: C")) {
-            pilarCInc = 1;
           }
 
           setScanMetrics(prev => ({ 
             ...prev, 
             activeDemands: prev.activeDemands + 1,
             pilarA: prev.pilarA + pilarAInc,
-            pilarB: prev.pilarB + pilarBInc,
-            pilarC: prev.pilarC + pilarCInc
+            pilarB: prev.pilarB + pilarBInc
           }));
 
           setCurrentLead(prev => {
@@ -434,7 +428,7 @@ export default function Dashboard() {
                         </div>
                         <div>
                           <h4 className="text-xs font-black uppercase tracking-wider">Fase 1: Captação de Demanda</h4>
-                          <p className="text-[9px] font-semibold opacity-60">Buscando atas, editais e obras na cidade</p>
+                          <p className="text-[9px] font-semibold opacity-60">Buscando cotações ativas de pintura na cidade</p>
                         </div>
                       </div>
                       <span className="text-[9px] font-black uppercase tracking-widest font-mono text-yellow-400">
@@ -547,7 +541,7 @@ export default function Dashboard() {
                     <span className="text-[9px] font-black uppercase tracking-widest text-yellow-400/80 block border-b border-white/5 pb-1">
                       Fluxo Ativo de Pilares Comerciais
                     </span>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <div className="bg-blue-500/5 border border-blue-500/10 p-2 text-center rounded-xl">
                         <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
                           <Building2 size={12} />
@@ -559,20 +553,11 @@ export default function Dashboard() {
 
                       <div className="bg-emerald-500/5 border border-emerald-500/10 p-2 text-center rounded-xl">
                         <div className="flex items-center justify-center gap-1 text-emerald-400 mb-1">
-                          <ScrollText size={12} />
+                          <Building size={12} />
                           <span className="text-[8px] font-bold uppercase tracking-wider">Pilar B</span>
                         </div>
                         <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarB}</span>
-                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Públicos</span>
-                      </div>
-
-                      <div className="bg-purple-500/5 border border-purple-500/10 p-2 text-center rounded-xl">
-                        <div className="flex items-center justify-center gap-1 text-purple-400 mb-1">
-                          <Briefcase size={12} />
-                          <span className="text-[8px] font-bold uppercase tracking-wider">Pilar C</span>
-                        </div>
-                        <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarC}</span>
-                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Corporativo</span>
+                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Grande Porte</span>
                       </div>
                     </div>
                   </div>
@@ -771,7 +756,7 @@ export default function Dashboard() {
               </div>
               <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.A ? 'text-white' : 'text-slate-500' }`}>Condomínios</h3>
               <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                Varredura profunda de atas de assembleias, mapeamento de fachadas e prospecção de fundos de obras ativas em condomínios residenciais.
+                Varredura de portais de condomínios (SindicoNet, CoteiBem), cotações abertas por síndicos e administradoras para pintura predial.
               </p>
               {activePillars.A && (
                 <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-blue-400/40 rounded-full" />
@@ -803,46 +788,12 @@ export default function Dashboard() {
                 </span>
                 <ScrollText size={18} className={`transition-all ${ activePillars.B ? 'text-emerald-400 group-hover:scale-110' : 'text-slate-600' }`} />
               </div>
-              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.B ? 'text-white' : 'text-slate-500' }`}>Editais Públicos</h3>
+              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.B ? 'text-white' : 'text-slate-500' }`}>Obras de Grande Porte</h3>
               <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                Monitoramento de diários oficiais do estado e municípios, portais de compras governamentais e licitações para reforma e pintura de prédios públicos.
+                Monitoramento de shoppings, hospitais, indústrias e grandes empreendimentos com cotações abertas de pintura predial.
               </p>
               {activePillars.B && (
                 <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-emerald-400/40 rounded-full" />
-              )}
-            </button>
-
-            {/* PILAR C */}
-            <button
-              type="button"
-              onClick={() => togglePilar('C')}
-              aria-pressed={activePillars.C}
-              className={`relative flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left group cursor-pointer select-none focus:outline-none
-                ${ activePillars.C
-                  ? 'bg-purple-500/10 border-purple-400/50 shadow-[0_0_18px_rgba(192,132,252,0.25)] scale-[1.01]'
-                  : 'bg-slate-900/40 border-white/5 opacity-40 saturate-0 hover:opacity-60 hover:saturate-100 hover:border-purple-500/20'
-                }`}
-            >
-              <div className="absolute top-3 right-3">
-                <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border transition-all ${
-                  activePillars.C ? 'bg-purple-400/20 border-purple-400/40 text-purple-300' : 'bg-slate-800 border-white/5 text-slate-500'
-                }`}>
-                  <span className={`w-1 h-1 rounded-full ${ activePillars.C ? 'bg-purple-400 animate-pulse' : 'bg-slate-600' }`} />
-                  {activePillars.C ? 'ATIVO' : 'OFF'}
-                </span>
-              </div>
-              <div className="flex items-center justify-between pr-14">
-                <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest bg-purple-500/10 px-2.5 py-1 rounded-full border border-purple-500/20">
-                  Pilar C
-                </span>
-                <Briefcase size={18} className={`transition-all ${ activePillars.C ? 'text-purple-400 group-hover:scale-110' : 'text-slate-600' }`} />
-              </div>
-              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.C ? 'text-white' : 'text-slate-500' }`}>Corporativo &amp; Facilities</h3>
-              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                Varredura de sites corporativos, vagas de manutenção predial comercial, indústrias, shoppings e acordos diretos com grandes administradoras de condomínio.
-              </p>
-              {activePillars.C && (
-                <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-purple-400/40 rounded-full" />
               )}
             </button>
 
@@ -964,8 +915,8 @@ export default function Dashboard() {
           {[
             { id: 'TODOS', label: 'Todas as Obras', count: leads.length, desc: 'Todo o radar' },
             { id: 'A', label: 'Pilar A: Condomínios', count: leads.filter(l => ((l as any).pilar || 'A') === 'A').length, desc: 'Atas e fachadas' },
-            { id: 'B', label: 'Pilar B: Públicos', count: leads.filter(l => (l as any).pilar === 'B').length, desc: 'Licitações gov' },
-            { id: 'C', label: 'Pilar C: Corporativo', count: leads.filter(l => (l as any).pilar === 'C').length, desc: 'Vagas e facilities' },
+            { id: 'B', label: 'Pilar B: Grande Porte', count: leads.filter(l => (l as any).pilar === 'B').length, desc: 'Shoppings, hospitais e indústrias' },
+            { id: 'B', label: 'Pilar B: Grande Porte', count: leads.filter(l => (l as any).pilar === 'B').length, desc: 'Shoppings, hospitais e indústrias' },
           ].map((tab) => (
             <button
               key={tab.id}

@@ -183,12 +183,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                   )}
                   {lead.pilar === 'B' && (
                     <span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1">
-                      <ScrollText size={10} /> Pilar B: Públicos
-                    </span>
-                  )}
-                  {lead.pilar === 'C' && (
-                    <span className="bg-purple-500/10 text-purple-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-purple-500/20 flex items-center gap-1">
-                      <Briefcase size={10} /> Pilar C: Corporativo
+                      <Building size={10} /> Pilar B: Grande Porte
                     </span>
                   )}
                 </div>
@@ -320,12 +315,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                       )}
                       {lead.pilar === 'B' && (
                         <span className="font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
-                          <ScrollText size={10} /> Pilar B: Públicos
-                        </span>
-                      )}
-                      {lead.pilar === 'C' && (
-                        <span className="font-black text-purple-400 bg-purple-500/15 border border-purple-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
-                          <Briefcase size={10} /> Pilar C: Corporativo
+                          <Building size={10} /> Pilar B: Grande Porte
                         </span>
                       )}
                     </div>

@@ -107,8 +107,7 @@ export default function HistoricoBuscasPage() {
   const getPilarLabel = (pilar: string) => {
     const labels: string[] = [];
     if (pilar.includes("A")) labels.push("Condomínios");
-    if (pilar.includes("B")) labels.push("Editais");
-    if (pilar.includes("C")) labels.push("Corporativo");
+    if (pilar.includes("B")) labels.push("Grande Porte");
     return labels.join(" · ");
   };
 
@@ -286,42 +285,28 @@ export default function HistoricoBuscasPage() {
                         </p>
                       </div>
                       <div className="p-4 bg-slate-900/50 rounded-xl text-center">
-                        <div className="flex items-center justify-center gap-2 text-blue-400 mb-1">
-                          <ScrollText size={18} />
+                        <div className="flex items-center justify-center gap-2 text-emerald-400 mb-1">
+                          <Building size={18} />
                           <span className="text-xs font-bold">PILAR B</span>
                         </div>
                         <span className="text-2xl font-bold text-white">
                           {entry.leads_b}
                         </span>
-                        <p className="text-xs text-slate-500 mt-1">Editais</p>
-                      </div>
-                      <div className="p-4 bg-slate-900/50 rounded-xl text-center">
-                        <div className="flex items-center justify-center gap-2 text-emerald-400 mb-1">
-                          <Briefcase size={18} />
-                          <span className="text-xs font-bold">PILAR C</span>
-                        </div>
-                        <span className="text-2xl font-bold text-white">
-                          {entry.leads_c}
-                        </span>
-                        <p className="text-xs text-slate-500 mt-1">
-                          Corporativo
-                        </p>
+                        <p className="text-xs text-slate-500 mt-1">Grande Porte</p>
                       </div>
                     </div>
 
                     {/* Leads por pilar */}
-                    {["A", "B", "C"].map((pilar) => {
+                    {["A", "B"].map((pilar) => {
                       const pilarData = entry.leads_json?.pilares?.[pilar];
                       const leads = pilarData?.leads || [];
                       const pilarLabels: Record<string, string> = {
                         A: "Condomínios",
-                        B: "Editais",
-                        C: "Corporativo",
+                        B: "Grande Porte",
                       };
                       const pilarColors: Record<string, string> = {
                         A: "text-yellow-400",
-                        B: "text-blue-400",
-                        C: "text-emerald-400",
+                        B: "text-emerald-400",
                       };
 
                       if (leads.length === 0) return null;

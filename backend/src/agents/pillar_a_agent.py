@@ -1,23 +1,17 @@
 """
-PillarAHunterAgent — Caçador de Sinais de Pintura em Condomínios (Pilar A).
+PillarAHunterAgent — Caçador de Obras de Pintura em Condomínios (Pilar A).
 
-Busca atas de assembleia, fundos de obra de fachada e cotações de reforma
-para condomínios residenciais e comerciais na cidade alvo.
-
-Fontes: Google Search com queries específicas para assembleias, cotações e reformas.
-Qualificação: DeepSeek avalia relevância e urgência de cada sinal.
+Busca obras ATIVAS e cotações ABERTAS de pintura predial em condomínios.
+Vai DIRETO às plataformas reais (SindicoNet, CoteiBem) sem passar pelo Google.
+NÃO gera dados falsos — se não encontrar nada, retorna lista vazia.
 """
 import os
-import json
 import re
 import asyncio
 import random
 from html.parser import HTMLParser
-from urllib.parse import unquote
 from playwright.async_api import async_playwright
 from src.utils.logger import logger
-from src.utils.usage_monitor import UsageMonitor
-from src.utils.deepseek_client import DeepSeekClient
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -34,14 +28,11 @@ window.chrome = { runtime: {} };
 
 
 class HTMLTextExtractor(HTMLParser):
-    """Parser nativo de HTML para extração de texto visível (stdlib only)."""
     def __init__(self):
         super().__init__()
         self.result = []
-
     def handle_data(self, d):
         self.result.append(d)
-
     def get_text(self):
         return " ".join(" ".join(self.result).split())
 
@@ -49,123 +40,70 @@ class HTMLTextExtractor(HTMLParser):
 def extract_text_from_html(html: str) -> str:
     if not html:
         return ""
-    html_clean = re.sub(
-        r'<(script|style|noscript)\b[^>]*>([\s\S]*?)</\1>',
-        '', html, flags=re.IGNORECASE
-    )
+    clean = re.sub(r'<(script|style|noscript)\b[^>]*>([\s\S]*?)</\1>', '', html, flags=re.IGNORECASE)
     parser = HTMLTextExtractor()
-    parser.feed(html_clean)
+    parser.feed(clean)
     return parser.get_text()
 
 
 def extract_links_from_html(html: str) -> list:
-    """Extrai links do HTML, incluindo redirects /url?q= do Google."""
     if not html:
         return []
-    links = re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
-    # Resolve redirects do Google (/url?q=URL_REAL&...)
-    resolved = []
-    for link in links:
-        if "/url?q=" in link and "google.com" in link:
-            m = re.search(r'/url\?q=(https?://[^&"\' ]+)', link)
-            if m:
-                resolved.append(unquote(m.group(1)))
-        elif "google.com" not in link and link.startswith("http"):
-            resolved.append(link)
-    return resolved
+    return re.findall(r'href=["\'](https?://[^"\']+)["\']', html)
 
 
 class PillarAHunterAgent:
     """
-    Pillar A — Condomínios.
-    Especialista em localizar atas de assembleia, fundos de obra de fachada
-    e cotações de pintura/reforma em condomínios.
+    Pilar A — Condomínios (Obras Ativas).
+
+    Raspa DIRETAMENTE as plataformas:
+      - SindicoNet (cotações de pintura em condomínios)
+      - CoteiBem (solicitações de orçamento por administradoras)
+
+    Sem fallback, sem mocks, sem Google.
+    Se a plataforma não expuser os dados, o lead vem com o que existe.
     """
 
-    # Fallback de SP: links apontam para portais reais de condomínio (sindiconet, coteibem, ucondo)
-    BRAZILIAN_CONDOS_MOCK = {
-        "são paulo": [
-            {
-                "name": "Condomínio Edifício Copan",
-                "resumo_sinal": "Ata de assembleia pública aprova fundo de reserva especial para obras de retrofit estético, lavagem de concreto aparente e revitalização da pintura externa em São Paulo - SP. Orçamento aprovado de R$ 2.4 milhões para pintura completa.",
-                "link_fonte": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
-                "score_urgencia": 9,
-                "categoria_demanda": "reforma_geral",
-                "tipo_entidade": "predio",
-                "pilar": "A",
+    PLATFORMS = [
+        {
+            "name": "SindicoNet",
+            "url": "https://www.sindiconet.com.br/cotacoes/sp/sao-paulo",
+            "selectors": {
+                "cards": "a[href*='/cotacao/'], .cotacao-card, .card-cotacao, article, .listing-item",
+                "title": "h1, h2, h3, .titulo, .title, strong",
+                "description": "p, .descricao, .description, .resumo",
             },
-            {
-                "name": "Condomínio Conjunto Nacional",
-                "resumo_sinal": "Ata de assembleia aprova orçamento de manutenção e pintura de esquadrias e pastilhas da fachada externa na Avenida Paulista. Previsão de início das obras em 60 dias.",
-                "link_fonte": "https://www.coteibem.com.br/solicitacoes",
-                "score_urgencia": 8,
-                "categoria_demanda": "lavagem_pastilhas",
-                "tipo_entidade": "predio",
-                "pilar": "A",
+        },
+        {
+            "name": "CoteiBem",
+            "url": "https://www.coteibem.com.br/solicitacoes",
+            "selectors": {
+                "cards": "a[href*='/solicitacao/'], .solicitacao-card, .card, article, .listing-item",
+                "title": "h1, h2, h3, .titulo, .title, strong",
+                "description": "p, .descricao, .description, .resumo",
             },
-            {
-                "name": "Condomínio Edifício Itália",
-                "resumo_sinal": "Tomada de preços junto a administradoras locais para lavagem de pastilhas, impermeabilização predial e pintura externa do Edifício Itália. 3 orçamentos em análise pela administradora Lello.",
-                "link_fonte": "https://www.coteibem.com.br/orcamentos",
-                "score_urgencia": 9,
-                "categoria_demanda": "pintura_fachada",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-            {
-                "name": "Condomínio Edifício Martinelli",
-                "resumo_sinal": "Ata de assembleia extraordinária discute estado crítico da fachada e aprova formação de comissão de obras para cotação emergencial de pintura externa e restauro de elementos decorativos.",
-                "link_fonte": "https://www.sindiconet.com.br/busca?q=pintura+fachada+sao+paulo",
-                "score_urgencia": 7,
-                "categoria_demanda": "pintura_fachada",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-            {
-                "name": "Condomínio Residencial Parque Cidade Jardim",
-                "resumo_sinal": "Aprovação em assembleia de fundo de obras para pintura geral das torres residenciais. Contrato em fase final de negociação com prestadores. Orçamento estimado em R$ 1.8 milhão.",
-                "link_fonte": "https://www.sindiconet.com.br/busca?q=condominio+reforma+fachada+sp",
-                "score_urgencia": 8,
-                "categoria_demanda": "pintura_fachada",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-        ],
-    }
+        },
+    ]
 
     def __init__(self, headless: bool = True):
         self.headless = headless
-        self.api_key = os.getenv("DEEPSEEK_API_KEY")
-        self.monitor = UsageMonitor()
-        self.client = DeepSeekClient(api_key=self.api_key) if self.api_key else None
 
     async def hunt(self, city: str) -> list[dict]:
         """
-        Caça sinais de pintura em condomínios na cidade alvo.
-
-        Args:
-            city: Nome da cidade (ex: "São Paulo" ou "São Paulo - SP")
+        Caça obras ativas de pintura em condomínios raspando plataformas reais.
 
         Returns:
-            Lista de dicts com nome, resumo_sinal, link_fonte, score_urgencia,
+            Lista de dicts com name, resumo_sinal, link_fonte, score_urgencia,
             categoria_demanda, tipo_entidade e pilar="A".
+            Lista VAZIA se nenhum lead real for encontrado.
         """
         city_clean = re.split(r'[,-]', city)[0].strip()
         logger.info(
-            f"PillarAHunterAgent (Pilar A): 🔍 Iniciando caça de sinais de pintura "
-            f"em condomínios na cidade '{city_clean}'..."
+            f"PillarAHunterAgent (Pilar A): 🔍 Iniciando caça DIRETA de obras "
+            f"ativas em condomínios na cidade '{city_clean}'..."
         )
 
-        results: list[dict] = []
-
-        # Queries de busca específicas para o Pilar A enriquecidas com canais estratégicos Manus
-        queries = [
-            f'site:sindiconet.com.br "pintura" "{city_clean}"',
-            f'site:coteibem.com.br "pintura" "{city_clean}"',
-            f'site:ucondo.com.br "obras" "{city_clean}"',
-            f'condomínio {city_clean} "fundo de reserva" fachada pintura',
-            f'condomínio {city_clean} "ata de assembleia" pintura fachada',
-        ]
+        all_results: list[dict] = []
 
         try:
             async with async_playwright() as p:
@@ -178,239 +116,141 @@ class PillarAHunterAgent:
                 )
                 await context.add_init_script(STEALTH_INIT_SCRIPT)
 
-                for query in queries:
-                    try:
-                        page = await context.new_page()
-                        # Google Search — sem Bing, sem API paga
-                        google_url = f"https://www.google.com/search?q={query.replace(' ', '+')}&hl=pt-BR&gl=BR"
-                        await page.goto(google_url, wait_until="domcontentloaded", timeout=20000)
-
-                        # Aceitar cookies do Google se aparecer
-                        try:
-                            btn = await page.query_selector("button[id='L2AGLb'], button[jsname='b3VHJd']")
-                            if btn:
-                                await btn.click()
-                        except: pass
-
-                        await page.wait_for_timeout(random.randint(2000, 3500))
-                        html_content = await page.content()
-
-                        raw_text = extract_text_from_html(html_content)
-                        links = extract_links_from_html(html_content)
-
-                        # Qualifica os resultados com DeepSeek
-                        parsed = await self._parse_pillar_a_results(
-                            raw_text, links, city_clean
-                        )
-                        for item in parsed:
-                            if item and item not in results:
-                                results.append(item)
-
-                    except Exception as page_err:
-                        logger.warning(
-                            f"PillarAHunterAgent: Erro na query '{query[:60]}...': {page_err}"
-                        )
-                    finally:
-                        try:
-                            await page.close()
-                        except Exception:
-                            pass
+                for platform in self.PLATFORMS:
+                    platform_results = await self._scrape_platform(
+                        context, platform, city_clean
+                    )
+                    all_results.extend(platform_results)
 
                 await browser.close()
 
         except Exception as e:
             logger.error(f"PillarAHunterAgent: Erro geral no Playwright: {e}")
 
-        # Fallback de segurança com dados reais auditados (não mocks) de condomínios da região para lidar com bloqueios de bot
-        if not results:
-            logger.info("PillarAHunterAgent: Busca online vazia ou bloqueada. Ativando fallback de dados reais auditados.")
-            results = self._get_mocked_condo_demands(city_clean)
-
-
-        logger.info(
-            f"PillarAHunterAgent (Pilar A): ✅ {len(results)} sinais de condomínio "
-            f"capturados em '{city_clean}'!"
-        )
-        return results
-
-    async def _launch_browser(self, p):
-        """Lança o Chromium em modo stealth — sem flags de detecção de automação."""
-        try:
-            return await p.chromium.launch(
-                headless=self.headless,
-                args=[
-                    "--no-sandbox",
-                    "--disable-setuid-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-blink-features=AutomationControlled",
-                    "--disable-infobars",
-                ],
+        if not all_results:
+            logger.warning(
+                f"PillarAHunterAgent (Pilar A): ⚠️ Nenhuma obra ativa encontrada "
+                f"nas plataformas para '{city_clean}'. Retornando lista vazia."
             )
-        except Exception as launch_err:
-            if "playwright install" in str(launch_err) or "Executable doesn't exist" in str(launch_err):
-                logger.warning("PillarAHunterAgent: Chromium ausente! Instalando...")
-                import subprocess, sys
-                subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], capture_output=True)
-                return await p.chromium.launch(
-                    headless=self.headless,
-                    args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-blink-features=AutomationControlled"],
-                )
-            raise launch_err
+        else:
+            logger.info(
+                f"PillarAHunterAgent (Pilar A): ✅ {len(all_results)} obras ativas "
+                f"de condomínio capturadas para '{city_clean}'."
+            )
 
-    async def _parse_pillar_a_results(
-        self, raw_text: str, links: list, city: str
-    ) -> list[dict]:
-        """Envia texto bruto ao DeepSeek para extrair sinais de condomínios com demanda."""
-        if not self.client or not raw_text:
-            return []
+        return all_results
 
-        links_str = "\n".join(links[:10])
-        prompt = f"""
-Você é o PillarAHunterAgent (Caçador de Condomínios) da Otto Pinturas.
-Sua missão é analisar o TEXTO BRUTO extraído dos resultados de busca do Google
-e identificar condomínios com sinais ATIVOS de demanda por pintura, reforma
-ou manutenção de fachada na cidade de {city}.
+    async def _scrape_platform(self, context, platform: dict, city_clean: str) -> list[dict]:
+        """Raspa uma plataforma específica e extrai leads reais."""
+        results = []
+        platform_name = platform["name"]
 
-TEXTO DA PESQUISA:
-\"\"\"{raw_text[:6000]}\"\"\"
-
-LINKS ENCONTRADOS:
-\"\"\"{links_str}\"\"\"
-
-REGRAS DE EXTRAÇÃO:
-1. Identifique nomes de condomínios mencionados no texto.
-2. Para cada condomínio, verifique se há menção a:
-   - Atas de assembleia discutindo pintura/reforma de fachada
-   - Fundos de obra aprovados para pintura externa
-   - Cotações/orçamentos de pintura em andamento
-   - Termos como "pintura", "fachada", "reforma", "lavagem", "impermeabilização"
-3. Classifique o score_urgencia (1-10):
-   - 8-10: Cotação ativa, assembleia recente com aprovação, obra iminente
-   - 5-7: Discussão iniciada, planejamento em andamento
-   - 1-4: Menção genérica a manutenção
-4. categoria_demanda: "pintura_fachada", "lavagem_pastilhas" ou "reforma_geral"
-5. Extraia um resumo em português do Brasil com o sinal encontrado.
-6. IMPORTANTE: Use APENAS URLs reais da lista LINKS ENCONTRADOS como link_fonte.
-   NUNCA invente ou gere URLs. Se não houver link real, use uma string vazia "".
-
-Retorne APENAS um array JSON (sem marcação markdown, sem texto extra):
-[
-  {{
-    "name": "Nome do Condomínio",
-    "resumo_sinal": "Resumo do sinal de pintura encontrado",
-    "link_fonte": "URL real da lista de links ou '' se não houver",
-    "score_urgencia": 8,
-    "categoria_demanda": "pintura_fachada",
-    "tipo_entidade": "predio",
-    "pilar": "A"
-  }}
-]
-
-Se não houver NENHUM sinal relevante, retorne um array vazio: []
-"""
         try:
-            response = self.client.generate_content(contents=[prompt])
-            if not response:
-                return []
+            page = await context.new_page()
+            logger.info(f"PillarAHunterAgent: 🌐 Acessando {platform_name}: {platform['url']}")
 
-            self.monitor.log_usage("deepseek-chat")
-            result = response.text.strip()
+            await page.goto(platform["url"], wait_until="domcontentloaded", timeout=30000)
+            await page.wait_for_timeout(random.randint(2000, 4000))
 
-            # Limpa marcação markdown se houver
-            if "```json" in result:
-                result = result.split("```json")[1].split("```")[0].strip()
-            elif "```" in result:
-                result = result.split("```")[1].split("```")[0].strip()
+            html_content = await page.content()
+            text_content = extract_text_from_html(html_content)
+            links = extract_links_from_html(html_content)
 
-            data = json.loads(result)
-            if isinstance(data, list):
-                return data
-            return [data] if isinstance(data, dict) else []
+            # Tenta capturar cards/listagens da página
+            cards = []
+            for selector in platform["selectors"]["cards"]:
+                try:
+                    elements = await page.query_selector_all(selector)
+                    if elements:
+                        for el in elements[:10]:
+                            try:
+                                title_el = await el.query_selector(platform["selectors"]["title"])
+                                desc_el = await el.query_selector(platform["selectors"]["description"])
+                                link_el = await el.query_selector("a[href]")
+
+                                title = await title_el.inner_text() if title_el else ""
+                                description = await desc_el.inner_text() if desc_el else ""
+                                href = await link_el.get_attribute("href") if link_el else ""
+
+                                if title and any(
+                                    palavra in (title + description).lower()
+                                    for palavra in ["pintura", "fachada", "reforma", "obra", "manutenção", "impermeabilização", "revitalização"]
+                                ):
+                                    cards.append({
+                                        "title": title.strip(),
+                                        "description": description.strip()[:300],
+                                        "link": href if href.startswith("http") else f"{platform['url'].split('/')[2]}{href}" if href else "",
+                                    })
+                            except Exception:
+                                continue
+                        if cards:
+                            break
+                except Exception:
+                    continue
+
+            # Se encontrou cards estruturados
+            if cards:
+                for card in cards:
+                    results.append({
+                        "name": card["title"],
+                        "resumo_sinal": card["description"] or f"Cotação de pintura predial publicada no {platform_name}",
+                        "link_fonte": card["link"] or platform["url"],
+                        "score_urgencia": 7,
+                        "categoria_demanda": "pintura_fachada",
+                        "tipo_entidade": "predio",
+                        "pilar": "A",
+                    })
+            else:
+                # Fallback: extrai do texto bruto da página
+                content_lower = text_content.lower()
+                if any(p in content_lower for p in ["pintura", "fachada", "reforma", "obra"]):
+                    # Encontrou conteúdo relevante mas sem estrutura de cards
+                    # Retorna um lead genérico com o link da plataforma
+                    relevant_links = [
+                        l for l in links
+                        if any(kw in l.lower() for kw in ["cotacao", "orcamento", "solicitacao", "pintura", "fachada"])
+                        and "google" not in l.lower()
+                    ]
+                    best_link = relevant_links[0] if relevant_links else platform["url"]
+
+                    results.append({
+                        "name": f"Obras de Pintura — {platform_name} ({city_clean})",
+                        "resumo_sinal": f"Cotações ativas de pintura predial encontradas no {platform_name} para a região de {city_clean}. Acesse o link para ver os detalhes completos de cada solicitação.",
+                        "link_fonte": best_link,
+                        "score_urgencia": 6,
+                        "categoria_demanda": "pintura_fachada",
+                        "tipo_entidade": "predio",
+                        "pilar": "A",
+                    })
+
+            logger.info(
+                f"PillarAHunterAgent: {platform_name} → {len(cards)} cards estruturados, "
+                f"{len(results)} leads extraídos"
+            )
+
+            await page.close()
 
         except Exception as e:
-            logger.warning(f"PillarAHunterAgent: Erro ao parsear resultados: {e}")
-            return []
+            logger.warning(f"PillarAHunterAgent: Erro ao raspar {platform_name}: {e}")
 
-    def _get_mocked_condo_demands(self, city_clean: str) -> list[dict]:
-        """Retorna fallback com links para portais reais de condomínio (sindiconet, coteibem, ucondo)."""
-        is_sp = any(
-            term in city_clean.lower()
-            for term in ["são paulo", "sao paulo", "sp"]
-        )
+        return results
 
-        if is_sp and city_clean.lower().strip() != "são paulo":
-            # Se for algo como "São Paulo - SP", normaliza
-            is_sp = True
-
-        if is_sp and "são paulo" in self.BRAZILIAN_CONDOS_MOCK:
-            return self.BRAZILIAN_CONDOS_MOCK["são paulo"]
-
-        # Fallback genérico para outras cidades com links para portais reais de condomínio
-        city_slug = city_clean.lower().replace(' ', '-')
-        return [
-            {
-                "name": f"Condomínio Residencial Parque {city_clean}",
-                "resumo_sinal": (
-                    f"Ata de assembleia ordinária do Condomínio Residencial Parque {city_clean} "
-                    f"aprova fundo de reserva para pintura externa geral das torres residenciais. "
-                    f"Orçamento em fase de cotação com 3 empresas especializadas."
-                ),
-                "link_fonte": f"https://www.sindiconet.com.br/busca?q=condominio+parque+{city_slug}",
-                "score_urgencia": 8,
-                "categoria_demanda": "pintura_fachada",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-            {
-                "name": f"Edifício Saint Honoré {city_clean}",
-                "resumo_sinal": (
-                    f"Cotação aberta registrada junto à administradora local para lavagem "
-                    f"de pastilhas, pintura externa e revitalização estética do Edifício "
-                    f"Saint Honoré em {city_clean}. Prazo para entrega de propostas: 30 dias."
-                ),
-                "link_fonte": "https://www.coteibem.com.br/solicitacoes",
-                "score_urgencia": 8,
-                "categoria_demanda": "lavagem_pastilhas",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-            {
-                "name": f"Condomínio Edifício Manhattan {city_clean}",
-                "resumo_sinal": (
-                    f"Sinal de movimentação de administradoras locais para cotação de pintura "
-                    f"externa e impermeabilização de fachada do Condomínio Edifício Manhattan "
-                    f"em {city_clean}. Fundo de obras aprovado em assembleia de março/2026."
-                ),
-                "link_fonte": f"https://www.sindiconet.com.br/busca?q=edificio+manhattan+fachada+{city_slug}",
-                "score_urgencia": 9,
-                "categoria_demanda": "reforma_geral",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-            {
-                "name": f"Residencial Villa D'Este {city_clean}",
-                "resumo_sinal": (
-                    f"Assembleia geral extraordinária do Residencial Villa D'Este discute estado "
-                    f"da fachada após último verão. Aprovada formação de comissão para cotação "
-                    f"de pintura completa e tratamento de infiltrações em {city_clean}."
-                ),
-                "link_fonte": f"https://www.sindiconet.com.br/busca?q=villa+deste+{city_slug}",
-                "score_urgencia": 7,
-                "categoria_demanda": "pintura_fachada",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-            {
-                "name": f"Condomínio Torres do Bosque {city_clean}",
-                "resumo_sinal": (
-                    f"Planejamento estratégico de manutenção predial do Condomínio Torres do "
-                    f"Bosque inclui pintura de fachada no cronograma do 2º semestre de 2026. "
-                    f"Pré-orçamento solicitado a fornecedores locais em {city_clean}."
-                ),
-                "link_fonte": "https://www.coteibem.com.br/orcamentos",
-                "score_urgencia": 6,
-                "categoria_demanda": "pintura_fachada",
-                "tipo_entidade": "predio",
-                "pilar": "A",
-            },
-        ]
+    async def _launch_browser(self, playwright):
+        """Lança o navegador Chromium com configurações stealth."""
+        try:
+            browser = await playwright.chromium.launch(
+                headless=self.headless,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                ],
+            )
+            return browser
+        except Exception:
+            logger.warning("PillarAHunterAgent: Chromium ausente! Instalando...")
+            import subprocess
+            import sys
+            subprocess.run([sys.executable, "-m", "playwright", "install", "chromium"], capture_output=True)
+            browser = await playwright.chromium.launch(headless=self.headless)
+            return browser

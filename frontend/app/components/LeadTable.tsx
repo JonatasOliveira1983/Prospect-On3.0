@@ -151,14 +151,9 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                       )}
                       {lead.pilar === 'B' && (
                         <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                          <ScrollText size={8} /> Pilar B: Públicos
-                        </span>
-                      )}
-                      {lead.pilar === 'C' && (
-                        <span className="bg-purple-500/10 border border-purple-500/20 text-purple-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                          <Briefcase size={8} /> Pilar C: Corporativo
-                        </span>
-                      )}
+                          <Building size={8} /> Pilar B: Grande Porte
+                          </span>
+                        )}
 
                       {lead.intencao_ativa ? (
                         <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] shrink-0">
@@ -313,7 +308,7 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                           )}
                           {lead.pilar === 'B' && (
                             <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
-                              <ScrollText size={8} /> Pilar B: Públicos
+                              <Building size={8} /> Pilar B: Grande Porte
                             </span>
                           )}
                           {lead.pilar === 'C' && (

@@ -1,15 +1,11 @@
 """
-DemandScoutAgent — Orquestrador de Varredura de Demanda (3 Pilares).
+DemandScoutAgent — Orquestrador de Varredura de Demanda (2 Pilares).
 
-Dispara os 3 agentes caçadores em paralelo (asyncio.gather):
+Dispara os 2 agentes caçadores em paralelo (asyncio.gather):
   - PillarAHunterAgent (Condomínios — Pilar A)
-  - PillarBHunterAgent (Editais Públicos — Pilar B)
-  - PillarCHunterAgent (Corporativo — Pilar C)
+  - PillarBHunterAgent (Obras de Grande Porte — Pilar B)
 
-Consolida os resultados e retorna array unificado com campo `pilar: "A"|"B"|"C"`.
-
-Este agente preserva compatibilidade com o método analyze_active_demand()
-para o pipeline de enriquecimento individual de leads.
+Consolida os resultados e retorna array unificado com campo `pilar: "A"|"B"`.
 """
 import os
 import json
@@ -24,7 +20,6 @@ from src.utils.usage_monitor import UsageMonitor
 from src.utils.deepseek_client import DeepSeekClient
 from src.agents.pillar_a_agent import PillarAHunterAgent
 from src.agents.pillar_b_agent import PillarBHunterAgent
-from src.agents.pillar_c_agent import PillarCHunterAgent
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -63,9 +58,9 @@ def extract_links_from_html(html: str) -> list:
 
 class DemandScoutAgent:
     """
-    Orquestrador de varredura de demanda por pintura nos 3 Pilares.
+    Orquestrador de varredura de demanda por pintura nos 2 Pilares.
 
-    Dispara os 3 caçadores (Pilar A/B/C) em paralelo via asyncio.gather,
+    Dispara os 2 caçadores (Pilar A/B) em paralelo via asyncio.gather,
     consolida os resultados e retorna um dicionário organizado por pilar
     com array unificado de leads.
     """
@@ -76,10 +71,9 @@ class DemandScoutAgent:
         self.monitor = UsageMonitor()
         self.client = DeepSeekClient(api_key=self.api_key) if self.api_key else None
 
-        # Instancia os 3 agentes caçadores
+        # Instancia os 2 agentes caçadores
         self.pillar_a = PillarAHunterAgent(headless=headless)
         self.pillar_b = PillarBHunterAgent(headless=headless)
-        self.pillar_c = PillarCHunterAgent(headless=headless)
 
     @staticmethod
     def _validate_link_fonte(url: str) -> str:
@@ -200,30 +194,30 @@ class DemandScoutAgent:
             "link_fonte": validated_link,
         }
 
-    async def scan_all_pillars(self, city: str, pilares: str = "A,B,C") -> dict:
+    async def scan_all_pillars(self, city: str, pilares: str = "A,B") -> dict:
         """
         Varredura seletiva e dinâmica nos Pilares comerciais em paralelo.
 
         Args:
             city: Nome da cidade alvo (ex: "São Paulo" ou "São Paulo - SP")
-            pilares: String contendo os pilares ativos separados por vírgula (ex: "A,B,C")
+            pilares: String contendo os pilares ativos separados por vírgula (ex: "A,B")
 
         Returns:
             {
                 "pilares": {
                     "A": { "nome": "Condomínios", "leads": [...], ... },
-                    "B": { ... },
-                    "C": { ... }
+                    "B": { "nome": "Obras de Grande Porte", "leads": [...], ... }
                 },
                 "total_leads": int,
                 "cidade": str,
                 "timestamp": str
             }
+            Pilares não ativos retornam lista vazia.
         """
         city_clean = re.split(r'[,-]', city)[0].strip()
         
         # Faz parse da string de pilares ativos (ex: "A,B" -> {"A", "B"})
-        active_set = {p.strip().upper() for p in pilares.split(",")} if pilares else {"A", "B", "C"}
+        active_set = {p.strip().upper() for p in pilares.split(",")} if pilares else {"A", "B"}
         
         logger.info(
             f"DemandScoutAgent (Orquestrador): 🚀 Iniciando varredura dinâmica "
@@ -239,16 +233,12 @@ class DemandScoutAgent:
         if "B" in active_set:
             tasks.append(self.pillar_b.hunt(city))
             task_indices.append("B")
-        if "C" in active_set:
-            tasks.append(self.pillar_c.hunt(city))
-            task_indices.append("C")
 
         # Dispara os hunters selecionados em paralelo
         results = await asyncio.gather(*tasks, return_exceptions=True) if tasks else []
 
         results_a = []
         results_b = []
-        results_c = []
 
         for idx, pilar_key in enumerate(task_indices):
             res = results[idx]
@@ -259,26 +249,21 @@ class DemandScoutAgent:
                 results_a = res
             elif pilar_key == "B":
                 results_b = res
-            elif pilar_key == "C":
-                results_c = res
 
         # Normaliza cada lead para o formato do frontend
         normalized_a = [self._normalize_lead(r, "A", i, city_clean) for i, r in enumerate(results_a if isinstance(results_a, list) else [])]
         normalized_b = [self._normalize_lead(r, "B", i, city_clean) for i, r in enumerate(results_b if isinstance(results_b, list) else [])]
-        normalized_c = [self._normalize_lead(r, "C", i, city_clean) for i, r in enumerate(results_c if isinstance(results_c, list) else [])]
 
-        total_leads = len(normalized_a) + len(normalized_b) + len(normalized_c)
+        total_leads = len(normalized_a) + len(normalized_b)
 
         logger.info(
             f"DemandScoutAgent (Orquestrador): ✅ Varredura concluída para "
-            f"'{city_clean}'! A={len(normalized_a)} B={len(normalized_b)} C={len(normalized_c)} "
+            f"'{city_clean}'! A={len(normalized_a)} B={len(normalized_b)} "
             f"→ Total={total_leads}"
         )
 
-        # Palavras‑chave por pilar (usadas pelo frontend como chips visuais)
-        kw_a = ["ata", "assembleia", "fundo de obra", "cotação", "pintura", "fachada", "lavagem", "reforma"]
-        kw_b = ["licitação", "pregão", "concorrência", "tomada de preço", "edital", "diário oficial", "contrato"]
-        kw_c = ["facilities", "cotação empresarial", "vaga", "manutenção predial", "limpeza", "segurança", "shopping"]
+        kw_a = ["cotação", "pintura", "fachada", "obra", "condomínio", "síndico", "administradora", "reforma"]
+        kw_b = ["facilities", "shopping", "hospital", "indústria", "logístico", "corporativo", "manutenção predial", "grande porte"]
 
         return {
             "pilares": {
@@ -287,33 +272,22 @@ class DemandScoutAgent:
                     "icone": "Building2",
                     "cor": "from-blue-500 to-cyan-500",
                     "corClara": "bg-blue-500/10 border-blue-500/30 text-blue-400",
-                    "descricao": "Atas, fundos de obra, cotações e demandas condominiais",
+                    "descricao": "Obras ativas, cotações abertas e chamamento de síndicos e administradoras",
                     "leads": normalized_a,
                     "total_encontrados": len(normalized_a),
                     "palavras_chave": kw_a,
                     "status": "completo" if normalized_a else "vazio",
                 },
                 "B": {
-                    "nome": "Editais Públicos",
-                    "icone": "ScrollText",
+                    "nome": "Obras de Grande Porte",
+                    "icone": "Building",
                     "cor": "from-emerald-500 to-green-500",
                     "corClara": "bg-emerald-500/10 border-emerald-500/30 text-emerald-400",
-                    "descricao": "Licitações, pregões, concorrências e diários oficiais",
+                    "descricao": "Shoppings, hospitais, indústrias e grandes empreendimentos em cotação",
                     "leads": normalized_b,
                     "total_encontrados": len(normalized_b),
                     "palavras_chave": kw_b,
                     "status": "completo" if normalized_b else "vazio",
-                },
-                "C": {
-                    "nome": "Corporativo",
-                    "icone": "Briefcase",
-                    "cor": "from-purple-500 to-pink-500",
-                    "corClara": "bg-purple-500/10 border-purple-500/30 text-purple-400",
-                    "descricao": "Vagas, facilities, cotações empresariais e demandas corporativas",
-                    "leads": normalized_c,
-                    "total_encontrados": len(normalized_c),
-                    "palavras_chave": kw_c,
-                    "status": "completo" if normalized_c else "vazio",
                 },
             },
             "total_leads": total_leads,
@@ -472,7 +446,7 @@ Se não houver sinais, retorne: []
             logger.warning(f"DemandScoutAgent: Erro ao analisar sinais: {e}")
             return []
 
-    async def discover_active_demands(self, city: str, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C") -> list[dict]:
+    async def discover_active_demands(self, city: str, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B") -> list[dict]:
         """
         Retorna uma lista plana de leads reais identificados na varredura seletiva de pilares.
         Interface de compatibilidade com o ManagerAgent.
@@ -501,8 +475,12 @@ Se não houver sinais, retorne: []
                 })
         return flat_leads
 
-    async def _get_mocked_demands(self, city: str, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C") -> list[dict]:
-        """Alias de compatibilidade que retorna os mesmos dados reais auditados em vez de mocks fictícios."""
-        logger.info("DemandScoutAgent: Redirecionando fallback de mocks para dados reais auditados.")
-        return await self.discover_active_demands(city, publico_alvo, palavra_chave, pilares=pilares)
+    async def _get_mocked_demands(self, city: str, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B") -> list[dict]:
+        """
+        Método de compatibilidade para o pipeline legado.
+        NÃO gera mais dados falsos — se o scan real falhar, retorna lista vazia.
+        """
+        logger.warning("DemandScoutAgent: _get_mocked_demands foi chamado (pipeline legado). "
+                        "Ignorando — sistema não gera mais dados fictícios.")
+        return []
 

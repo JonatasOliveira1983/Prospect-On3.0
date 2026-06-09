@@ -91,8 +91,7 @@ class ManagerAgent:
         # Traduz a string de pilares para nomes amigáveis para exibir no log premium
         pilar_names = []
         if "A" in pilares: pilar_names.append("Condomínios (Pilar A)")
-        if "B" in pilares: pilar_names.append("Editais Públicos (Pilar B)")
-        if "C" in pilares: pilar_names.append("Corporativo (Pilar C)")
+        if "B" in pilares: pilar_names.append("Obras de Grande Porte (Pilar B)")
         
         self.emit_log("ManagerAgent", "start_scan", "="*60, "info")
         self.emit_log("ManagerAgent", "start_scan", "🎯 SNIPER MULTIAGENTE DEMAND-FIRST v10.5 INICIADO", "info")
@@ -105,7 +104,7 @@ class ManagerAgent:
         # ==========================================
         # FASE 1: CAPTAÇÃO DE SINAIS ATIVOS NA CIDADE
         # ==========================================
-        self.emit_log("DemandScoutAgent", f"Fase 1: Buscando atas de assembleia, editais e sinais nos pilares [{pilares}]...", "working")
+        self.emit_log("DemandScoutAgent", f"Fase 1: Buscando obras ativas e cotações abertas nos pilares [{pilares}]...", "working")
         try:
             sinais_demanda = await self.demand_scout.discover_active_demands(city, publico_alvo=pa, palavra_chave=pk, pilares=pilares)
             if sinais_demanda:
@@ -115,11 +114,9 @@ class ManagerAgent:
                         f"🔥 SINAL DETECTADO: '{sinal.get('name')}' | Pilar: {sinal.get('pilar', 'A')} | Urgência: {sinal.get('score_urgencia')}/10 | {sinal.get('resumo_sinal')}", 
                         "info")
             else:
-                self.emit_log("DemandScoutAgent", "Fase 1: Atenção", "⚠️ Nenhum sinal ativo de cotação encontrado nos portais da cidade. Ativando mocks de alta fidelidade.", "warning")
-                sinais_demanda = await self.demand_scout._get_mocked_demands(city, publico_alvo=pa, palavra_chave=pk, pilares=pilares)
+                self.emit_log("DemandScoutAgent", "Fase 1: Atenção", "⚠️ Nenhuma obra ativa encontrada nas plataformas para esta cidade.", "warning")
         except Exception as e:
-            self.emit_log("DemandScoutAgent", "Fase 1: Erro", f"❌ Falha na Fase 1: {e}. Usando mock de contingência.", "error")
-            sinais_demanda = await self.demand_scout._get_mocked_demands(city, publico_alvo=pa, palavra_chave=pk, pilares=pilares)
+            self.emit_log("DemandScoutAgent", "Fase 1: Erro", f"❌ Falha na Fase 1: {e}. Nenhum lead será processado.", "error")
 
         self.emit_log("ManagerAgent", "info", f"📊 Iniciando processamento reverso dos {min(target_leads, len(sinais_demanda))} melhores alvos...", "info")
         self.emit_log("ManagerAgent", "info", "-"*60, "info")

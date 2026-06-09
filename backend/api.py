@@ -531,7 +531,7 @@ async def clear_leads():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/scan/start")
-async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C"):
+async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B"):
     """Dispara a varredura completa Sniper (Discovery + Enrichment) em background."""
     try:
         logger.info(f"API: Disparando varredura Sniper para {query} em {city} (Objetivo: {target}) | Público: {publico_alvo} | Palavra: {palavra_chave} | Pilares: {pilares}...")
@@ -546,7 +546,7 @@ async def start_scan(query: str = "Condominios", city: str = "São Paulo", targe
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sniper/start")
-async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo", publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C"):
+async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo", publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B"):
     """Dispara a varredura Sniper (Google Maps Browser). Agora unificado com o scan principal."""
     return await start_scan(query, city, publico_alvo=publico_alvo, palavra_chave=palavra_chave, pilares=pilares)
 
@@ -634,7 +634,7 @@ def load_system_config():
         "motor_mapas": "Google Maps (Playwright Stealth)",
         "motor_ia": "DeepSeek Chat",
         "delay_stealth": "2.0s – 3.5s (aleatório)",
-        "pilares_ativos": "A (Condomínios) · B (Editais) · C (Corporativo)",
+        "pilares_ativos": "A (Condomínios) · B (Obras de Grande Porte)",
         "pilar_varredura": "Todos"
     }
 
@@ -719,13 +719,12 @@ async def get_image(filename: str):
     raise HTTPException(status_code=404, detail="Imagem não encontrada")
 
 @app.get("/api/scan-pillars")
-async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C", x_user_id: str = Header(None)):
+async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B", x_user_id: str = Header(None)):
     """
-    Varredura completa de demanda nos 3 Pilares (A/B/C) em paralelo.
+    Varredura completa de demanda nos 2 Pilares (A/B) em paralelo.
     
-    Pilar A — Condomínios (atas, fundos de obra, cotações)
-    Pilar B — Editais Públicos (licitações, pregões, diários oficiais)
-    Pilar C — Corporativo (vagas, facilities, cotações empresariais)
+    Pilar A — Condomínios (obras ativas, cotações abertas, síndicos e administradoras)
+    Pilar B — Obras de Grande Porte (shoppings, hospitais, indústrias e grandes empreendimentos)
 
     Retorna leads organizados por pilar com metadados visuais para o frontend.
     """
@@ -743,8 +742,7 @@ async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C", x_user_
         logger.info(
             f"API: ✅ Varredura de Pilares concluída — {result['total_leads']} leads "
             f"(A={len(result['pilares']['A']['leads'])} "
-            f"B={len(result['pilares']['B']['leads'])} "
-            f"C={len(result['pilares']['C']['leads'])})"
+            f"B={len(result['pilares']['B']['leads'])})"
         )
         
         # Salvar no histórico
@@ -758,7 +756,7 @@ async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C", x_user_
                 total_leads=result['total_leads'],
                 leads_a=len(result['pilares']['A']['leads']),
                 leads_b=len(result['pilares']['B']['leads']),
-                leads_c=len(result['pilares']['C']['leads']),
+                leads_c=0,
                 leads_json=result
             )
         
