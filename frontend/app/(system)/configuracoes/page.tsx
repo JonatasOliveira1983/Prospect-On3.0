@@ -46,7 +46,7 @@ export default function Configuracoes() {
     motor_mapas: "Google Maps (Playwright Stealth)",
     motor_ia: "DeepSeek Chat",
     delay_stealth: "2.0s – 3.5s (aleatório)",
-    pilares_ativos: "A (Condomínios) · B (Obras de Grande Porte)"
+    pilares_ativos: "A (Condomínios) · B (Obras de Grande Porte) · C (Editais Públicos)"
   });
 
   useEffect(() => {
@@ -236,6 +236,7 @@ export default function Configuracoes() {
                 <option value="Todos" className="bg-background">Todos os Pilares</option>
                 <option value="A" className="bg-background">Pilar A (Condomínios)</option>
                 <option value="B" className="bg-background">Pilar B (Grande Porte)</option>
+                <option value="C" className="bg-background">Pilar C (Editais)</option>
               </select>
             </div>
           </div>

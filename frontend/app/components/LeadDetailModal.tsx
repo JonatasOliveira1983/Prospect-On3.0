@@ -23,6 +23,7 @@ import {
   Image as ImageIcon,
   AlertCircle,
   Building2,
+  Building,
   ScrollText,
   Briefcase,
   ShieldAlert
@@ -295,8 +296,13 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                   <button disabled className="flex-1 bg-slate-800 text-slate-600 font-black py-3.5 px-4 rounded-2xl flex items-center justify-center gap-2.5 text-xs uppercase tracking-widest opacity-40 cursor-not-allowed">
                     <Mail size={15} /> Sem E-mail
                   </button>
-                )}
-              </div>
+                  )}
+                  {lead.pilar === 'C' && (
+                    <span className="bg-amber-500/10 text-amber-400 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border border-amber-500/20 flex items-center gap-1">
+                      <ScrollText size={10} /> Pilar C: Editais
+                    </span>
+                  )}
+                </div>
 
               {/* Inteligência de Obra Ativa */}
               {lead.intencao_ativa ? (
@@ -316,6 +322,11 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                       {lead.pilar === 'B' && (
                         <span className="font-black text-emerald-400 bg-emerald-500/15 border border-emerald-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
                           <Building size={10} /> Pilar B: Grande Porte
+                        </span>
+                      )}
+                      {lead.pilar === 'C' && (
+                        <span className="font-black text-amber-400 bg-amber-500/15 border border-amber-500/25 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider flex items-center gap-1">
+                          <ScrollText size={10} /> Pilar C: Editais
                         </span>
                       )}
                     </div>

@@ -15,6 +15,7 @@ from src.agents.manager_agent import ManagerAgent
 from src.agents.health_agent import HealthAgent
 from src.agents.extension_launcher import ExtensionLauncherAgent
 from src.agents.demand_scout_agent import DemandScoutAgent
+from src.agents.contact_miner import ContactMiner
 import threading
 import asyncio
 from datetime import datetime
@@ -27,6 +28,7 @@ manager = ManagerAgent()
 health_monitor = HealthAgent()
 extension_launcher = ExtensionLauncherAgent()
 demand_scout = DemandScoutAgent(headless=True)
+contact_miner = ContactMiner(db=db)
 executor = ThreadPoolExecutor(max_workers=4)
 
 @app.on_event("startup")
@@ -531,7 +533,7 @@ async def clear_leads():
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/scan/start")
-async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B"):
+async def start_scan(query: str = "Condominios", city: str = "São Paulo", target: int = 1, publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C"):
     """Dispara a varredura completa Sniper (Discovery + Enrichment) em background."""
     try:
         logger.info(f"API: Disparando varredura Sniper para {query} em {city} (Objetivo: {target}) | Público: {publico_alvo} | Palavra: {palavra_chave} | Pilares: {pilares}...")
@@ -546,7 +548,7 @@ async def start_scan(query: str = "Condominios", city: str = "São Paulo", targe
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sniper/start")
-async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo", publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B"):
+async def start_sniper_scan(query: str = "Condominios", city: str = "São Paulo", publico_alvo: str = None, palavra_chave: str = None, pilares: str = "A,B,C"):
     """Dispara a varredura Sniper (Google Maps Browser). Agora unificado com o scan principal."""
     return await start_scan(query, city, publico_alvo=publico_alvo, palavra_chave=palavra_chave, pilares=pilares)
 
@@ -634,7 +636,7 @@ def load_system_config():
         "motor_mapas": "Google Maps (Playwright Stealth)",
         "motor_ia": "DeepSeek Chat",
         "delay_stealth": "2.0s – 3.5s (aleatório)",
-        "pilares_ativos": "A (Condomínios) · B (Obras de Grande Porte)",
+        "pilares_ativos": "A (Condomínios) · B (Obras de Grande Porte) · C (Editais Públicos)",
         "pilar_varredura": "Todos"
     }
 
@@ -719,12 +721,13 @@ async def get_image(filename: str):
     raise HTTPException(status_code=404, detail="Imagem não encontrada")
 
 @app.get("/api/scan-pillars")
-async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B", x_user_id: str = Header(None)):
+async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B,C", x_user_id: str = Header(None)):
     """
-    Varredura completa de demanda nos 2 Pilares (A/B) em paralelo.
+    Varredura completa de demanda nos 3 Pilares (A/B/C) em paralelo.
     
-    Pilar A — Condomínios (obras ativas, cotações abertas, síndicos e administradoras)
-    Pilar B — Obras de Grande Porte (shoppings, hospitais, indústrias e grandes empreendimentos)
+    Pilar A — Condomínios (cotações ativas de pintura no GetNinjas)
+    Pilar B — Obras de Grande Porte (shoppings, hospitais, indústrias no oHub)
+    Pilar C — Editais Públicos (licitações de pintura predial — PNCP, DOE-SP)
 
     Retorna leads organizados por pilar com metadados visuais para o frontend.
     """
@@ -744,6 +747,28 @@ async def scan_pillars(city: str = "São Paulo", pilares: str = "A,B", x_user_id
             f"(A={len(result['pilares']['A']['leads'])} "
             f"B={len(result['pilares']['B']['leads'])})"
         )
+        
+        # Salvar cada lead no banco de dados
+        for pilar_key in ["A", "B"]:
+            for lead in result["pilares"][pilar_key]["leads"]:
+                try:
+                    db.upsert_lead({
+                        "name": lead.get("nome", ""),
+                        "address": lead.get("endereco", ""),
+                        "phone": lead.get("telefone", "N/D"),
+                        "email": lead.get("email", "N/D"),
+                        "website": lead.get("site", ""),
+                        "score": lead.get("score_urgencia", 5),
+                        "source": f"Pilar {pilar_key} (Scan Direto)",
+                        "justification": lead.get("resumo", ""),
+                        "category": lead.get("tag", "pintura_fachada"),
+                        "urgency_score": lead.get("score_urgencia", 5),
+                        "contact_status": "Aguardando Abordagem",
+                        "pilar": pilar_key,
+                        "link_fonte": lead.get("link_fonte", ""),
+                    })
+                except Exception as e:
+                    logger.warning(f"API: Erro ao salvar lead '{lead.get('nome')}' no DB: {e}")
         
         # Salvar no histórico
         if user:
@@ -793,6 +818,30 @@ async def get_search_history(x_user_id: str = Header(None)):
         raise
     except Exception as e:
         logger.error(f"API: Erro ao buscar histórico: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/contacts/search")
+async def search_contacts(city: str = "São Paulo", type: str = "administrators", x_user_id: str = Header(None)):
+    """
+    Garimpa contatos de administradoras de condomínio e síndicos profissionais.
+    
+    type: "administrators" (administradoras) ou "syndics" (síndicos)
+    """
+    try:
+        logger.info(f"API: Garimpando contatos tipo '{type}' em '{city}'...")
+        
+        if type == "administrators":
+            results = await contact_miner.mine_administrators(city, limit=5)
+        elif type == "syndics":
+            results = await contact_miner.mine_syndics(city, limit=5)
+        else:
+            admins = await contact_miner.mine_administrators(city, limit=3)
+            syndics = await contact_miner.mine_syndics(city, limit=3)
+            results = admins + syndics
+        
+        return {"success": True, "contacts": results, "total": len(results)}
+    except Exception as e:
+        logger.error(f"API: Erro ao garimpar contatos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.websocket("/ws/logs")

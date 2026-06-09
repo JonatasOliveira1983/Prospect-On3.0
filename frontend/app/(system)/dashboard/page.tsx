@@ -97,7 +97,8 @@ export default function Dashboard() {
     enrichedContacts: 0,
     activeDemands: 0,
     pilarA: 0,
-    pilarB: 0
+    pilarB: 0,
+    pilarC: 0
   });
 
   const [scanFinished, setScanFinished] = useState(false);
@@ -146,7 +147,8 @@ export default function Dashboard() {
       enrichedContacts: 0,
       activeDemands: 0,
       pilarA: 0,
-      pilarB: 0
+      pilarB: 0,
+      pilarC: 0
     });
     setCurrentLead(null);
 
@@ -253,18 +255,22 @@ export default function Dashboard() {
           
           let pilarAInc = 0;
           let pilarBInc = 0;
+          let pilarCInc = 0;
           
           if (msg.includes("Pilar: A")) {
             pilarAInc = 1;
           } else if (msg.includes("Pilar: B")) {
             pilarBInc = 1;
+          } else if (msg.includes("Pilar: C")) {
+            pilarCInc = 1;
           }
 
           setScanMetrics(prev => ({ 
             ...prev, 
             activeDemands: prev.activeDemands + 1,
             pilarA: prev.pilarA + pilarAInc,
-            pilarB: prev.pilarB + pilarBInc
+            pilarB: prev.pilarB + pilarBInc,
+            pilarC: prev.pilarC + pilarCInc
           }));
 
           setCurrentLead(prev => {
@@ -536,12 +542,12 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Monitoramento Triplo dos 3 Pilares em Tempo Real */}
+                  {/* Monitoramento dos 3 Pilares em Tempo Real */}
                   <div className="bg-slate-950/60 p-4 border border-white/5 rounded-2xl flex flex-col gap-3 mt-2">
                     <span className="text-[9px] font-black uppercase tracking-widest text-yellow-400/80 block border-b border-white/5 pb-1">
                       Fluxo Ativo de Pilares Comerciais
                     </span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       <div className="bg-blue-500/5 border border-blue-500/10 p-2 text-center rounded-xl">
                         <div className="flex items-center justify-center gap-1 text-blue-400 mb-1">
                           <Building2 size={12} />
@@ -558,6 +564,15 @@ export default function Dashboard() {
                         </div>
                         <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarB}</span>
                         <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Grande Porte</span>
+                      </div>
+
+                      <div className="bg-amber-500/5 border border-amber-500/10 p-2 text-center rounded-xl">
+                        <div className="flex items-center justify-center gap-1 text-amber-400 mb-1">
+                          <ScrollText size={12} />
+                          <span className="text-[8px] font-bold uppercase tracking-wider">Pilar C</span>
+                        </div>
+                        <span className="text-lg font-bold text-white font-mono">{scanMetrics.pilarC}</span>
+                        <span className="text-[7px] text-slate-500 block font-medium mt-0.5 uppercase">Editais</span>
                       </div>
                     </div>
                   </div>
@@ -714,18 +729,18 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Painel Sniper 3 Pilares Ativos */}
+        {/* Painel Sniper 2 Pilares Ativos */}
         <div className="bg-slate-950/40 backdrop-blur-xl border border-yellow-400/10 p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] flex flex-col gap-5 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-64 h-64 bg-yellow-400/5 blur-[80px] rounded-full -ml-32 -mt-32 pointer-events-none" />
 
           <div className="flex flex-col gap-2 relative z-10 border-b border-white/5 pb-4">
-            <h2 className="text-lg font-black text-white uppercase tracking-wider">Tríplice Varredura Concorrente</h2>
+            <h2 className="text-lg font-black text-white uppercase tracking-wider">Dupla Varredura Concorrente</h2>
             <p className="text-xs text-slate-400 font-semibold leading-relaxed font-sans">
-              O sistema Otto v7.2 executa buscas e inteligência cibernética paralelamente em três pilares comerciais de alta conversão:
+              O sistema Prospect-On executa buscas paralelamente em dois pilares comerciais de alta conversão:
             </p>
           </div>
 
-          {/* Grid dos 3 Pilares — Cards Interativos com Toggle Cyberpunk */}
+          {/* Grid dos 3 Pilares */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 relative z-10">
 
             {/* PILAR A */}
@@ -756,7 +771,7 @@ export default function Dashboard() {
               </div>
               <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.A ? 'text-white' : 'text-slate-500' }`}>Condomínios</h3>
               <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
-                Varredura de portais de condomínios (SindicoNet, CoteiBem), cotações abertas por síndicos e administradoras para pintura predial.
+                Varredura no GetNinjas (pedidos de pintor) com links diretos para cotações públicas de pintura predial.
               </p>
               {activePillars.A && (
                 <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-blue-400/40 rounded-full" />
@@ -794,6 +809,40 @@ export default function Dashboard() {
               </p>
               {activePillars.B && (
                 <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-emerald-400/40 rounded-full" />
+              )}
+            </button>
+
+            {/* PILAR C */}
+            <button
+              type="button"
+              onClick={() => togglePilar('C')}
+              aria-pressed={activePillars.C}
+              className={`relative flex flex-col gap-2.5 p-4 sm:p-5 rounded-2xl sm:rounded-3xl border transition-all duration-300 text-left group cursor-pointer select-none focus:outline-none
+                ${ activePillars.C
+                  ? 'bg-amber-500/10 border-amber-400/50 shadow-[0_0_18px_rgba(245,158,11,0.25)] scale-[1.01]'
+                  : 'bg-slate-900/40 border-white/5 opacity-40 saturate-0 hover:opacity-60 hover:saturate-100 hover:border-amber-500/20'
+                }`}
+            >
+              <div className="absolute top-3 right-3">
+                <span className={`inline-flex items-center gap-1 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border transition-all ${
+                  activePillars.C ? 'bg-amber-400/20 border-amber-400/40 text-amber-300' : 'bg-slate-800 border-white/5 text-slate-500'
+                }`}>
+                  <span className={`w-1 h-1 rounded-full ${ activePillars.C ? 'bg-amber-400 animate-pulse' : 'bg-slate-600' }`} />
+                  {activePillars.C ? 'ATIVO' : 'OFF'}
+                </span>
+              </div>
+              <div className="flex items-center justify-between pr-14">
+                <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20">
+                  Pilar C
+                </span>
+                <ScrollText size={18} className={`transition-all ${ activePillars.C ? 'text-amber-400 group-hover:scale-110' : 'text-slate-600' }`} />
+              </div>
+              <h3 className={`text-sm font-black uppercase tracking-wider ${ activePillars.C ? 'text-white' : 'text-slate-500' }`}>Editais Públicos</h3>
+              <p className="text-[10px] text-slate-400 font-medium leading-relaxed">
+                Licitações e editais de pintura predial em portais oficiais — PNCP, DOE-SP e Imprensa Oficial. 100% público.
+              </p>
+              {activePillars.C && (
+                <div className="absolute bottom-3 left-3 right-3 h-0.5 bg-amber-400/40 rounded-full" />
               )}
             </button>
 
@@ -914,9 +963,9 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-center gap-2 mb-6 sm:mb-8 border-b border-white/5 pb-4 z-10 relative">
           {[
             { id: 'TODOS', label: 'Todas as Obras', count: leads.length, desc: 'Todo o radar' },
-            { id: 'A', label: 'Pilar A: Condomínios', count: leads.filter(l => ((l as any).pilar || 'A') === 'A').length, desc: 'Atas e fachadas' },
+            { id: 'A', label: 'Pilar A: Condomínios', count: leads.filter(l => ((l as any).pilar || 'A') === 'A').length, desc: 'Cotações ativas de pintura' },
             { id: 'B', label: 'Pilar B: Grande Porte', count: leads.filter(l => (l as any).pilar === 'B').length, desc: 'Shoppings, hospitais e indústrias' },
-            { id: 'B', label: 'Pilar B: Grande Porte', count: leads.filter(l => (l as any).pilar === 'B').length, desc: 'Shoppings, hospitais e indústrias' },
+            { id: 'C', label: 'Pilar C: Editais', count: leads.filter(l => (l as any).pilar === 'C').length, desc: 'Licitações de pintura predial' },
           ].map((tab) => (
             <button
               key={tab.id}

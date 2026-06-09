@@ -133,7 +133,15 @@ class PillarAHunterAgent:
                         "movel", "moveis", "gesso", "textura", "artistico",
                         "em belo horizonte", "em belem", "em curitiba", "em fortaleza",
                         "em salvador", "em recife", "em porto alegre", "em brasilia",
-                        "em manaus", "em goiania", "em campinas", "em florianopolis"
+                        "em manaus", "em goiania", "em campinas", "em florianopolis",
+                        "em rio de janeiro", "em guarulhos", "em sao goncalo",
+                        "em duque de caxias", "em nova iguacu", "em sao bernardo",
+                        "em santo andre", "em osasco", "em sorocaba", "em ribeirao",
+                        "em uberlandia", "em contagem", "em juiz de fora", "em londrina",
+                        "em joinville", "em cuiaba", "em natal", "em teresina",
+                        "em joao pessoa", "em maceio", "em aracaju", "em vitoria",
+                        "em campo grande", "em porto velho", "em boa vista",
+                        "em rio branco", "em macapa", "em palmas", "em sao luis",
                     ]
                     
                     text_lower = (href + text).lower()

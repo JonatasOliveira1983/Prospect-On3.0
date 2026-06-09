@@ -108,6 +108,7 @@ export default function HistoricoBuscasPage() {
     const labels: string[] = [];
     if (pilar.includes("A")) labels.push("Condomínios");
     if (pilar.includes("B")) labels.push("Grande Porte");
+    if (pilar.includes("C")) labels.push("Editais");
     return labels.join(" · ");
   };
 
@@ -294,19 +295,31 @@ export default function HistoricoBuscasPage() {
                         </span>
                         <p className="text-xs text-slate-500 mt-1">Grande Porte</p>
                       </div>
+                      <div className="p-4 bg-slate-900/50 rounded-xl text-center">
+                        <div className="flex items-center justify-center gap-2 text-amber-400 mb-1">
+                          <ScrollText size={18} />
+                          <span className="text-xs font-bold">PILAR C</span>
+                        </div>
+                        <span className="text-2xl font-bold text-white">
+                          {entry.leads_c}
+                        </span>
+                        <p className="text-xs text-slate-500 mt-1">Editais</p>
+                      </div>
                     </div>
 
                     {/* Leads por pilar */}
-                    {["A", "B"].map((pilar) => {
+                    {["A", "B", "C"].map((pilar) => {
                       const pilarData = entry.leads_json?.pilares?.[pilar];
                       const leads = pilarData?.leads || [];
                       const pilarLabels: Record<string, string> = {
                         A: "Condomínios",
                         B: "Grande Porte",
+                        C: "Editais",
                       };
                       const pilarColors: Record<string, string> = {
                         A: "text-yellow-400",
                         B: "text-emerald-400",
+                        C: "text-amber-400",
                       };
 
                       if (leads.length === 0) return null;
