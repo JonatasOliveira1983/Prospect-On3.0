@@ -127,26 +127,13 @@ class PillarAHunterAgent:
                         continue
                     
                     # Filtra apenas links relevantes a pintura predial/residencial
+                    # E que sejam da cidade alvo OU links genericos (sem cidade especifica)
                     keywords = ["pintor", "pintura", "fachada", "predial", "imovel", "casa", "apartamento", "condominio"]
-                    # Exclui subcategorias nao relevantes (moveis, cidades erradas, etc.)
-                    exclude_keywords = [
-                        "movel", "moveis", "gesso", "textura", "artistico",
-                        "em belo horizonte", "em belem", "em curitiba", "em fortaleza",
-                        "em salvador", "em recife", "em porto alegre", "em brasilia",
-                        "em manaus", "em goiania", "em campinas", "em florianopolis",
-                        "em rio de janeiro", "em guarulhos", "em sao goncalo",
-                        "em duque de caxias", "em nova iguacu", "em sao bernardo",
-                        "em santo andre", "em osasco", "em sorocaba", "em ribeirao",
-                        "em uberlandia", "em contagem", "em juiz de fora", "em londrina",
-                        "em joinville", "em cuiaba", "em natal", "em teresina",
-                        "em joao pessoa", "em maceio", "em aracaju", "em vitoria",
-                        "em campo grande", "em porto velho", "em boa vista",
-                        "em rio branco", "em macapa", "em palmas", "em sao luis",
-                    ]
+                    exclude_keywords = ["movel", "moveis", "gesso", "textura", "artistico"]
                     
                     text_lower = (href + text).lower()
+                    
                     if any(kw in text_lower for kw in keywords) and not any(kw in text_lower for kw in exclude_keywords):
-                        # Monta URL completa
                         full_url = href if href.startswith("http") else f"https://www.getninjas.com.br{href}"
                         relevant_links.append({
                             "title": text,
