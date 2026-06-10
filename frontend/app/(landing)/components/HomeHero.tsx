@@ -142,7 +142,8 @@ export default function HomeHero() {
 
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
               <a 
-                href="#orcamento"
+                href="https://wa.me/5511950201275"
+                target="_blank"
                 className="group px-8 py-4 rounded-full bg-white hover:bg-slate-100 text-slate-950 font-black text-sm transition-all duration-300 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap w-full sm:w-auto"
               >
                 Garantir Minha Vistoria

@@ -422,7 +422,8 @@ export default function NeighborhoodInteractive() {
           </div>
 
           <a 
-            href="#orcamento" 
+            href="https://wa.me/5511950201275"
+            target="_blank" 
             className="w-full lg:w-auto px-6 py-3 rounded-full bg-otto-yellow hover:bg-otto-yellow/90 text-otto-blue text-center font-black tracking-wide text-xs lg:text-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(250,204,21,0.4)] active:scale-95 whitespace-nowrap flex items-center justify-center gap-2 min-h-[44px]"
           >
             Agendar Minha Vistoria
