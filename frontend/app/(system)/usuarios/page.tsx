@@ -82,7 +82,10 @@ export default function UsuariosAdminPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorMsg(data.detail || `Erro ${res.status}: ${JSON.stringify(data)}`);
+        const msg = Array.isArray(data.detail) 
+          ? data.detail.map((e: any) => e.msg).join("; ")
+          : (data.detail || `Erro ${res.status}`);
+        setErrorMsg(String(msg));
         return;
       }
 
