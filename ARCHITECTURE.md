@@ -1,209 +1,200 @@
-# 🏗️ Arquitetura Prospect-On 3.0 (Browser Extension Mode)
+# Arquitetura Prospect-On 3.2
 
-Este documento descreve a arquitetura técnica, os fluxos de dados e as integrações do sistema **Prospect-On**, operando em **modo extensão de navegador real** — zero APIs pagas, zero Bing, zero Google Console.
+Motor de Inteligência Comercial da **Otto Pinturas** — descoberta automatizada, qualificação e contato para prospecção de pintura predial e comercial.
 
 ---
 
-## 🚀 1. Stack Tecnológica
+## Stack Tecnológica
 
 | Camada | Tecnologia | Porta | Observação |
 |--------|-----------|-------|------------|
-| **Frontend** | Next.js 16 (Turbopack), TypeScript, Tailwind CSS v3.4 | 3000 | Landing Page + Dashboard Glass-Premium |
-| **Backend API** | FastAPI (Python 3.10+), Uvicorn | 8002 | REST + WebSocket para logs ativos |
-| **IA Principal** | **DeepSeek Chat** (deepseek-chat) | cloud | Qualificação, extração de sinais e enriquecimento textual |
-| **Discovery Engine** | **Playwright Stealth** (Chromium) | local | Navega Google Maps, Google Search e sites como usuário real |
-| **Banco de Dados** | SQLite (Bunker Mode) | local | Schema com contatos ricos (e-mail, telefone, CNPJ, social) |
-
-> ⚠️ **Nenhuma API paga de busca é usada.** O sistema navega a web como extensão de navegador real.
+| **Frontend** | Next.js 16 (Turbopack), TypeScript, Tailwind CSS v3.4 | 3000 | Landing + Dashboard + CRM + Documentos |
+| **Backend API** | FastAPI (Python 3.10+), Uvicorn | 8002 | REST + WebSocket |
+| **IA** | **DeepSeek Chat** | cloud | Enriquecimento textual, scoring, copy |
+| **Discovery** | **Playwright Stealth** (Chromium) | local | GetNinjas, oHub, Google Maps |
+| **Discovery** | **Apify** (Google Maps Extractor) | cloud | 990+ leads de administradoras/síndicos |
+| **Discovery** | **DuckDuckGo** | cloud | Editais públicos (gov.br/PNCP) |
+| **Banco** | SQLite (`data/prospecton.db`) | local | Leads, leads_quentes, lead_messages, users |
+| **WhatsApp** | Evolution API v2 | 8080 | Configurado (opcional) |
 
 ---
 
-## 📁 2. Estrutura do Projeto (v4.0 — Browser Extension Mode)
+## Estrutura do Projeto
 
 ### Backend (`/backend`)
 ```
 backend/
-├── api.py                          # Servidor FastAPI — rotas REST e WebSocket
-├── main.py                         # Entry point legado
-├── auto_prospect.py                # Prospecção autônoma
+├── api.py                          # FastAPI — rotas REST
 ├── requirements.txt                # Dependências Python
-├── .env                            # Chaves de API e configurações
 ├── data/
-│   ├── prospecton.db               # Banco SQLite
-│   └── images/                     # Capturas de fachada (.png)
-├── static/
-│   └── vistorias/                  # Screenshots de fachada capturados pelo browser
-└── src/
-    ├── agents/                     # Agentes especialistas
-    │   ├── manager_agent.py        # Orquestrador v10.0 — sem Places API
-    │   ├── demand_scout_agent.py   # Orquestra os 3 Pilares via asyncio.gather
-    │   ├── pillar_a_agent.py       # Pilar A — Condomínios (Google Search stealth)
-    │   ├── pillar_b_agent.py       # Pilar B — Editais Públicos (Google Search stealth)
-    │   ├── pillar_c_agent.py       # Pilar C — Corporativo/Facilities (Google Search stealth)
-    │   ├── browser_scout_agent.py  # Google Maps via Playwright stealth (sem Places API)
-    │   ├── web_enrichment_agent.py # Google Search stealth para contatos (sem Bing)
-    │   ├── semantic_extractor_agent.py  # Extração semântica profunda com DeepSeek
-    │   ├── lead_enrichment_agent.py     # Enriquecimento contextual com DeepSeek
-    │   ├── analyst_agent.py        # Score final e Match Otto
-    │   ├── hunter_agent.py         # Fallback geográfico via OpenStreetMap
-    │   ├── surveyor_agent.py       # Auditoria visual de fachada
-    │   └── closing_agent.py        # Geração de propostas e copy
-    └── utils/
-        ├── database.py             # Interface SQLite (Postgres-ready)
-        ├── deepseek_client.py      # Cliente da API DeepSeek
-        ├── vision_analyzer.py      # Análise de imagens
-        ├── places_client.py        # DEPRECIADO — mantido apenas por compatibilidade
-        ├── usage_monitor.py        # Monitor de uso da API DeepSeek
-        ├── webhook_client.py       # Cliente webhook (WhatsApp/Evolution)
-        └── logger.py               # Logger centralizado
+│   └── prospecton.db               # Banco SQLite
+├── src/
+│   ├── agents/
+│   │   ├── pillar_a_agent.py       # Pilar A — Condomínios (GetNinjas)
+│   │   ├── pillar_b_agent.py       # Pilar B — Editais Públicos (DuckDuckGo → gov.br)
+│   │   └── pillar_c_agent.py       # Pilar C — Corporativo (oHub)
+│   └── utils/
+│       ├── database.py             # Interface SQLite
+│       ├── apify_client.py         # Integração Apify Google Maps
+│       └── logger.py               # Logger centralizado
+```
+
+### Frontend (`/frontend`)
+```
+frontend/
+├── app/
+│   ├── page.tsx                    # Landing page
+│   ├── (landing)/
+│   │   └── components/
+│   │       ├── HomeHeader.tsx      # Header com login
+│   │       ├── HomeHero.tsx        # Hero com Ponte Estaiada SP + Spline 3D
+│   │       ├── HomeServices.tsx    # Seção de serviços
+│   │       ├── HomePortfolio.tsx   # Portfólio
+│   │       ├── HomePartners.tsx    # Parceiros
+│   │       ├── HomeFooter.tsx      # Footer
+│   │       └── NeighborhoodInteractive.tsx  # Simulador de fachadas
+│   ├── (system)/
+│   │   ├── layout.tsx              # Layout autenticado (sidebar + mobile nav)
+│   │   ├── dashboard/page.tsx      # Cockpit: zonas, bairros, filtros, importação Apify
+│   │   ├── leads-quentes/page.tsx  # Leads Elite: favoritos + chat + criação manual
+│   │   ├── documentos/page.tsx     # Documentos: upload/download/lista
+│   │   └── usuarios/page.tsx       # Gerenciamento de usuários (admin)
+│   └── components/
+│       ├── Sidebar.tsx             # Sidebar desktop + badge de mensagens
+│       ├── LeadTable.tsx           # Tabela paginada de leads
+│       ├── LeadDetailModal.tsx     # Modal de detalhes + CRM + chat
+│       └── ChatPanel.tsx           # Chat em tempo real por lead
+├── lib/
+│   └── api.ts                      # Cliente API
+└── public/
+    └── AquivosOtto/
+        ├── Logo/                   # Logos da Otto
+        ├── img/                    # Imagens (ponte-estaiada.png)
+        └── documentos/             # PDFs de documentos
 ```
 
 ---
 
-## ⚡ 3. Fluxo de Inteligência — Os 3 Pilares (v4.0)
+## Fluxos Principais
 
-O sistema opera com **varredura paralela** via `asyncio.gather` dos 3 pilares, sem depender de nenhuma API de busca paga:
+### 1. Descoberta de Leads
 
 ```
-Usuário dispara varredura
+Dashboard → Seleciona pilares → Dispara scan
          ↓
-DemandScoutAgent
-  ├── PillarAHunterAgent  → Google Search (Playwright stealth) → DeepSeek analisa
-  ├── PillarBHunterAgent  → Google Search (Playwright stealth) → DeepSeek analisa
-  └── PillarCHunterAgent  → Google Search (Playwright stealth) → DeepSeek analisa
+Pilar A (GetNinjas) ─────┐
+Pilar B (DuckDuckGo) ────┤ asyncio.gather
+Pilar C (oHub) ──────────┘
          ↓
-  [Leads com sinais de demanda identificados — dados 100% reais]
-         ↓
-ManagerAgent processa cada lead:
-  ├── BrowserScoutAgent   → Google Maps (Playwright stealth)
-  │     Captura: endereço, telefone, coordenadas, foto da fachada
-  ├── SemanticExtractorAgent → DeepSeek
-  │     Captura: CNPJ, síndico, administradora, decisores
-  ├── WebEnrichmentAgent  → Google Search (Playwright stealth) → DeepSeek
-  │     Captura: email, WhatsApp, redes sociais, website oficial
-  └── LeadEnrichmentAgent → DeepSeek
-        Captura: score final, urgência estimada, copy de prospecção
-         ↓
-Lead enriquecido → SQLite → Dashboard ✅
+Leads qualificados → SQLite → Dashboard
 ```
 
-### O que cada Pilar busca:
+### 2. Importação Apify (Google Maps)
 
-| Pilar | Fonte | O que detecta |
-|-------|-------|---------------|
-| **A — Condomínios** | Google Search (stealth) | Atas de assembleia, fundos de obra, cotações de fachada |
-| **B — Editais Públicos** | Google Search (stealth) | Pregões eletrônicos, licitações, diários oficiais |
-| **C — Corporativo** | Google Search (stealth) | Vagas de pintor, facilities, cotações corporativas |
+```
+Dashboard → Botão "Importar do Apify"
+         ↓
+ApifyClient.run_google_maps_scraper(regions)
+         ↓
+990+ leads de administradoras/síndicos → SQLite
+```
 
-### Resultado comprovado (20/05/2026):
-- **27 leads reais** capturados em uma varredura de São Paulo
-- Pilar B: 15 editais reais (Coren-SP, CPTM, FMUSP, TCE-SP, Prefeitura SP...)
-- Pilar C: 11 demandas corporativas reais (facilities, vagas, empresas especializadas)
+### 3. CRM — Chat em Tempo Real
 
----
+```
+Leads Elite → Seleciona lead → Abre chat
+            ↓
+Envia mensagem → POST /api/messages/{leadId}
+            ↓
+Backend salva em lead_messages → Polling GET a cada 5s
+            ↓
+Admin recebe badge de não lidos no sidebar
+```
 
-## 🔐 4. Modo Stealth — Como o Navegador Simula um Usuário Real
+### 4. Gestão de Documentos
 
-Todos os agentes Playwright usam o perfil stealth para não ser detectados como bot:
-
-```python
-# Flags que desativam a detecção de automação
-args = [
-    "--disable-blink-features=AutomationControlled",
-    "--disable-infobars",
-]
-
-# Script injetado antes de qualquer página carregar
-Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
-window.chrome = { runtime: {} };
-
-# Contexto variável (imita monitor real)
-viewport: [1366x768, 1440x900 ou 1920x1080] — aleatório
-user_agent: Chrome 122 / 123 / 124 — aleatório
-locale: "pt-BR" | timezone: "America/Sao_Paulo"
-delay: 2.0s a 3.5s entre ações — aleatório
+```
+Página Documentos → Lista PDFs do diretório
+                  ↓
+Admin: Upload/Deletar | Todos: Download/Visualizar/Imprimir
 ```
 
 ---
 
-## 🛡️ 5. Protocolos de Estabilidade
+## Banco de Dados (SQLite)
 
-| Camada | Comportamento |
-|--------|---------------|
-| **Busca primária** | Google Search via Playwright stealth (sem API paga) |
-| **Google Maps** | Playwright stealth — sem Places API |
-| **Fallback de dados** | Quando Google bloqueia: dados reais auditados (Copan, USP, etc.) |
-| **Bunker Mode DB** | Migrações preservam dados. ALTER TABLE antes de DROP. |
-| **Stealth Anti-Bot** | `navigator.webdriver=undefined` + user-agent real + delays humanos |
+### Tabelas Principais
+
+| Tabela | Descrição |
+|--------|-----------|
+| `leads` | Leads descobertos via scraping (Pilares A/B/C) |
+| `leads_quentes` | Leads qualificados + favoritos + criação manual |
+| `lead_messages` | Mensagens de chat por lead |
+| `users` | Usuários do sistema |
+
+### lead_messages (Chat)
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id` | INTEGER PK | ID da mensagem |
+| `lead_id` | INTEGER | ID do lead (leads ou leads_quentes) |
+| `user_id` | INTEGER | ID do usuário que enviou |
+| `user_name` | TEXT | Nome do usuário |
+| `message` | TEXT | Conteúdo da mensagem |
+| `created_at` | DATETIME | Data/hora do envio |
+| `is_read` | BOOLEAN | Lida ou não |
 
 ---
 
-## 🔌 6. APIs Externas
+## Regras de Chat
+
+- Cada lead tem seu próprio thread de mensagens
+- Mensagens estilo WhatsApp com separadores de data
+- Deletar: apenas suas próprias mensagens
+- **Admin** pode conversar em qualquer lead
+- **Vendedor** só conversa em leads favoritos
+- Badge de não lidos: admin vê todos, vendedor vê apenas seus favoritos
+- Polling a cada 5 segundos
+
+---
+
+## Permissões
+
+| Ação | Admin | Vendedor |
+|------|-------|----------|
+| Ver dashboard | ✅ | ✅ |
+| Ver leads | ✅ | ✅ |
+| Favoritar lead | ✅ | ✅ |
+| Chat em qualquer lead | ✅ | ❌ (apenas favoritos) |
+| Criar lead manual | ✅ | ✅ |
+| Deletar lead | ✅ | ❌ |
+| Upload documento | ✅ | ❌ |
+| Deletar documento | ✅ | ❌ |
+| Ver/baixar documento | ✅ | ✅ |
+| Gerenciar usuários | ✅ | ❌ |
+
+---
+
+## Mobile Responsivo
+
+- **Header mobile**: logo (linka para home)
+- **Nav inferior**: Cockpit, Elite, Docs, Vendedores (admin), Sair
+- **Sidebar**: oculta no mobile, substituída pela nav inferior
+- **Touch targets**: mínimo 44px
+- **Landing**: 3D oculto no mobile, conteúdo adaptado
+
+---
+
+## APIs Externas
 
 | API | Uso | Status |
 |-----|-----|--------|
-| **DeepSeek Chat** | Extração de sinais, enriquecimento, scoring, copy | ✅ Ativo |
-| **Google Search** | Navegação stealth via Playwright (SEM API) | ✅ Ativo |
-| **Google Maps** | Navegação stealth via Playwright (SEM API) | ✅ Ativo |
-| **Google Places API** | ~~Dados estruturados~~ | ❌ REMOVIDO (REQUEST_DENIED) |
-| **Bing Search** | ~~Busca alternativa~~ | ❌ REMOVIDO (bloqueava como bot) |
-| **Evolution API (WhatsApp)** | Envio de mensagens WhatsApp | ⏳ Configurado |
+| **DeepSeek Chat** | Enriquecimento textual, scoring, copy | ✅ Ativo |
+| **Apify** | Google Maps Extractor (leads administradoras) | ✅ Ativo |
+| **Playwright Stealth** | GetNinjas, oHub, Google Search | ✅ Ativo |
+| **DuckDuckGo** | Busca de editais públicos | ✅ Ativo |
+| **Evolution API** | WhatsApp (configurado) | ⏳ Opcional |
 
 ---
 
-## 🖥️ 7. Como Iniciar o Sistema
-
-### Backend (FastAPI)
-```powershell
-cd backend
-pip install -r requirements.txt
-python api.py
-# Servidor em: http://localhost:8002
-# Swagger UI: http://localhost:8002/docs
-```
-
-### Frontend (Next.js)
-```powershell
-cd frontend
-npm install
-npm run dev
-# Servidor em: http://localhost:3000
-```
-
-### Parar os Servidores
-```powershell
-Get-Process -Name "python","node" -ErrorAction SilentlyContinue | Stop-Process -Force
-```
-
----
-
-## 📊 8. Rotas da API (Backend)
-
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| `GET` | `/api/health` | Health check do sistema |
-| `POST` | `/api/scan` | Inicia scan Sniper (3 pilares) |
-| `POST` | `/api/analyze-lead` | Analisa lead individual |
-| `GET` | `/api/leads` | Lista todos os leads |
-| `GET` | `/api/leads/{id}` | Detalhe do lead |
-| `GET` | `/api/leads/hot` | Leads quentes (qualificados) |
-| `GET` | `/api/reports/{filename}` | Download de relatório PDF |
-| `GET` | `/api/images/{filename}` | Download de imagem de fachada |
-| `GET` | `/api/usage` | Métricas de uso do DeepSeek |
-| `WS` | `/ws/logs` | WebSocket para logs em tempo real |
-
-### Comandos de Manutenção
-```powershell
-# Verificar DB
-cd backend ; python check_db.py
-
-# Testar os 3 Pilares
-cd backend ; python test_real_pillars.py
-
-# Testar pipeline completo
-cd backend ; python -c "import asyncio; from src.agents.manager_agent import ManagerAgent; asyncio.run(ManagerAgent().run_full_scan(city='São Paulo', target_leads=3))"
-```
-
----
-
-*Atualizado em: 20 de Maio de 2026 — Versão 4.0 (Browser Extension Mode — Zero API Paga)*
+*Atualizado em: Junho 2026 — Versão 3.2*

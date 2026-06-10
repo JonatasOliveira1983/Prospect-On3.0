@@ -1,202 +1,141 @@
-# 📜 RULES — Prospect-On 3.0 (Browser Extension Mode)
-## Documento de Contexto, Padrões e Regras do Sistema
+# RULES — Prospect-On 3.2
 
-> **Versão:** 4.0 (Browser Extension Mode) — Última atualização: 20 de Maio de 2026
-> Este documento é a fonte da verdade sobre a arquitetura de **Agentes Sniper** e estabilidade do sistema.
+Documento de contexto, padrões e regras do sistema.
 
 ---
 
-## 🎯 1. IDENTIDADE E MISSÃO
+## Identidade e Missão
 
-**Prospect-On** é um Motor de Inteligência Comercial de alta performance. Sua missão é localizar, qualificar e gerar propostas premium para a **Otto Pinturas** através de navegação web automatizada em modo stealth (extensão de navegador real) e análise textual via IA generativa.
+**Prospect-On** é o Motor de Inteligência Comercial da **Otto Pinturas**. Sua missão é localizar, qualificar e gerar contato com leads de pintura predial e comercial através de navegação web automatizada e análise via IA.
 
-**Regra de Ouro:** O sistema **NÃO USA NENHUMA API PAGA DE BUSCA**. Navega a web como um usuário humano real — como uma extensão do Chrome faria.
-
----
-
-## 🏗️ 2. ARQUITETURA — OS 3 PILARES
-
-O sistema opera com **varredura paralela** dos 3 pilares. Cada pilar usa Playwright stealth para navegar o Google e DeepSeek para analisar o texto capturado:
-
-### Agentes de Descoberta (Demand-First)
-
-1. **DemandScoutAgent** — Orquestrador dos 3 Pilares. Executa em paralelo via `asyncio.gather`.
-
-2. **PillarAHunterAgent (Pilar A)** — Caça condomínios com demanda ativa:
-   - Navega Google Search: atas de assembleia, fundos de obra, cotações de fachada
-   - DeepSeek extrai nome, urgência, link fonte, resumo do sinal
-
-3. **PillarBHunterAgent (Pilar B)** — Caça editais e licitações públicas:
-   - Navega Google Search: pregões eletrônicos, diários oficiais, portais de compras
-   - DeepSeek identifica número do edital, órgão, valor estimado
-
-4. **PillarCHunterAgent (Pilar C)** — Caça demandas corporativas:
-   - Navega Google Search: vagas de pintor, facilities, cotações corporativas
-   - DeepSeek identifica empresa contratante e urgência da demanda
-
-### Agentes de Enriquecimento (Pipeline Reverso)
-
-5. **ManagerAgent v10.0** — Orquestrador central. Processa sinais dos pilares e aciona o enriquecimento.
-
-6. **BrowserScoutAgent** — Google Maps via Playwright stealth. Captura: endereço, telefone, foto da fachada, coordenadas, website.
-
-7. **WebEnrichmentAgent v4.0** — Google Search stealth para contatos. Captura: email, WhatsApp, CNPJ, redes sociais.
-   - ⚠️ **Sem Bing.** Usa Google Search via Playwright como usuário real.
-
-8. **SemanticExtractorAgent** — Extração semântica profunda com DeepSeek (CNPJ, síndico, administradora, decisores).
-
-9. **LeadEnrichmentAgent** — Score final, urgência estimada e copy de prospecção personalizada.
-
-10. **AnalystAgent** — Cálculo do Match Otto e Urgency Score.
-
-11. **SurveyorAgent** — Auditoria visual de fachada (contagem de torres, andares, estimativa de m²).
-
-12. **ClosingAgent** — Consolidação de dados e geração de proposta editorial.
-
-### Agentes de Suporte
-
-13. **HunterAgent** — Fallback geográfico via OpenStreetMap (aciona apenas se BrowserScout falhar).
-14. **GeosampaAgent** — Dados de IPTU e idade do prédio (foco São Paulo).
+**Regra de Ouro:** O sistema não usa APIs pagas de busca. Navega a web como um usuário humano real.
 
 ---
 
-## ⚡ 3. STACK TECNOLÓGICA
+## Arquitetura — Os 3 Pilares + Apify
 
-| Camada | Tecnologia | Porta | Observação |
-|--------|-----------|-------|------------|
-| Frontend | Next.js 16 (Turbopack) | 3000 | Padrão Slate-950 + Cyan-400 |
-| Backend API | FastAPI (Python 3.10+) | **8002** | Uvicorn + WebSocket |
-| IA Principal | **DeepSeek Chat** | cloud | Extração, scoring e copy |
-| Discovery | **Playwright Stealth** (Chromium) | local | Google Maps + Google Search — SEM API |
-| Banco Dados | SQLite (Bunker Mode) | local | Schema com contatos ricos |
-| WhatsApp | Evolution API v2 | 8080 | Opcional |
+### Pilares de Descoberta
+
+1. **Pilar A — Condomínios**: GetNinjas via Playwright stealth
+2. **Pilar B — Editais Públicos**: DuckDuckGo → gov.br/PNCP
+3. **Pilar C — Corporativo**: oHub via Playwright stealth
+4. **Google Maps**: Apify Google Maps Extractor (990+ leads de administradoras/síndicos)
+
+### Stack
+
+| Camada | Tecnologia | Porta |
+|--------|-----------|-------|
+| Frontend | Next.js 16 (Turbopack), TypeScript, Tailwind CSS | 3000 |
+| Backend | FastAPI (Python 3.10+), Uvicorn | 8002 |
+| Banco | SQLite (`data/prospecton.db`) | local |
+| IA | DeepSeek Chat | cloud |
+| Scraping | Playwright Stealth + Apify | cloud/local |
 
 ---
 
-## 🔐 4. PROTOCOLO STEALTH — REGRAS DE NAVEGAÇÃO
+## Protocolo Stealth
 
-Todo agente que usa Playwright DEVE seguir estas regras:
+Todo agente que usa Playwright DEVE seguir:
 
 ```python
-# ✅ OBRIGATÓRIO em todo launch de browser
 args = [
     "--no-sandbox",
     "--disable-setuid-sandbox",
-    "--disable-blink-features=AutomationControlled",  # Anti-detecção
+    "--disable-blink-features=AutomationControlled",
     "--disable-infobars",
 ]
 
-# ✅ OBRIGATÓRIO em todo new_context
-viewport    = random.choice([{w:1366,h:768}, {w:1440,h:900}, {w:1920,h:1080}])
-user_agent  = random.choice(STEALTH_USER_AGENTS)  # Chrome 122-124
-locale      = "pt-BR"
+viewport = random.choice([{w:1366,h:768}, {w:1440,h:900}, {w:1920,h:1080}])
+user_agent = random.choice(STEALTH_USER_AGENTS)
+locale = "pt-BR"
 timezone_id = "America/Sao_Paulo"
 
-# ✅ OBRIGATÓRIO — Script injetado antes de carregar qualquer página
 await context.add_init_script("""
     Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
     window.chrome = { runtime: {} };
 """)
 
-# ✅ OBRIGATÓRIO — Delay humano aleatório
 await page.wait_for_timeout(random.randint(2000, 3500))
 ```
 
-### Fontes de Busca Aprovadas
+### Fontes Aprovadas
 
 | ✅ Usar | ❌ Nunca usar |
 |---|---|
-| `google.com/search` via Playwright | Bing API ou Bing headless |
-| `google.com/maps` via Playwright | Google Places API (REQUEST_DENIED) |
-| Site oficial do lead diretamente | Qualquer API paga de busca |
+| GetNinjas via Playwright | Bing API |
+| oHub via Playwright | Google Places API |
+| DuckDuckGo | APIs pagas de busca |
+| Apify Google Maps Extractor | |
 
 ---
 
-## 🛡️ 5. PROTOCOLOS DE DESENVOLVIMENTO
+## Regras de Desenvolvimento
 
-### 5.1 Dados — Apenas Reais
-- **Zero mocks em produção.** Dados devem ser extraídos de fontes reais.
-- Fallbacks com dados reais auditados são aceitáveis apenas quando Google bloquear após N tentativas.
-- Jamais inserir dados fictícios no banco `prospecton.db`.
+### Dados
+- **Zero mocks em produção.** Dados reais apenas.
+- Fallbacks com dados auditados aceitáveis quando Google bloquear.
+- Jamais inserir dados fictícios no banco.
 
-### 5.2 Estabilidade do Frontend
-- **Zero Crash UI:** Usar optional chaining (`?.`) extensivamente.
-- **Tailwind Only:** Estilização exclusiva via Tailwind CSS.
-- **Componentes Resilientes:** Todo componente deve ter fallback visual para estados de erro e loading.
+### Frontend
+- **Zero Crash UI:** optional chaining (`?.`) extensivamente.
+- **Tailwind Only:** estilização via Tailwind CSS.
+- **Componentes Resilientes:** fallback visual para erro e loading.
 
-### 5.3 Banco de Dados — Bunker Mode
-- Migrações usam `ALTER TABLE` antes de `DROP TABLE`. Dados nunca perdidos.
-- Schema: `prospecton.db` via SQLite. Compatível com Postgres para produção.
+### Banco de Dados
+- Migrações: `ALTER TABLE` antes de `DROP TABLE`. Dados nunca perdidos.
+- Schema: SQLite local. Compatível com Postgres.
 
-### 5.4 Separação de Responsabilidades (Agentic Separation)
-- Agentes não compartilham estado diretamente — comunicação via ManagerAgent.
-- Fluxo unidirecional: Discovery (Pilares) → Mapping (Maps) → Enrichment (Web) → Scoring → Closing.
-
----
-
-## 🎨 6. PADRÕES DE DESIGN (Premium Diagram)
-
-- **Sistema Visual:** Inspirado no *Diagram Design* (Cathryn Lavery).
-- **Cores:** Slate-950 (Fundo), Cyan-400 (Destaque), Emerald-400 (Success), Slate-400 (Muted).
-- **Tipografia:** Instrument Serif (títulos), Geist Sans (corpo), Geist Mono (dados).
-- **Bordas:** Máximo 6px de arredondamento.
+### CRM (Chat)
+- Cada lead tem seu próprio thread.
+- Admin conversa em qualquer lead.
+- Vendedor conversa apenas em favoritos.
+- Deletar: apenas suas próprias mensagens.
 
 ---
 
-## 🚀 7. COMANDOS RÁPIDOS
+## Regras de Chat
 
-### Iniciar Sistema
+| Regra | Admin | Vendedor |
+|-------|-------|----------|
+| Conversar em qualquer lead | ✅ | ❌ |
+| Conversar em favoritos | ✅ | ✅ |
+| Deletar próprias mensagens | ✅ | ✅ |
+| Deletar mensagens alheias | ❌ | ❌ |
+
+---
+
+## Design
+
+- **Cores:** Slate-950 (fundo), Yellow-400 (destaque), Slate-400 (muted)
+- **Tipografia:** Instrument Serif (títulos), Geist Sans (corpo)
+- **Bordas:** Máximo 6px de arredondamento
+- **Mobile:** touch targets mínimos 44px
+
+---
+
+## Comandos Rápidos
+
 ```powershell
-# Terminal 1 — Backend
-cd backend
-python api.py
+# Backend
+cd backend ; python api.py
 
-# Terminal 2 — Frontend
-cd frontend
-npm run dev
-```
+# Frontend
+cd frontend ; npm run dev
 
-### Parar Sistema
-```powershell
+# Parar tudo
 Get-Process -Name "python","node" -ErrorAction SilentlyContinue | Stop-Process -Force
+
+# Verificar banco
+cd backend ; python -c "import sqlite3; conn = sqlite3.connect('data/prospecton.db'); print(conn.execute('SELECT COUNT(*) FROM leads').fetchone()[0])"
 ```
-
-### Testes e Manutenção
-```powershell
-# Testar os 3 Pilares (deve capturar leads reais)
-cd backend ; python test_real_pillars.py
-
-# Verificar banco de dados
-cd backend ; python check_db.py
-
-# Pipeline completo (ManagerAgent)
-cd backend ; python -c "
-import asyncio
-from src.agents.manager_agent import ManagerAgent
-asyncio.run(ManagerAgent().run_full_scan(city='São Paulo', target_leads=3))
-"
-```
-
-### Health Check
-- **Backend:** http://localhost:8002/docs
-- **Frontend:** http://localhost:3000
-- **System Health:** http://localhost:3000/api/system/health
 
 ---
 
-## 📊 8. RESULTADOS COMPROVADOS
+## Health Check
 
-| Data | Cidade | Leads Reais | Pilar A | Pilar B | Pilar C |
-|------|--------|------------|---------|---------|---------|
-| 20/05/2026 | São Paulo | **27** | 1 | 15 | 11 |
-
-**Exemplos reais capturados:**
-- Coren-SP — Pregão Eletrônico nº 10/2025 (Pintura da Fachada)
-- CPTM — Pintura + Hidrojateamento da Estação Palmeiras-Barra Funda
-- TCE-SP — Recuperação e Pintura do Edifício Anexo II
-- Prefeitura SP (SVMA) — Pintura dos Parques Municipais
-- Faculdade de Medicina USP — Pregão Eletrônico nº 06/2024
+- Backend: http://localhost:8002/docs
+- Frontend: http://localhost:3000
 
 ---
 
-*Atualizado em: 20 de Maio de 2026 — Versão 4.0 (Browser Extension Mode — Zero API Paga)*
+*Atualizado em: Junho 2026 — Versão 3.2*

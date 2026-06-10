@@ -1,116 +1,101 @@
-# Estado Atual do Projeto — Prospect-On 3.0 (Seleção Dinâmica de Pilares + Manus)
+# Estado Atual — Prospect-On 3.2
 
 ## Resumo Executivo
-**Data:** 2026-05-20
-**Versão:** `v5.0 — Seleção Dinâmica de Pilares + Inteligência Manus`
-**Estado:** `OPERATIONAL ✅`
-**Motor Principal:** Playwright Stealth (Google Search + Google Maps) + DeepSeek Chat
-**Bloqueios:** Nenhum. Google Places API e Bing removidos completamente.
+- **Data:** Junho 2026
+- **Versão:** `3.2 — Commercial Intelligence Engine`
+- **Estado:** `OPERATIONAL ✅`
+- **Motor:** Playwright Stealth + Apify + DeepSeek Chat
+- **Bloqueios:** Apify proxies RESIDENTIAL/GOOGLE_SERP indisponíveis (plano gratuito)
 
 ---
 
-## O Que Funciona Agora
+## O Que Funciona
 
-### Os 3 Pilares — Varredura Real Comprovada
-**Resultado:** 27 leads reais capturados em São Paulo em ~90 segundos.
+### Pilares de Descoberta
 
-| Pilar | Fonte | Portais Estratégicos (Manus) | Leads |
-|-------|-------|------------------------------|-------|
-| A — Condomínios | Google Search stealth | SíndicoNet, CoteiBem, uCondo | 1+ |
-| B — Editais Públicos | Google Search stealth | PNCP, BEC-SP, Comprasnet | 15+ |
-| C — Corporativo | Google Search stealth | oHub, Habitissimo, GetNinjas | 11+ |
+| Pilar | Fonte | Status | Leads |
+|-------|-------|--------|-------|
+| A — Condomínios | GetNinjas (Playwright) | ✅ | 1+ |
+| B — Editais Públicos | DuckDuckGo → gov.br/PNCP | ✅ | 15+ |
+| C — Corporativo | oHub (Playwright) | ✅ | 11+ |
+| Google Maps | Apify (Google Maps Extractor) | ✅ | 990+ |
 
-**Leads reais capturados (amostra):**
-- **Coren-SP** — Pregão Eletrônico nº 10/2025 — Pintura da Fachada (urgência 9/10)
-- **CPTM** — Pintura Predial + Hidrojateamento — Estação Palmeiras-Barra Funda (urgência 8/10)
-- **TCE-SP** — Recuperação e Pintura do Edifício Anexo II (urgência 7/10)
-- **Faculdade de Medicina USP** — Pregão Eletrônico nº 06/2024 (urgência 7/10)
-- **Prefeitura SP (SVMA)** — Pintura dos Parques Municipais (urgência 6/10)
+### Dashboard (Cockpit)
+- 5 zonas geográficas: Sul, Norte, Leste, Oeste, Centro
+- 559 bairros mapeados com contadores
+- Filtros por bairro, pesquisa, categorias
+- Importação de leads via Apify
+- Indicadores: total, quentes, mensagens, matches
 
-### 🆕 Seleção Dinâmica de Pilares (v5.0)
-O usuário pode **ativar/desativar cada pilar individualmente** no Dashboard antes de disparar a varredura:
+### Leads Elite
+- Favoritos com chat em tempo real
+- Criação manual de leads (auto-favorita)
+- Exclusão de leads
+- Badge de mensagens não lidas
 
-- **Toggle Interativo:** Cada card de pilar (A, B, C) funciona como botão clicável com visual cyberpunk
-- **Feedback Visual:** Pilar ATIVO → borda neon colorida + glow + badge `ATIVO` pulsante | Pilar OFF → opaco, dessaturado, badge `OFF`
-- **Botão Sniper Inteligente:** Mostra pilares selecionados no texto (ex: `Iniciar Sniper · A,C Pilares`), desabilitado quando 0 pilares estão selecionados
-- **Backend Condicional:** Apenas os hunters dos pilares ativados executam busca; pilares inativos retornam `[]` sem erro
+### CRM — Chat em Tempo Real
+- Thread por lead (tabela `lead_messages`)
+- Mensagens estilo WhatsApp
+- Separadores de data
+- Deletar apenas suas próprias mensagens
+- Badge de não lidos no sidebar
+- Polling a cada 5 segundos
 
-#### Fluxo de Dados (Pilares Selecionáveis)
-```
-Dashboard (activePillars toggle) → api.ts (pilares=A,C) → api.py (query param) → ManagerAgent → DemandScoutAgent → asyncio.gather(apenas hunters ativos)
-```
+### Documentos
+- Upload/download/visualização/impressão
+- Diretório: `public/AquivosOtto/documentos/` (11 PDFs)
+- Admin: upload/deletar | Todos: download/visualizar/imprimir
 
-### 🆕 Inteligência Manus — Queries Estratégicas
-Os caçadores de cada pilar foram enriquecidos com queries direcionadas a portais de alta conversão mapeados pela pesquisa Manus:
+### Landing Page
+- Background: Ponte Estaiada SP (foto real)
+- Elemento 3D Spline animado
+- Efeitos neon glow
+- Login mobile com formulário flutuante
 
-| Pilar | Portais Alvo | Tipo de Query |
-|-------|--------------|---------------|
-| A | `sindiconet.com.br`, `coteibem.com.br`, `ucondo.com.br` | Atas de assembleia, fundos de obra, cotações condominiais |
-| B | `pncp.gov.br`, `bec.sp.gov.br`, `comprasnet.gov.br` | Licitações, pregões eletrônicos, diários oficiais |
-| C | `ohub.com.br`, `habitissimo.com.br`, `getninjas.com.br` | Vagas de facilities, cotações corporativas, manutenção predial |
+### Mobile Responsivo
+- Header fixo com logo (linka para home)
+- Nav inferior: Cockpit, Elite, Docs, Vendedores (admin), Sair
+- Touch targets mínimos de 44px
+- 3D oculto no mobile
 
-### Tecnologia Ativa
-- ✅ **Playwright Stealth** — `navigator.webdriver=undefined`, user-agent real Chrome 124, viewport variável
-- ✅ **Google Search** como fonte de busca (sem API, sem Bing)
-- ✅ **Google Maps** como fonte de geolocalização (sem Places API)
-- ✅ **DeepSeek Chat** para análise textual de todos os sinais capturados
-- ✅ **SQLite** salvando todos os leads reais com contatos enriquecidos
-- ✅ **Seleção Dinâmica de Pilares** — Frontend toggle → Backend condicional
+### Usuários
+| Nome | Perfil |
+|------|--------|
+| Jonatas Oliveira | admin |
+| Joao Otto | admin |
+| Nico Otto | admin |
+| Carlos Cabral | vendedor |
 
-### Servidores Ativos
+---
+
+## Servidores
+
 - Backend FastAPI: `http://localhost:8002`
 - Frontend Next.js: `http://localhost:3000`
-
----
-
-## Mudanças Recentes (v5.0 — 20/05/2026)
-
-### Adicionado (v5.0)
-- ✅ **Seleção Dinâmica de Pilares no Dashboard** — Cards de pilar agora são botões toggle com visual premium cyberpunk (neon glow, badge ATIVO/OFF, barra inferior colorida)
-- ✅ **Estado `activePillars`** — `{ A: true, B: true, C: true }` no React com toggle individual
-- ✅ **Propagação completa do parâmetro `pilares`** — `page.tsx` → `api.ts` → `api.py` → `ManagerAgent` → `DemandScoutAgent` → `asyncio.gather` condicional
-- ✅ **Botão Sniper inteligente** — Texto dinâmico mostra pilares ativos, desabilitado com aviso `⚠` quando 0 pilares estão selecionados
-- ✅ **Queries Manus nos Hunters** — `pillar_a_agent.py`, `pillar_b_agent.py`, `pillar_c_agent.py` com queries focadas em portais de alta conversão
-- ✅ **Logs WS detalhados** — `ManagerAgent` emite nomes ricos de pilares ativados no HUD holográfico
-
-### Arquivos Modificados (v5.0)
-| Arquivo | Tipo | Descrição |
-|---------|------|-----------|
-| `backend/api.py` | Backend | Rotas `/scan/start`, `/sniper/start`, `/scan-pillars` com parâmetro `pilares` |
-| `backend/src/agents/pillar_a_agent.py` | Backend | Queries Manus para SíndicoNet, CoteiBem, uCondo |
-| `backend/src/agents/pillar_b_agent.py` | Backend | Queries Manus para PNCP, BEC-SP, Comprasnet |
-| `backend/src/agents/pillar_c_agent.py` | Backend | Queries Manus para oHub, Habitissimo, GetNinjas |
-| `backend/src/agents/demand_scout_agent.py` | Backend | `scan_all_pillars(pilares)` com gather condicional |
-| `backend/src/agents/manager_agent.py` | Backend | `run_full_scan(pilares)` com logs WS ricos |
-| `frontend/lib/api.ts` | Frontend | `scanStart` e `scanPillars` com parâmetro `pilares` |
-| `frontend/app/(system)/dashboard/page.tsx` | Frontend | Estado `activePillars`, cards toggle, botão inteligente |
-
-### Histórico v4.0
-- ✅ Modo Stealth Playwright completo em todos os agentes
-- ✅ Google Search em todos os pilares (substitui Bing)
-- ✅ WebEnrichmentAgent v4.0 — Google Search para contatos
-- ✅ BrowserScoutAgent — Google Maps direto
-- ❌ Removido: PlacesClient, Bing Search headless
 
 ---
 
 ## Comandos Rápidos
 
 ```powershell
-# Testar os 3 pilares
-cd backend ; python test_real_pillars.py
+# Backend
+cd backend ; python api.py
 
-# Pipeline completo (todos os pilares)
-cd backend ; python -c "
-import asyncio
-from src.agents.manager_agent import ManagerAgent
-asyncio.run(ManagerAgent().run_full_scan(city='São Paulo', target_leads=3, pilares='A,B,C'))
-"
+# Frontend
+cd frontend ; npm run dev
 
-# Pipeline apenas Pilar A e C
-cd backend ; python -c "
-import asyncio
-from src.agents.manager_agent import ManagerAgent
-asyncio.run(ManagerAgent().run_full_scan(city='São Paulo', target_leads=3, pilares='A,C'))
-"
+# Verificar banco
+cd backend ; python -c "import sqlite3; conn = sqlite3.connect('data/prospecton.db'); print(f'Leads: {conn.execute(\"SELECT COUNT(*) FROM leads\").fetchone()[0]}'); print(f'Quentes: {conn.execute(\"SELECT COUNT(*) FROM leads_quentes\").fetchone()[0]}'); print(f'Mensagens: {conn.execute(\"SELECT COUNT(*) FROM lead_messages\").fetchone()[0]}')"
 ```
+
+---
+
+## Próximos Passos
+
+- [ ] Apify: rodar importação completa das 11 regiões quando proxies estiverem disponíveis
+- [ ] Landing page: corrigir sobreposição mobile do hero
+- [ ] Push commits restantes para remote
+
+---
+
+*Atualizado em: Junho 2026 — Versão 3.2*

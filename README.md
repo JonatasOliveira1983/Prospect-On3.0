@@ -1,12 +1,12 @@
-# Prospect-On 3.2 (Sniper Sovereignty)
+# Prospect-On 3.2 — Motor de Inteligência Comercial
 
-**Motor de Inteligência Comercial** da **Otto Pinturas** — localização, qualificação e geração de propostas premium para prospecção de condomínios.
+**Otto Pinturas** — Automação de descoberta, qualificação e contato para prospecção de pintura predial e comercial.
 
 ---
 
-## 🚀 Como Rodar
+## Como Rodar
 
-### 1. Backend (FastAPI — Porta 8002)
+### Backend (FastAPI — Porta 8002)
 
 ```powershell
 cd backend
@@ -14,12 +14,10 @@ pip install -r requirements.txt
 python api.py
 ```
 
-**Acesso:**
 - API: http://localhost:8002
-- Swagger UI: http://localhost:8002/docs
-- WebSocket Logs: `ws://localhost:8002/ws/logs`
+- Swagger: http://localhost:8002/docs
 
-### 2. Frontend (Next.js 16 — Porta 3000)
+### Frontend (Next.js 16 — Porta 3000)
 
 ```powershell
 cd frontend
@@ -27,13 +25,12 @@ npm install
 npm run dev
 ```
 
-**Acesso:**
 - Landing Page: http://localhost:3000
 - Dashboard: http://localhost:3000/dashboard
-- Leads Quentes: http://localhost:3000/leads-quentes
-- Mapa Radar: http://localhost:3000/mapa-radar
+- Leads Elite: http://localhost:3000/leads-quentes
+- Documentos: http://localhost:3000/documentos
 
-### 3. Parar os Servidores
+### Parar Servidores
 
 ```powershell
 Get-Process -Name "python","node" -ErrorAction SilentlyContinue | Stop-Process -Force
@@ -41,69 +38,101 @@ Get-Process -Name "python","node" -ErrorAction SilentlyContinue | Stop-Process -
 
 ---
 
-## ⚙️ Configuração
+## Funcionalidades
 
-Copie `.env.example` para `backend/.env` e configure:
+### Pilares de Descoberta
+| Pilar | Fonte | O que detecta |
+|-------|-------|---------------|
+| **A — Condomínios** | GetNinjas (Playwright) | Atas de assembleia, fundos de obra, cotações de fachada |
+| **B — Editais Públicos** | DuckDuckGo → gov.br/PNCP | Pregões eletrônicos, licitações, diários oficiais |
+| **C — Corporativo** | oHub (Playwright) | Vagas de pintor, facilities, cotações corporativas |
+| **Google Maps** | Apify (Google Maps Extractor) | Administradoras, síndicos, construtoras — 990+ leads |
+
+### Dashboard (Cockpit)
+- 5 zonas geográficas: Sul, Norte, Leste, Oeste, Centro
+- 559 bairros mapeados com contadores
+- Filtros por bairro, pesquisa, categorias
+- Importação de leads via Apify (Google Maps)
+- Indicadores: total leads, leads quentes, mensagens não lidas, matches
+
+### Leads Elite
+- Favoritos com chat em tempo real (bate-papo) por lead
+- Criação manual de leads (auto-favorita)
+- Exclusão de leads
+- Badge de mensagens não lidas
+
+### CRM — Chat em Tempo Real
+- Cada lead tem seu próprio thread de mensagens
+- Mensagens estilo WhatsApp com separadores de data
+- Deletar apenas suas próprias mensagens
+- Badge de não lidos no sidebar (admin vê todos, vendedor vê apenas favoritos)
+- Polling a cada 5 segundos
+
+### Documentos
+- Upload/download/visualização/impressão de PDFs
+- Diretório: `public/AquivosOtto/documentos/`
+- Apenas admin pode fazer upload/deletar
+- Todos podem visualizar/baixar/imprimir
+
+### Landing Page
+- Background: Ponte Estaiada SP (foto real)
+- Elemento 3D Spline animado
+- Efeitos neon glow
+- Login mobile com formulário flutuante
+
+### Usuários
+| Nome | Perfil |
+|------|--------|
+| Jonatas Oliveira | admin |
+| Joao Otto | admin |
+| Nico Otto | admin |
+| Carlos Cabral | vendedor |
+
+---
+
+## Stack Tecnológica
+
+| Camada | Tecnologia | Porta |
+|--------|-----------|-------|
+| Frontend | Next.js 16 (Turbopack), TypeScript, Tailwind CSS | 3000 |
+| Backend | FastAPI (Python 3.10+), Uvicorn | 8002 |
+| Banco | SQLite (`data/prospecton.db`) | local |
+| IA | DeepSeek Chat | cloud |
+| Scraping | Playwright Stealth + Apify | cloud/local |
+| WhatsApp | Evolution API v2 (configurado) | 8080 |
+
+---
+
+## API Endpoints
+
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| `GET` | `/api/leads` | Lista todos os leads (leads + leads_quentes) |
+| `POST` | `/api/leads` | Cria lead manual |
+| `PUT` | `/api/leads/{id}` | Atualiza lead |
+| `DELETE` | `/api/leads/{id}` | Deleta lead |
+| `GET` | `/api/leads/hot` | Leads quentes |
+| `POST` | `/api/favorites/toggle` | Toggle favorito |
+| `GET` | `/api/favorites` | Lista favoritos |
+| `POST` | `/api/crm/{leadId}` | Salva notas CRM |
+| `GET` | `/api/messages/{leadId}` | Mensagens do chat |
+| `POST` | `/api/messages/{leadId}` | Envia mensagem |
+| `GET` | `/api/messages/unread` | Contagem de não lidos |
+| `GET` | `/api/documents` | Lista documentos |
+| `POST` | `/api/documents/upload` | Upload de documento |
+| `DELETE` | `/api/documents/{filename}` | Deleta documento |
+| `POST` | `/api/apify/import` | Importa leads do Apify |
+| `GET` | `/api/health` | Health check |
+
+---
+
+## Configuração
 
 | Variável | Descrição |
 |----------|-----------|
-| `DEEPSEEK_API_KEY` | Chave da API DeepSeek (enriquecimento textual e copy) |
-| `GEMINI_API_KEY` | Chave da API Google Gemini (auditoria visual de fachada) |
-| `GOOGLE_MAPS_API_KEY` | Chave da API Google Maps (legacy — opcional) |
+| `DEEPSEEK_API_KEY` | API DeepSeek (enriquecimento textual) |
+| `APIFY_TOKEN` | Token Apify (Google Maps Extractor) |
 
 ---
 
-## 🏗️ Arquitetura (13 Agentes Sniper)
-
-O sistema é composto por agentes Python especialistas orquestrados pelo **ManagerAgent**:
-
-| Agente | Função |
-|--------|--------|
-| **BrowserScoutAgent** | Motor principal — Playwright/DOM Scraping do Google Maps |
-| **HunterAgent** | Fallback geográfico via OpenStreetMap |
-| **AnalystAgent** | Qualificação e cálculo de Match Otto |
-| **SurveyorAgent** | Auditoria visual de fachada via Gemini |
-| **ClosingAgent** | Consolidação e geração de propostas |
-| **ContactAgent** | Enriquecimento de canais de contato |
-| **LeadEnrichmentAgent** | Enriquecimento textual via DeepSeek |
-| **DemandScraperAgent** | Raspagem de demandas externas |
-| **GeosampaAgent** | Dados da prefeitura de SP (IPTU) |
-| **HealthAgent** | Monitoramento de saúde do sistema |
-| **ExtensionLauncher** | Extensão Chrome para captura manual |
-| **ScoutAgent** | Scout auxiliar de reconhecimento |
-
----
-
-## 📚 Documentação
-
-| Documento | Conteúdo |
-|-----------|----------|
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Arquitetura completa do sistema |
-| [RULES.md](RULES.md) | Regras, padrões e comandos rápidos |
-| [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) | Sistema de design (cores, tipografia, grid) |
-| [GSD.md](GSD.md) | Protocolo GSD de desenvolvimento |
-| [.gsd/PROJECT.md](.gsd/PROJECT.md) | Visão do projeto |
-| [.gsd/REQUIREMENTS.md](.gsd/REQUIREMENTS.md) | Requisitos técnicos e limites |
-| [.gsd/STATE.md](.gsd/STATE.md) | Estado atual do projeto |
-| [.gsd/ROADMAP.md](.gsd/ROADMAP.md) | Roadmap de desenvolvimento |
-
----
-
-## 🛠️ Comandos Úteis
-
-```powershell
-# Testes
-cd backend ; python test_sniper.py        # Testa o motor Sniper
-cd backend ; python test_gemini.py        # Testa integração Gemini
-cd backend ; python test_demand_pipeline.py # Testa pipeline de demanda
-
-# Manutenção
-cd backend ; python check_db.py           # Verifica banco de dados
-cd backend ; python check_usage.py        # Verifica uso de APIs
-cd backend ; python src/utils/migrate_v7.py # Migração do banco v7
-cd backend ; python inject_mock.py        # Injeta dados de teste
-```
-
----
-
-*Versão 3.2 — Maio 2026*
+*Versão 3.2 — Junho 2026*
