@@ -8,10 +8,16 @@ export async function POST(
     try {
         const { id } = await params;
         const body = await request.json();
+        
+        // Obter X-User-Id enviado pelo cliente do frontend e propagar para o backend
+        const userId = request.headers.get('x-user-id') || '';
 
         const response = await fetch(`${BACKEND_URL}/api/leads/${id}/favorite`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+                'Content-Type': 'application/json',
+                ...(userId ? { 'X-User-Id': userId } : {})
+            },
             body: JSON.stringify(body),
             cache: 'no-store'
         });
