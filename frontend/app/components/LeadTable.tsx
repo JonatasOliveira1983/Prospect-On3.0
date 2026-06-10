@@ -11,6 +11,7 @@ import {
   Globe,
   Phone,
   Star,
+  Trash2,
   Building2,
   Building,
   ScrollText,
@@ -58,7 +59,7 @@ const STATUS_DOT: Record<string, string> = {
 
 const ITEMS_PER_PAGE = 100;
 
-export default function LeadTable({ leads, onSave, readOnly = false }: { leads: Lead[]; onSave?: () => void; readOnly?: boolean }) {
+export default function LeadTable({ leads, onSave, onDelete, readOnly = false }: { leads: Lead[]; onSave?: () => void; onDelete?: (id: string) => void; readOnly?: boolean }) {
   const [inspectingLead, setInspectingLead] = useState<Lead | null>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -374,6 +375,15 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                       >
                         Ver CRM
                       </button>
+                      {onDelete && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); if (confirm('Remover este lead?')) onDelete(lead.id || ''); }}
+                          className="p-2 bg-slate-900 hover:bg-red-500/20 text-slate-500 hover:text-red-400 rounded-xl transition-all border border-white/5"
+                          title="Deletar lead"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                       <button className="p-2 bg-slate-900 hover:bg-slate-700 text-slate-500 hover:text-white rounded-xl transition-all border border-white/5">
                         <ChevronRight size={14} />
                       </button>

@@ -73,6 +73,15 @@ export default function LeadsQuentes() {
     }
   }
 
+  async function handleDeleteLead(leadId: string) {
+    try {
+      await api.deleteLead(leadId);
+      fetchLeads();
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   useEffect(() => {
     // Dispara a busca sempre que sellerId for definido ou no primeiro carregamento
     fetchLeads();
@@ -161,7 +170,7 @@ export default function LeadsQuentes() {
             </p>
           </div>
         ) : (
-          <LeadTable leads={leads} readOnly={isReadOnly} />
+          <LeadTable leads={leads} readOnly={isReadOnly} onDelete={handleDeleteLead} />
         )}
       </div>
     </div>
