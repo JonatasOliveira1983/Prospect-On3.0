@@ -497,7 +497,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                   <label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
                     <Check size={11} /> Resposta do Administrador
                   </label>
-                  {readOnly ? (
+                  {(readOnly && currentUser?.role !== 'admin') ? (
                     <p className="text-sm text-emerald-300 font-medium">{crmResponse || "Aguardando resposta..."}</p>
                   ) : (
                     <textarea
