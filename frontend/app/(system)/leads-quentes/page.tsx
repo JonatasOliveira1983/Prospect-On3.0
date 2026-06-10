@@ -131,7 +131,20 @@ export default function LeadsQuentes() {
         setFormMsg("Lead cadastrado!");
         setNewLead({ name: "", phone: "", email: "", address: "", notes: "" });
         setShowForm(false);
-        fetchLeads();
+        // Aguarda o lead aparecer no banco e favorita
+        setTimeout(async () => {
+          const allLeadsResp = await fetch("http://localhost:8002/api/leads");
+          const allLeads = await allLeadsResp.json();
+          const created = allLeads.find((l: any) => l.name === newLead.name.trim());
+          if (created?.id) {
+            await fetch(`http://localhost:8002/api/leads/${created.id}/favorite`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-User-Id": currentUser?.id || "1" },
+              body: JSON.stringify({ is_favorite: true }),
+            });
+          }
+          fetchLeads();
+        }, 800);
       }
     } catch (e) {
       setFormMsg("Erro de conexao");
