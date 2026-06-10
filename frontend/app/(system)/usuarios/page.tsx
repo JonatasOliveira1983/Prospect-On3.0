@@ -74,8 +74,8 @@ export default function UsuariosAdminPage() {
           email: email.trim(),
           password: password.trim(),
           role: role,
-          phone: phone.trim() || null,
-          document: document.trim() || null,
+          phone: phone.trim() || "",
+          document: document.trim() || "",
         }),
       });
 
