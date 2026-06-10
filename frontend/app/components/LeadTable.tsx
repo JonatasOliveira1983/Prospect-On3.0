@@ -189,7 +189,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                 </div>
                 <button
                   onClick={(e) => handleToggleFavorite(e, lead)}
-                  className={`p-2 rounded-xl transition-all border shrink-0 ${
+                  className={`p-2.5 rounded-xl transition-all border shrink-0 ${
                     lead.reserved_by_user_id
                       ? 'bg-slate-900 border-purple-500/30 text-purple-400'
                       : isFav
@@ -264,7 +264,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                   <td className="px-5 py-4 first:rounded-l-2xl w-16">
                     <button
                       onClick={(e) => handleToggleFavorite(e, lead)}
-                      className={`p-2 rounded-xl transition-all border hover:scale-105 active:scale-95 ${
+                      className={`p-2.5 rounded-xl transition-all border hover:scale-105 active:scale-95 ${
                         lead.reserved_by_user_id
                           ? 'bg-slate-900 border-purple-500/30 text-purple-400 shadow-md shadow-purple-500/5'
                           : isFav
@@ -427,7 +427,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
+              className="px-4 py-3 min-h-[40px] rounded-lg bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
             >
               <ChevronLeft size={12} /> Anterior
             </button>
@@ -451,7 +451,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
+              className="px-4 py-3 min-h-[40px] rounded-lg bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
             >
               Próximo <ChevronRight size={12} />
             </button>

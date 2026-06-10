@@ -184,7 +184,7 @@ export default function LeadsQuentes() {
           <Flame size={14} className="fill-rose-500" />
           <span>Leads Quentes</span>
         </div>
-        <h1 className="text-4xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-none">
+        <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase leading-none">
           {isReadOnly ? (
             <>Leads Elite <span className="text-yellow-400">de {sellerName}</span></>
           ) : (
@@ -200,7 +200,7 @@ export default function LeadsQuentes() {
         </p>
       </header>
 
-      <div className="flex items-center gap-4">
+      <div className="flex flex-wrap items-center gap-4">
         {!showForm ? (
           <button onClick={() => setShowForm(true)} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors">
             <Plus size={14} /> Cadastrar Lead Manual
@@ -262,7 +262,7 @@ export default function LeadsQuentes() {
             <span className="text-slate-500 font-bold uppercase tracking-widest text-sm">Carregando Favoritos...</span>
           </div>
         ) : leads.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 bg-slate-950/40 backdrop-blur-xl border border-dashed border-white/10 rounded-[3rem]">
+          <div className="flex flex-col items-center justify-center py-20 md:py-32 bg-slate-950/40 backdrop-blur-xl border border-dashed border-white/10 rounded-[3rem]">
             <Flame className="text-slate-700 mb-4" size={64} />
             <h3 className="text-xl font-bold text-slate-500 uppercase tracking-widest">Nenhum Favorito</h3>
             <p className="text-slate-600 text-sm mt-2 text-center max-w-md">

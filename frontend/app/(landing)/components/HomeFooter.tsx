@@ -9,7 +9,7 @@ export default function HomeFooter() {
     <footer className="bg-slate-950 border-t border-white/5 pt-16 pb-8 text-white relative overflow-hidden">
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-otto-yellow/5 rounded-full blur-3xl pointer-events-none" />
       
-      <div className="container mx-auto px-8 relative z-10">
+      <div className="container mx-auto px-6 md:px-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
           <div>
             <div className="mb-6 select-none active:scale-95 transition-transform inline-block">

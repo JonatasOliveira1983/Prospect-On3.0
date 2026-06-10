@@ -106,7 +106,7 @@ export default function ChatPanel({ leadId, currentUser, isReadOnly }: Props) {
       </div>
 
       {/* Mensagens */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0" style={{ maxHeight: "400px" }}>
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0" style={{ maxHeight: "min(400px, 50vh)" }}>
         {messages.length === 0 && (
           <div className="text-center text-slate-500 text-xs py-8">
             Nenhuma mensagem ainda. Inicie a conversa!
@@ -167,12 +167,12 @@ export default function ChatPanel({ leadId, currentUser, isReadOnly }: Props) {
               onChange={(e) => setNewMsg(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSend()}
               placeholder="Digite sua mensagem..."
-              className="flex-1 bg-slate-900/50 border border-white/5 rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400/30"
+              className="flex-1 bg-slate-900/50 border border-white/5 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400/30"
             />
             <button
               onClick={handleSend}
               disabled={!newMsg.trim() || sending}
-              className="bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 px-3 py-2 rounded-xl transition-all"
+              className="bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-700 disabled:text-slate-500 text-slate-900 px-3 py-2.5 rounded-xl transition-all"
             >
               <Send size={14} />
             </button>

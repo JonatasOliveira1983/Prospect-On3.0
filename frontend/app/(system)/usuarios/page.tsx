@@ -147,7 +147,7 @@ export default function UsuariosAdminPage() {
     <div className="max-w-7xl mx-auto space-y-8 animate-fade-in pb-12">
       {/* Cabeçalho */}
       <div>
-        <h1 className="text-3xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider flex items-center gap-3">
           <Users className="text-yellow-400" size={32} />
           Painel de Usuários & Vendedores
         </h1>
@@ -170,7 +170,7 @@ export default function UsuariosAdminPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Lado Esquerdo: Formulário de Cadastro */}
         <div className="bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl space-y-6 h-fit">
           <h2 className="text-base font-black text-white uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-white/5">
@@ -259,7 +259,7 @@ export default function UsuariosAdminPage() {
         </div>
 
         {/* Lado Direito: Listagem de Usuários */}
-        <div className="xl:col-span-2 bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl space-y-6">
+        <div className="lg:col-span-2 bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-3xl p-6 shadow-2xl space-y-6">
           <h2 className="text-base font-black text-white uppercase tracking-wider pb-3 border-b border-white/5">
             Vendedores Ativos no Sistema ({users.length})
           </h2>

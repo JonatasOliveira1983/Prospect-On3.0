@@ -72,29 +72,29 @@ export default function SystemLayout({
       
       {/* Mobile Nav - Limpa e Responsiva com base no Perfil */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-slate-950/90 backdrop-blur-xl border-t border-yellow-400/20 z-50 flex items-center justify-around px-2 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-        <Link href="/dashboard" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/dashboard" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+        <Link href="/dashboard" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/dashboard" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <LayoutDashboard size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Cockpit</span>
+          <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Cockpit</span>
         </Link>
-        <Link href="/leads-quentes" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/leads-quentes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+        <Link href="/leads-quentes" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/leads-quentes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <Target size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Elite</span>
+          <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Elite</span>
         </Link>
         {isAdmin && (
           <>
-            <Link href="/usuarios" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/usuarios" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+            <Link href="/usuarios" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/usuarios" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
               <Users size={20} />
-              <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Vendedores</span>
+              <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Vendedores</span>
             </Link>
-            <Link href="/configuracoes" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/configuracoes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+            <Link href="/configuracoes" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/configuracoes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
               <Settings size={20} />
-              <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Painel</span>
+              <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Painel</span>
             </Link>
           </>
         )}
-        <Link href="/minha-conta" className={`p-2 transition-all flex flex-col items-center justify-center ${pathname === "/minha-conta" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+        <Link href="/minha-conta" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/minha-conta" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <User size={20} />
-          <span className="text-[8px] font-black mt-0.5 tracking-tighter uppercase">Perfil</span>
+          <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Perfil</span>
         </Link>
       </div>
     </div>

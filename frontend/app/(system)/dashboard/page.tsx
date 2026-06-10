@@ -283,7 +283,7 @@ export default function Dashboard() {
         <div className="flex flex-wrap gap-2 mb-3">
           <button
             onClick={() => { setZoneFilter(null); setBairroFilter(null); }}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${!zoneFilter ? 'bg-white/10 border-white/30 text-white' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
+            className={`px-3 py-1.5 min-h-[36px] rounded-full text-[10px] lg:text-[11px] font-bold border transition-all ${!zoneFilter ? 'bg-white/10 border-white/30 text-white' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
           >
             SP: {totalLeads}
           </button>
@@ -291,7 +291,7 @@ export default function Dashboard() {
             <button
               key={zone}
               onClick={() => { setZoneFilter(zoneFilter === zone ? null : zone); setBairroFilter(null); }}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${zoneFilter === zone ? 'bg-white/10 border-white/40 text-white' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
+              className={`px-3 py-1.5 min-h-[36px] rounded-full text-[10px] lg:text-[11px] font-bold border transition-all ${zoneFilter === zone ? 'bg-white/10 border-white/40 text-white' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
             >
               {zone}: <span className={zoneFilter === zone ? 'text-white' : 'text-slate-300'}>{count}</span>
             </button>
@@ -299,7 +299,7 @@ export default function Dashboard() {
           {(zoneFilter || bairroFilter) && (
             <button
               onClick={() => { setZoneFilter(null); setBairroFilter(null); }}
-              className="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-400/30 text-rose-400 text-[10px] font-bold flex items-center gap-1"
+              className="px-3 py-1.5 min-h-[36px] rounded-full bg-rose-500/10 border border-rose-400/30 text-rose-400 text-[10px] lg:text-[11px] font-bold flex items-center gap-1"
             >
               <X size={10} /> Limpar
             </button>
@@ -314,7 +314,7 @@ export default function Dashboard() {
               <button
                 key={b.name}
                 onClick={() => setBairroFilter(bairroFilter === b.name ? null : b.name)}
-                className={`px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all ${bairroFilter === b.name ? 'bg-blue-500/20 border-blue-400/40 text-blue-400' : 'bg-slate-800 border-blue-500/10 text-blue-400/70 hover:border-blue-400/20'}`}
+                className={`px-2.5 py-1 min-h-[32px] rounded-full text-[10px] lg:text-[11px] font-bold border transition-all ${bairroFilter === b.name ? 'bg-blue-500/20 border-blue-400/40 text-blue-400' : 'bg-slate-800 border-blue-500/10 text-blue-400/70 hover:border-blue-400/20'}`}
               >
                 {b.name}: {b.count}
               </button>
@@ -367,7 +367,7 @@ export default function Dashboard() {
           <button
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+            className={`px-3 py-2 min-h-[36px] rounded-full text-[10px] lg:text-[11px] font-bold uppercase tracking-wider border transition-all ${
               statusFilter === f.key ? "bg-amber-500/20 border-amber-400/40 text-amber-400" : "bg-slate-900 border-white/10 text-slate-400 hover:border-white/20"
             }`}
           >

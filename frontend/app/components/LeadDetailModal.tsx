@@ -279,7 +279,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1.5 flex items-center gap-1.5">
                   <Phone size={12} className="text-yellow-400 animate-pulse" /> LINHA DE CONTATO SNIPER
                 </span>
-                <span className="text-2xl sm:text-3xl font-black text-yellow-400 font-mono tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]">
+                <span className="text-xl sm:text-2xl md:text-3xl font-black text-yellow-400 font-mono break-all tracking-wider drop-shadow-[0_0_8px_rgba(250,204,21,0.3)]">
                   {phoneRaw || 'TELEFONE NÃO CADASTRADO'}
                 </span>
               </div>
@@ -454,8 +454,23 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                   </select>
                 </div>
 
+                {/* Bloco de Notas Pessoais */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <ScrollText size={11} className="text-yellow-400" /> Bloco de Notas
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    disabled={readOnly}
+                    placeholder={readOnly ? "Sem notas." : "Anotações pessoais sobre este lead..."}
+                    rows={3}
+                    className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-2xl p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed"
+                  />
+                </div>
+
                 {/* Bate-Papo do Lead */}
-                <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden" style={{ minHeight: "350px" }}>
+                <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden min-h-[280px] lg:min-h-[350px]">
                   <ChatPanel
                     leadId={leadId}
                     currentUser={currentUser || { id: 0, name: "", role: "" }}

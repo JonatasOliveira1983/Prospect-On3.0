@@ -88,7 +88,7 @@ export default function MinhaContaPage() {
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black text-white uppercase tracking-wider flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-wider flex items-center gap-3">
           <User className="text-yellow-400" size={32} />
           Minha Conta
         </h1>
@@ -130,7 +130,7 @@ export default function MinhaContaPage() {
         </div>
 
         {/* Lado Direito: Formulário de Edição */}
-        <div className="md:col-span-2 bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-3xl p-8 shadow-2xl">
+        <div className="md:col-span-2 bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-3xl p-5 md:p-8 shadow-2xl">
           <form onSubmit={handleUpdateProfile} className="space-y-6">
             <h2 className="text-lg font-bold text-white uppercase tracking-wider pb-3 border-b border-white/5">
               Editar Cadastro Pessoal

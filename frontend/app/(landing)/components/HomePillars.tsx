@@ -25,10 +25,10 @@ export default function HomePillars() {
   ];
 
   return (
-    <section className="py-24 bg-white text-otto-blue">
+    <section className="py-16 lg:py-24 bg-white text-otto-blue">
       <div className="container mx-auto px-8">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-5xl font-black tracking-tight mb-6">Nossos Pilares</h2>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight mb-6">Nossos Pilares</h2>
           <p className="text-xl text-slate-500 font-light">
             A base sólida que sustenta cada projeto executado pela Otto Pinturas.
           </p>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { ArrowRight, ShieldCheck, Award, Briefcase, Play } from "lucide-react";
 import Script from "next/script";
+import BuildingsBackground from "./BuildingsBackground";
 
 export default function HomeHero() {
   const [splineUrl, setSplineUrl] = useState<string>("https://prod.spline.design/p9DEvpgdmtwGsA57/scene.splinecode");
@@ -45,7 +46,7 @@ export default function HomeHero() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-[90vh] lg:min-h-[95vh] flex items-center justify-center bg-slate-950 overflow-hidden py-20 lg:py-28 border-b border-white/5">
+    <section className="relative w-full min-h-[85vh] lg:min-h-[95vh] flex items-center justify-center bg-slate-950 overflow-hidden py-20 lg:py-28 border-b border-white/5">
       
       {/* Background Neon Halo Lights (Radial Gradients) */}
       <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -61,6 +62,9 @@ export default function HomeHero() {
         {/* Subtle grid lines for high-tech architectural drafting feel */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
+
+      {/* 3 Prédios Espelhados no Fundo */}
+      <BuildingsBackground />
 
       {/* Spline 3D Scene rendered dynamically for high performance */}
       <div className="absolute top-[12%] lg:top-[5%] right-0 w-full lg:w-[50%] h-[400px] lg:h-[650px] z-0 overflow-hidden opacity-90 pointer-events-auto">
@@ -186,7 +190,7 @@ export default function HomeHero() {
             
             {/* Monumental Overlapping Text */}
             <div className="relative mb-4 lg:mb-6 select-none">
-              <h1 className="text-4xl md:text-6xl lg:text-[5.5rem] xl:text-[7rem] font-black text-white leading-[0.95] tracking-tighter uppercase relative">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5.5rem] xl:text-[7rem] font-black text-white leading-[0.95] tracking-tighter uppercase relative">
                 pinturas de
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-otto-yellow">
                   grande porte
