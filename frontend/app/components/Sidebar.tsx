@@ -3,7 +3,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Settings, Target, Users, User, LogOut, History } from "lucide-react";
-import UsageIndicator from "./UsageIndicator";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -78,7 +77,6 @@ export default function Sidebar() {
           <span className="font-bold text-sm tracking-tight">Sair</span>
         </button>
         
-        <UsageIndicator />
       </div>
     </aside>
   );

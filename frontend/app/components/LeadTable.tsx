@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   MapPin,
   ChevronRight,
+  ChevronLeft,
   Mail,
   Globe,
   Phone,
@@ -55,9 +56,12 @@ const STATUS_DOT: Record<string, string> = {
   'Sem Interesse':     'bg-rose-500',
 };
 
+const ITEMS_PER_PAGE = 100;
+
 export default function LeadTable({ leads, onSave, readOnly = false }: { leads: Lead[]; onSave?: () => void; readOnly?: boolean }) {
   const [inspectingLead, setInspectingLead] = useState<Lead | null>(null);
   const [favorites, setFavorites] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     if (leads) {
@@ -69,6 +73,9 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
       );
     }
   }, [leads]);
+
+  const totalPages = Math.ceil(leads.length / ITEMS_PER_PAGE);
+  const paginatedLeads = leads.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const handleToggleFavorite = async (e: React.MouseEvent, lead: Lead) => {
     e.stopPropagation();
@@ -116,7 +123,7 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
     <>
       {/* Mobile Card View */}
       <div className="grid grid-cols-1 md:hidden gap-3">
-        {leads.map((lead, i) => {
+        {paginatedLeads.map((lead, i) => {
           const isFav = favorites[lead.name] || false;
           const dotClass = STATUS_DOT[lead.contact_status || ''] || 'bg-slate-600';
           return (
@@ -228,7 +235,7 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
             </tr>
           </thead>
           <tbody>
-            {leads.map((lead, i) => {
+            {paginatedLeads.map((lead, i) => {
               const isFav = favorites[lead.name] || false;
               const hasNotes = !!lead.interaction_notes;
               const phoneRaw = lead.phone || lead.responsavel_contato || "";
@@ -342,16 +349,19 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
 
                   {/* Contatos Rápidos */}
                   <td className="px-5 py-4">
-                    <div className="flex gap-1.5">
-                      <div className={`p-1.5 rounded-lg border ${phoneRaw && phoneRaw !== 'N/D' ? 'bg-slate-800 text-yellow-400 border-white/5' : 'bg-slate-900/30 text-slate-600 border-transparent'}`} title={phoneRaw || 'Sem Telefone'}>
-                        <Phone size={12} />
-                      </div>
-                      <div className={`p-1.5 rounded-lg border ${lead.email && lead.email !== 'N/D' ? 'bg-slate-800 text-yellow-400 border-white/5' : 'bg-slate-900/30 text-slate-600 border-transparent'}`} title={lead.email || 'Sem E-mail'}>
-                        <Mail size={12} />
-                      </div>
-                      <div className={`p-1.5 rounded-lg border ${lead.website && lead.website !== 'N/D' ? 'bg-slate-800 text-yellow-400 border-white/5' : 'bg-slate-900/30 text-slate-600 border-transparent'}`} title={lead.website || 'Sem Site'}>
-                        <Globe size={12} />
-                      </div>
+                    <div className="flex flex-col gap-1 min-w-[140px]">
+                      {phoneRaw && phoneRaw !== 'N/D' ? (
+                        <span className="text-xs font-bold text-yellow-400 flex items-center gap-1">
+                          <Phone size={11} className="shrink-0" /> {phoneRaw}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-slate-600">Sem telefone</span>
+                      )}
+                      {lead.email && lead.email !== 'N/D' && (
+                        <span className="text-xs text-slate-400 truncate max-w-[200px]" title={lead.email}>
+                          <Mail size={11} className="inline mr-1 shrink-0" /> {lead.email}
+                        </span>
+                      )}
                     </div>
                   </td>
 
@@ -375,6 +385,48 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
           </tbody>
         </table>
       </div>
+
+      {/* PAGINAÇÃO */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-4 py-3 border-t border-white/5">
+          <span className="text-xs text-slate-500">
+            Página {currentPage} de {totalPages} · {leads.length} leads
+          </span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
+            >
+              <ChevronLeft size={12} /> Anterior
+            </button>
+            {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+              const page = currentPage <= 3 ? i + 1 : Math.max(1, currentPage - 2) + i;
+              if (page > totalPages) return null;
+              return (
+                <button
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
+                  className={`w-8 h-8 rounded-lg text-xs font-bold transition-colors ${
+                    page === currentPage
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-slate-800 border border-white/10 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1.5 rounded-lg bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white disabled:opacity-30 transition-colors flex items-center gap-1"
+            >
+              Próximo <ChevronRight size={12} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {inspectingLead && (
         <LeadDetailModal
