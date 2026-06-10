@@ -74,11 +74,16 @@ export default function LeadsQuentes() {
   }
 
   async function handleDeleteLead(leadId: string) {
+    if (!leadId) return;
     try {
-      await api.deleteLead(leadId);
-      fetchLeads();
+      const resp = await api.deleteLead(leadId);
+      const data = await resp.json();
+      if (data.success) {
+        // Remove da lista local imediatamente
+        setLeads(prev => prev.filter(l => l.id !== leadId));
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Erro ao deletar lead:", e);
     }
   }
 
