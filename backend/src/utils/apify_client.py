@@ -26,29 +26,35 @@ GOOGLE_MAPS_ACTOR = "compass~google-maps-extractor"
 SEARCH_CONFIGS = {
     "administradoras": {
         "search": "administradora de condominios",
-        "location": "Sao Paulo, SP, Brasil",
-        "maxResults": 200,
         "category": "sindico_administradora",
     },
     "sindicos": {
         "search": "sindico profissional condominio",
-        "location": "Sao Paulo, SP, Brasil",
-        "maxResults": 200,
         "category": "sindico_administradora",
     },
     "pintura_predial": {
         "search": "pintura predial fachada condominio",
-        "location": "Sao Paulo, SP, Brasil",
-        "maxResults": 200,
         "category": "pintura_predial",
     },
     "facilities": {
         "search": "facilities manutencao predial empresa",
-        "location": "Sao Paulo, SP, Brasil",
-        "maxResults": 200,
         "category": "grande_porte",
     },
 }
+
+REGIONS = [
+    {"name": "Sao Paulo — Zona Sul", "location": "Zona Sul, Sao Paulo, SP, Brasil"},
+    {"name": "Sao Paulo — Zona Norte", "location": "Zona Norte, Sao Paulo, SP, Brasil"},
+    {"name": "Sao Paulo — Zona Leste", "location": "Zona Leste, Sao Paulo, SP, Brasil"},
+    {"name": "Sao Paulo — Zona Oeste", "location": "Zona Oeste, Sao Paulo, SP, Brasil"},
+    {"name": "Sao Paulo — Centro", "location": "Centro, Sao Paulo, SP, Brasil"},
+    {"name": "Guarulhos — SP", "location": "Guarulhos, SP, Brasil"},
+    {"name": "Campinas — SP", "location": "Campinas, SP, Brasil"},
+    {"name": "Sao Bernardo do Campo — SP", "location": "Sao Bernardo do Campo, SP, Brasil"},
+    {"name": "Santo Andre — SP", "location": "Santo Andre, SP, Brasil"},
+    {"name": "Osasco — SP", "location": "Osasco, SP, Brasil"},
+    {"name": "Barueri — SP", "location": "Barueri, SP, Brasil"},
+]
 
 
 class ApifyClient:
@@ -199,17 +205,9 @@ class ApifyClient:
 
         return all_items
 
-    def normalize_lead(self, raw: dict, category: str = "") -> dict:
+    def normalize_lead(self, raw: dict, category: str = "", region: str = "") -> dict:
         """
         Normaliza um lead bruto da Apify para o formato interno.
-
-        Campos de entrada (Apify Google Maps Scraper):
-          - title, subTitle, description
-          - phone, phoneUnformatted, phones[]
-          - email, emails[]
-          - website, location {lat, lng}
-          - address, street, city, postalCode, state
-          - categoryName, additionalInfo {}, serviceOptions {}
         """
         name = raw.get("title", "")
         if not name:
@@ -247,11 +245,7 @@ class ApifyClient:
         if loc and loc.get("lat") and loc.get("lng"):
             coords = {"lat": loc["lat"], "lng": loc["lng"]}
 
-        # Categoria / descrição
-        description = raw.get("description", "") or raw.get("subTitle", "")
-        apify_category = raw.get("categoryName", "")
-
-        # Score baseado na qualidade dos dados
+        # Score baseado nos dados disponíveis
         score = 5.0
         if phone and email:
             score = 9.0
@@ -262,60 +256,108 @@ class ApifyClient:
         if address:
             score += 0.5
 
+        import datetime
+        now = datetime.datetime.now().isoformat()
+
         return {
             "name": name.strip(),
-            "address": address.strip() if address else "São Paulo, SP",
+            "address": address.strip() if address else (region or "Sao Paulo, SP"),
             "phone": phone or "N/D",
             "email": email or "N/D",
             "website": website or "N/D",
             "coords": coords,
             "score": min(score, 10.0),
             "category": category or "lead_apify",
-            "source": f"Apify Google Maps — {apify_category or category}",
-            "justification": description.strip() if description else f"Lead importado via Apify — {category}",
+            "source": f"Apify — {region or 'SP'}",
+            "justification": f"Lead importado via Apify Google Maps — {category} — {region}",
             "urgency_score": 7.0,
             "contact_status": "Aguardando Abordagem",
-            "pilar": "M",  # M = Manual / Importado
+            "pilar": "M",
+            "created_at": now,
+            "updated_at": now,
         }
 
 
-def import_leads_for_city(token: str, city: str = "Sao Paulo, SP, Brasil", max_per_category: int = 200) -> list[dict]:
+def get_import_stats() -> dict:
+    """Retorna estatísticas sobre a importação: regiões, categorias e total estimado."""
+    total_regions = len(REGIONS)
+    total_categories = len(SEARCH_CONFIGS)
+    total_estimated = total_regions * total_categories * 200
+    return {
+        "regions": total_regions,
+        "categories": total_categories,
+        "estimated_leads": total_estimated,
+        "regions_list": [r["name"] for r in REGIONS],
+        "categories_list": list(SEARCH_CONFIGS.keys()),
+    }
+
+
+def import_all_regions(
+    token: str,
+    db=None,
+    max_per_category: int = 200,
+    progress_callback=None,
+) -> dict:
     """
-    Função de conveniência: importa leads de todas as categorias para uma cidade.
+    Importa leads de todas as regiões e categorias.
 
     Returns:
-        Lista de leads normalizados prontos para salvar no banco.
+        {"imported": int, "skipped": int, "total": int}
     """
     client = ApifyClient(token=token)
     all_leads = []
+    total_imported = 0
+    total_skipped = 0
+    seen_names = set()
 
-    for config_key, config in SEARCH_CONFIGS.items():
-        logger.info(f"ApifyClient: Importando categoria '{config_key}'...")
+    for region in REGIONS:
+        region_name = region["name"]
+        logger.info(f"ApifyClient: Importando região {region_name}...")
 
-        raw_results = client.run_google_maps_search(
-            search=config["search"],
-            location=city,
-            max_results=config["maxResults"],
-        )
+        for cat_key, config in SEARCH_CONFIGS.items():
+            logger.info(f"ApifyClient:   Categoria '{cat_key}' em '{region_name}'")
 
-        for raw in raw_results:
-            normalized = client.normalize_lead(raw, category=config["category"])
-            if normalized:
-                all_leads.append(normalized)
+            raw_results = client.run_google_maps_search(
+                search=config["search"],
+                location=region["location"],
+                max_results=max_per_category,
+            )
 
-        logger.info(f"ApifyClient: {len(raw_results)} brutos -> {sum(1 for l in all_leads if l['category'] == config['category'])} normalizados para '{config_key}'")
+            for raw in raw_results:
+                normalized = client.normalize_lead(
+                    raw,
+                    category=config["category"],
+                    region=region_name,
+                )
+                if not normalized:
+                    total_skipped += 1
+                    continue
 
-        # Pequena pausa entre buscas para não sobrecarregar
-        time.sleep(2)
+                # Deduplica por nome
+                key = normalized["name"].lower().strip()
+                if key and key not in seen_names:
+                    seen_names.add(key)
+                    all_leads.append(normalized)
 
-    # Deduplica por nome
-    seen = set()
-    unique = []
-    for lead in all_leads:
-        key = lead["name"].lower().strip()
-        if key and key not in seen:
-            seen.add(key)
-            unique.append(lead)
+                    if db:
+                        try:
+                            db.upsert_lead(normalized)
+                            total_imported += 1
+                        except Exception as e:
+                            logger.warning(f"ApifyClient: Erro ao salvar: {e}")
+                            total_skipped += 1
+                    else:
+                        total_imported += 1
 
-    logger.info(f"ApifyClient: {len(unique)} leads únicos após deduplicação")
-    return unique
+            time.sleep(2)
+
+    logger.info(
+        f"ApifyClient: Importação concluída — {total_imported} leads, "
+        f"{total_skipped} ignorados, {len(all_leads)} únicos"
+    )
+
+    return {
+        "imported": total_imported,
+        "skipped": total_skipped,
+        "total": total_imported + total_skipped,
+    }
