@@ -20,7 +20,7 @@ from src.utils.apify_client import ApifyClient, SEARCH_CONFIGS, get_import_stats
 import threading
 import asyncio
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 
 app = FastAPI(title="Prospect-On API Server")
 db = Database()
@@ -108,12 +108,13 @@ class LeadData(BaseModel):
     website: str = None
     coords: dict = None
 
+
 class InteractionData(BaseModel):
-    notes: str
-    return_date: str = None
+    notes: str = ""
+    return_date: Optional[str] = None
     contact_status: str = 'Aguardando Abordagem'
-    email_sent_at: str = None
-    vision_image_url: str = None
+    email_sent_at: Optional[str] = None
+    vision_image_url: Optional[str] = None
 
 class FavoriteData(BaseModel):
     is_favorite: bool
