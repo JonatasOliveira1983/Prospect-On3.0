@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Target, Users, User, Settings, FileText } from "lucide-react";
+import { LayoutDashboard, Target, Users, User, FileText } from "lucide-react";
 
 export default function SystemLayout({
   children,
@@ -85,16 +85,10 @@ export default function SystemLayout({
           <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Docs</span>
         </Link>
         {isAdmin && (
-          <>
-            <Link href="/usuarios" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/usuarios" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
-              <Users size={20} />
-              <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Vendedores</span>
-            </Link>
-            <Link href="/configuracoes" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/configuracoes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
-              <Settings size={20} />
-              <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Painel</span>
-            </Link>
-          </>
+          <Link href="/usuarios" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/usuarios" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+            <Users size={20} />
+            <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Vendedores</span>
+          </Link>
         )}
         <Link href="/minha-conta" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/minha-conta" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <User size={20} />

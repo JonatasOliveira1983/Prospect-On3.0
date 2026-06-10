@@ -45,7 +45,7 @@ export default function HomeHero() {
   }, []);
 
   return (
-    <section className="relative w-full min-h-[85vh] lg:min-h-[95vh] flex items-center justify-center bg-slate-950 overflow-hidden py-20 lg:py-28 border-b border-white/5">
+    <section className="relative w-full min-h-[auto] lg:min-h-[95vh] flex items-center justify-center bg-slate-950 overflow-hidden py-16 lg:py-28 border-b border-white/5">
       
       {/* Background Neon Halo Lights (Radial Gradients) */}
       <div className="absolute inset-0 w-full h-full pointer-events-none">
@@ -70,8 +70,8 @@ export default function HomeHero() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
 
-      {/* Spline 3D Scene rendered dynamically for high performance */}
-      <div className="absolute top-[12%] lg:top-[5%] right-0 w-full lg:w-[50%] h-[400px] lg:h-[650px] z-0 overflow-hidden opacity-90 pointer-events-auto">
+      {/* Spline 3D Scene - Desktop only */}
+      <div className="hidden lg:block absolute top-[5%] right-0 w-[50%] h-[650px] z-0 overflow-hidden opacity-90 pointer-events-auto">
         <div className="w-full h-full relative">
           {load3D && isDesktop ? (
             <>
@@ -98,7 +98,7 @@ export default function HomeHero() {
         </div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-6 lg:px-8 w-full flex flex-col justify-between min-h-[70vh]">
+      <div className="relative z-10 container mx-auto px-6 lg:px-8 w-full flex flex-col justify-between min-h-[auto] lg:min-h-[70vh]">
         
         {/* Header Badges */}
         <div className="flex flex-wrap items-center gap-4 mb-8 lg:mb-12">
