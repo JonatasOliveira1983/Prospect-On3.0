@@ -1,6 +1,6 @@
 # Nixpacks configuration for Next.js frontend
 [phases.setup]
-nixPkgs = ["nodejs-20", "npm"]
+nixPkgs = ["nodejs_20", "npm"]
 
 [phases.install]
 cmds = ["npm ci"]
