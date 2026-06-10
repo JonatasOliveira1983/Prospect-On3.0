@@ -23,18 +23,18 @@ export default function Sidebar() {
   }, []);
 
   useEffect(() => {
-    if (currentUser?.role !== "admin") return;
+    if (!currentUser) return;
     const poll = async () => {
       try {
-        const r = await fetch(`http://localhost:8002/api/admin/pending-responses`, {
+        const r = await fetch(`http://localhost:8002/api/messages/unread`, {
           headers: { "X-User-Id": String(currentUser.id) }
         });
         const d = await r.json();
-        setPendingCount(d.pending || 0);
+        setPendingCount(d.unread || 0);
       } catch (e) {}
     };
     poll();
-    const iv = setInterval(poll, 15000);
+    const iv = setInterval(poll, 10000);
     return () => clearInterval(iv);
   }, [currentUser]);
 
@@ -84,13 +84,13 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {isAdmin && pendingCount > 0 && (
-        <div className="mb-4 p-3 bg-rose-500/10 border border-rose-400/20 rounded-xl animate-pulse">
-          <div className="flex items-center gap-2 text-rose-400 text-xs font-bold">
+      {pendingCount > 0 && (
+        <div className="mb-4 p-3 bg-yellow-400/10 border border-yellow-400/20 rounded-xl animate-pulse">
+          <div className="flex items-center gap-2 text-yellow-400 text-xs font-bold">
             <Bell size={14} />
-            {pendingCount} lead{pendingCount > 1 ? 's' : ''} com nota pendente
+            {pendingCount} mensagem{pendingCount > 1 ? 'ns' : ''} nova{pendingCount > 1 ? 's' : ''}
           </div>
-          <p className="text-[9px] text-rose-400/60 mt-1">Os vendedores aguardam sua resposta</p>
+          <p className="text-[9px] text-yellow-400/60 mt-1">{isAdmin ? "Mensagens dos leads" : "Respostas do administrador"}</p>
         </div>
       )}
 

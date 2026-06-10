@@ -315,6 +315,20 @@ class Database:
                     FOREIGN KEY (user_id) REFERENCES users(id)
                 )
             """)
+
+            # 5. Tabela de Mensagens do Chat por Lead
+            self._run_query(conn, """
+                CREATE TABLE IF NOT EXISTS lead_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lead_id TEXT NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    user_name TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    is_read BOOLEAN DEFAULT 0,
+                    FOREIGN KEY (user_id) REFERENCES users(id)
+                )
+            """)
             conn.commit()
 
     def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None, user_id=None):
@@ -896,6 +910,109 @@ class Database:
                     AND (lq.crm_response IS NULL OR lq.crm_response = '')
                 )"""
             )
+            count = cursor.fetchone()[0]
+            conn.close()
+            return count
+        except Exception as e:
+            return 0
+
+    def get_lead_messages(self, lead_id: str, user_id: int = None):
+        """Retorna todas as mensagens de um lead."""
+        try:
+            conn = self._get_connection()
+            if self.is_postgres:
+                from psycopg2.extras import RealDictCursor
+                cur = conn.cursor(cursor_factory=RealDictCursor)
+                cur.execute(
+                    "SELECT * FROM lead_messages WHERE lead_id = %s ORDER BY created_at ASC",
+                    (lead_id,)
+                )
+                rows = [dict(row) for row in cur.fetchall()]
+            else:
+                conn.row_factory = sqlite3.Row
+                rows = [dict(r) for r in conn.execute(
+                    "SELECT * FROM lead_messages WHERE lead_id = ? ORDER BY created_at ASC",
+                    (lead_id,)
+                ).fetchall()]
+            # Marcar como lidas para o usuario atual
+            if user_id is not None:
+                if self.is_postgres:
+                    cur.execute(
+                        "UPDATE lead_messages SET is_read = 1 WHERE lead_id = %s AND user_id != %s AND is_read = 0",
+                        (lead_id, user_id)
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE lead_messages SET is_read = 1 WHERE lead_id = ? AND user_id != ? AND is_read = 0",
+                        (lead_id, user_id)
+                    )
+                conn.commit()
+            conn.close()
+            return rows
+        except Exception as e:
+            logger.error(f"DB: Erro ao buscar mensagens: {e}")
+            return []
+
+    def send_lead_message(self, lead_id: str, user_id: int, user_name: str, message: str):
+        """Envia uma mensagem no chat do lead."""
+        try:
+            from datetime import datetime
+            conn = self._get_connection()
+            now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            if self.is_postgres:
+                cur = conn.cursor()
+                cur.execute(
+                    "INSERT INTO lead_messages (lead_id, user_id, user_name, message, created_at) VALUES (%s, %s, %s, %s, %s)",
+                    (lead_id, user_id, user_name, message, now)
+                )
+            else:
+                conn.execute(
+                    "INSERT INTO lead_messages (lead_id, user_id, user_name, message, created_at) VALUES (?, ?, ?, ?, ?)",
+                    (lead_id, user_id, user_name, message, now)
+                )
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao enviar mensagem: {e}")
+            return False
+
+    def delete_lead_message(self, message_id: int, user_id: int) -> bool:
+        """Deleta uma mensagem (somente a propria). Retorna True se deletou."""
+        try:
+            conn = self._get_connection()
+            if self.is_postgres:
+                cur = conn.cursor()
+                cur.execute("DELETE FROM lead_messages WHERE id = %s AND user_id = %s", (message_id, user_id))
+                deleted = cur.rowcount > 0
+            else:
+                cursor = conn.execute("DELETE FROM lead_messages WHERE id = ? AND user_id = ?", (message_id, user_id))
+                deleted = cursor.rowcount > 0
+            conn.commit()
+            conn.close()
+            return deleted
+        except Exception as e:
+            logger.error(f"DB: Erro ao deletar mensagem: {e}")
+            return False
+
+    def count_unread_messages(self, user_id: int, role: str = "vendedor") -> int:
+        """Conta mensagens nao lidas para o usuario. Admin conta todas, vendedor so seus leads favoritos."""
+        try:
+            conn = self._get_connection()
+            if role == "admin":
+                # Admin vê mensagens de todos os leads
+                cursor = conn.execute(
+                    "SELECT COUNT(*) FROM lead_messages WHERE user_id != ? AND is_read = 0",
+                    (user_id,)
+                )
+            else:
+                # Vendedor so ve mensagens dos seus leads favoritos
+                cursor = conn.execute(
+                    """SELECT COUNT(*) FROM lead_messages m
+                       INNER JOIN leads_quentes lq ON m.lead_id = lq.id AND lq.user_id = ?
+                       WHERE m.user_id != ? AND m.is_read = 0""",
+                    (user_id, user_id)
+                )
             count = cursor.fetchone()[0]
             conn.close()
             return count

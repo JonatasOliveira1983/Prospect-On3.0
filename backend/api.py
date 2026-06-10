@@ -934,6 +934,61 @@ async def update_crm_notes(lead_id: str, request: Request, x_user_id: str = Head
         logger.error(f"API: Erro CRM: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/leads/{lead_id}/messages")
+async def get_lead_messages(lead_id: str, request: Request, x_user_id: str = Header(None)):
+    """Retorna mensagens do chat do lead e marca como lidas."""
+    try:
+        uid = int(x_user_id) if x_user_id else None
+        messages = db.get_lead_messages(lead_id, user_id=uid)
+        return {"success": True, "messages": messages}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/leads/{lead_id}/messages")
+async def send_lead_message(lead_id: str, request: Request, x_user_id: str = Header(None)):
+    """Envia uma mensagem no chat do lead."""
+    try:
+        body = await request.json()
+        message = body.get("message", "").strip()
+        user_name = body.get("user_name", "")
+        if not message:
+            raise HTTPException(status_code=400, detail="Mensagem vazia")
+        uid = int(x_user_id) if x_user_id else None
+        if not uid:
+            raise HTTPException(status_code=401, detail="User ID obrigatorio")
+        db.send_lead_message(lead_id, uid, user_name, message)
+        return {"success": True, "message": "Enviada"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/leads/{lead_id}/messages/{message_id}")
+async def delete_lead_message(lead_id: str, message_id: int, x_user_id: str = Header(None)):
+    """Deleta uma mensagem (somente a propria)."""
+    try:
+        uid = int(x_user_id) if x_user_id else None
+        if not uid:
+            raise HTTPException(status_code=401)
+        db.delete_lead_message(message_id, uid)
+        return {"success": True}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/messages/unread")
+async def count_unread_messages(x_user_id: str = Header(None)):
+    """Contagem de mensagens nao lidas para o usuario."""
+    try:
+        uid = int(x_user_id) if x_user_id else None
+        if not uid:
+            return {"success": True, "unread": 0}
+        user = db.get_user_by_id(uid)
+        role = user.get("role", "vendedor") if user else "vendedor"
+        count = db.count_unread_messages(uid, role)
+        return {"success": True, "unread": count}
+    except Exception as e:
+        return {"success": True, "unread": 0}
+
 @app.get("/api/admin/pending-responses")
 async def get_pending_responses(x_user_id: str = Header(None)):
     """Retorna contagem de leads com notas pendentes de resposta."""

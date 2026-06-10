@@ -4,6 +4,7 @@ import { api, resolveLeadImageUrl } from '@/lib/api';
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import ChatPanel from "./ChatPanel";
 import {
   X,
   Save,
@@ -114,21 +115,8 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
   }
 
   async function handleSave() {
-    if (readOnly && currentUser?.role !== 'admin') return;
     setSaving(true);
     try {
-      // Se for admin respondendo em modo leitura, só salva CRM
-      if (readOnly && currentUser?.role === 'admin') {
-        await fetch(`http://localhost:8002/api/leads/${leadId}/crm-notes`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", "X-User-Id": String(currentUser?.id || "") },
-          body: JSON.stringify({ crm_notes: crmNotes, crm_response: crmResponse }),
-        });
-        onSave();
-        onClose();
-        setSaving(false);
-        return;
-      }
       const body = {
         notes,
         return_date: returnDate || null,
@@ -137,14 +125,6 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
       };
       const res = await api.interaction(leadId, body);
       if (res.ok) {
-        // Salva CRM notes/resposta separadamente
-        if (crmNotes || crmResponse) {
-          await fetch(`http://localhost:8002/api/leads/${leadId}/crm-notes`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json", "X-User-Id": String(currentUser?.id || "") },
-            body: JSON.stringify({ crm_notes: crmNotes, crm_response: crmResponse }),
-          });
-        }
         onSave();
         onClose();
       } else {
@@ -451,7 +431,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
               <div className="space-y-4 sm:space-y-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-1">CRM Otto Pinturas</h3>
-                  <p className="text-xs text-slate-400 font-medium">Registre o andamento do contato e o histórico da prospecção.</p>
+                  <p className="text-xs text-slate-400 font-medium">Registre o andamento do contato e converse com o administrador.</p>
                 </div>
 
                 {/* Status da Abordagem */}
@@ -474,52 +454,13 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                   </select>
                 </div>
 
-                {/* Anotações */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <MessageSquare size={11} className="text-yellow-400" /> O que você conversou com o cliente?
-                  </label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    disabled={readOnly}
-                    placeholder={readOnly ? "Sem histórico registrado." : "Notas rápidas: com quem falou, o que respondeu, proposta enviada, valor cobrado..."}
-                    rows={5}
-                    className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed"
+                {/* Bate-Papo do Lead */}
+                <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden" style={{ minHeight: "350px" }}>
+                  <ChatPanel
+                    leadId={leadId}
+                    currentUser={currentUser || { id: 0, name: "", role: "" }}
+                    isReadOnly={false}
                   />
-                </div>
-
-                {/* CRM: Notas para o Administrador */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <MessageSquare size={11} className="text-amber-400" /> Comunicado para o Administrador
-                  </label>
-                  <textarea
-                    value={crmNotes}
-                    onChange={(e) => setCrmNotes(e.target.value)}
-                    disabled={readOnly}
-                    placeholder="Ex: Preciso de autorizacao para enviar proposta... Cliente pediu urgencia... Valor negociado foi X..."
-                    rows={3}
-                    className="w-full bg-slate-950 border border-amber-500/20 focus:border-amber-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed"
-                  />
-                </div>
-
-                {/* CRM: Resposta do Administrador */}
-                <div className="flex flex-col gap-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
-                  <label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
-                    <Check size={11} /> Resposta do Administrador
-                  </label>
-                  {(readOnly && currentUser?.role !== 'admin') ? (
-                    <p className="text-sm text-emerald-300 font-medium">{crmResponse || "Aguardando resposta..."}</p>
-                  ) : (
-                    <textarea
-                      value={crmResponse}
-                      onChange={(e) => setCrmResponse(e.target.value)}
-                      placeholder="Resposta para o vendedor..."
-                      rows={2}
-                      className="w-full bg-slate-950 border border-emerald-500/20 focus:border-emerald-400 rounded-xl p-3 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed"
-                    />
-                  )}
                 </div>
 
                 {/* Agendamento de Retorno */}
@@ -537,30 +478,24 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                 </div>
               </div>
 
-               {/* Botão Salvar ou Aviso de Somente Leitura */}
-               {readOnly && currentUser?.role !== 'admin' ? (
-                 <div className="w-full bg-slate-950 border border-white/5 text-slate-400 font-bold p-4 rounded-2xl text-center text-xs uppercase tracking-widest mt-auto">
-                   Apenas visualização
-                 </div>
-               ) : (
-                 <button
-                   onClick={handleSave}
-                   disabled={saving}
-                   className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-yellow-400/10 mt-auto"
-                 >
-                   {saving ? (
-                     <>
-                       <Loader2 className="animate-spin" size={16} />
-                       <span className="uppercase tracking-widest text-xs">Salvando...</span>
-                     </>
-                   ) : (
-                     <>
-                       <Save size={16} />
-                       <span className="uppercase tracking-widest text-xs">{readOnly ? 'Responder ao Vendedor' : 'Salvar Registro no CRM'}</span>
-                    </>
-                  )}
-                </button>
-              )}
+               {/* Botão Salvar */}
+               <button
+                 onClick={handleSave}
+                 disabled={saving}
+                 className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-yellow-400/10 mt-auto"
+               >
+                 {saving ? (
+                   <>
+                     <Loader2 className="animate-spin" size={16} />
+                     <span className="uppercase tracking-widest text-xs">Salvando...</span>
+                   </>
+                 ) : (
+                   <>
+                     <Save size={16} />
+                     <span className="uppercase tracking-widest text-xs">Salvar Registro no CRM</span>
+                 </>
+               )}
+             </button>
             </div>
           </motion.div>
         </div>

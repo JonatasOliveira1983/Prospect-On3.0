@@ -247,6 +247,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
             {paginatedLeads.map((lead, i) => {
               const isFav = favorites[lead.name] || false;
               const hasNotes = !!lead.interaction_notes;
+              const hasChat = !!(lead.crm_notes || lead.crm_response);
               const phoneRaw = lead.phone || lead.responsavel_contato || "";
               const dotClass = STATUS_DOT[lead.contact_status || ''] || 'bg-slate-600';
 
@@ -354,6 +355,11 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                         <span className="text-xs font-bold text-white uppercase tracking-tight">
                           {lead.contact_status || 'Aguardando Abordagem'}
                         </span>
+                        {hasChat && (
+                          <span className="text-[10px] bg-yellow-400/10 text-yellow-400 px-1.5 py-0.5 rounded-full font-bold" title="Tem mensagem no chat">
+                            💬
+                          </span>
+                        )}
                       </div>
                       {hasNotes && (
                         <p className="text-[10px] text-slate-500 italic font-medium max-w-[200px] truncate">
