@@ -315,6 +315,13 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                             <Building2 size={8} /> {lead.category === 'grande_porte' ? 'Grande Porte' : lead.category === 'pintura_predial' ? 'Pintura Predial' : 'Admin / Síndico'}
                           </span>
 
+                          {/* Lead Personalizado */}
+                          {(lead.source || "").includes("Manual") && (
+                            <span className="bg-purple-500/15 border border-purple-400/30 text-purple-300 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap animate-pulse">
+                              <User size={8} /> Lead Personalizado
+                            </span>
+                          )}
+
 
                           {lead.intencao_ativa ? (
                             <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] whitespace-nowrap">
