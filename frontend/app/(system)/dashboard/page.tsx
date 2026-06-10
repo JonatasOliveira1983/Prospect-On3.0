@@ -42,24 +42,25 @@ const SP_BAIRRO_ZONA: Record<string, string> = {
   "alto da mooca": "Zona Leste", "alto de pinheiros": "Zona Oeste", "anhangabau": "Centro",
   "aricanduva": "Zona Leste", "artur alvim": "Zona Leste", "barra funda": "Zona Oeste",
   "bela vista": "Centro", "belenzinho": "Zona Leste", "bom retiro": "Centro",
-  "bosque da saude": "Zona Sul", "bras": "Zona Leste", "brasilandia": "Zona Norte",
+  "bosque da saude": "Zona Sul", "bras": "Centro", "brasilandia": "Zona Norte",
   "brooklin": "Zona Sul", "butanta": "Zona Oeste", "cambuci": "Centro",
   "campo belo": "Zona Sul", "campo grande": "Zona Sul", "campo limpo": "Zona Sul",
   "cangaiba": "Zona Leste", "carandiru": "Zona Norte", "casa verde": "Zona Norte",
-  "caxingui": "Zona Oeste", "centro historico": "Centro", "cerqueira cesar": "Centro",
+  "caxingui": "Zona Oeste", "centro historico de sao paulo": "Centro", "cerqueira cesar": "Centro",
   "chacara belenzinho": "Zona Leste", "chacara flora": "Zona Sul", "chacara inglesa": "Zona Sul",
-  "chacara mafalda": "Zona Sul", "cidade dutra": "Zona Sul", "cidade lider": "Zona Leste",
-  "cidade mae do ceu": "Zona Leste", "cidade moncoes": "Zona Sul", "cidade patriarca": "Zona Leste",
-  "cidade sao francisco": "Zona Leste", "cidade tiradentes": "Zona Leste", "city america": "Zona Norte",
-  "consolacao": "Centro", "cursino": "Zona Sul", "ermelino matarazzo": "Zona Leste",
-  "freguesia do o": "Zona Norte", "granja julieta": "Zona Sul", "guaianases": "Zona Leste",
-  "higienopolis": "Centro", "ibirapuera": "Zona Sul", "imirim": "Zona Norte",
-  "indianopolis": "Zona Sul", "interlagos": "Zona Sul", "ipiranga": "Zona Sul",
-  "itaberaba": "Zona Norte", "itaim bibi": "Zona Sul", "itaim paulista": "Zona Leste",
-  "itaquera": "Zona Leste", "jabaquara": "Zona Sul", "jacana": "Zona Norte",
-  "jaguara": "Zona Oeste", "jaguare": "Zona Oeste", "jaragua": "Zona Norte",
-  "jardim america": "Zona Sul", "jardim am": "Zona Sul", "jardim bonfiglioli": "Zona Oeste",
-  "jardim europa": "Zona Sul", "jardim paulista": "Zona Sul", "jardim paulistano": "Zona Sul",
+  "chacara mafalda": "Zona Sul", "chacara santo antonio": "Zona Sul", "cidade dutra": "Zona Sul",
+  "cidade lider": "Zona Leste", "cidade mae do ceu": "Zona Leste", "cidade moncoes": "Zona Sul",
+  "cidade patriarca": "Zona Leste", "cidade sao francisco": "Zona Leste", "cidade tiradentes": "Zona Leste",
+  "city america": "Zona Norte", "consolacao": "Centro", "cursino": "Zona Sul",
+  "ermelino matarazzo": "Zona Leste", "freguesia do o": "Zona Norte", "granja julieta": "Zona Sul",
+  "guaianases": "Zona Leste", "higienopolis": "Centro", "ibirapuera": "Zona Sul",
+  "imirim": "Zona Norte", "indianopolis": "Zona Sul", "interlagos": "Zona Sul",
+  "ipiranga": "Zona Sul", "itaberaba": "Zona Norte", "itaim bibi": "Zona Sul",
+  "itaim paulista": "Zona Leste", "itaquera": "Zona Leste", "jabaquara": "Zona Sul",
+  "jacana": "Zona Norte", "jaguara": "Zona Oeste", "jaguare": "Zona Oeste",
+  "jaragua": "Zona Norte", "jardim america": "Zona Sul", "jardim avelino": "Zona Sul",
+  "jardim bonfiglioli": "Zona Oeste", "jardim europa": "Zona Sul",
+  "jardim paulista": "Zona Sul", "jardim paulistano": "Zona Sul",
   "jardim sao paulo": "Zona Norte", "jardim sapopemba": "Zona Leste", "jardins": "Zona Sul",
   "lapa": "Zona Oeste", "liberdade": "Centro", "limao": "Zona Norte",
   "mandaqui": "Zona Norte", "mirandopolis": "Zona Sul", "moema": "Zona Sul",
@@ -85,7 +86,18 @@ const SP_BAIRRO_ZONA: Record<string, string> = {
   "vila nova cachoeirinha": "Zona Norte", "vila nova conceicao": "Zona Sul", "vila olimpia": "Zona Sul",
   "vila prudente": "Zona Leste", "vila reg feijo": "Zona Leste", "vila romana": "Zona Oeste",
   "vila santa catarina": "Zona Sul", "vila socorro": "Zona Sul", "vila sonia": "Zona Oeste",
-  "vila zelina": "Zona Leste",
+  "vila zelina": "Zona Leste", "vila esperanca": "Zona Leste", "vila marieta": "Zona Sul",
+  "vila carmosina": "Zona Leste", "vila das belezas": "Zona Oeste", "agua branca": "Zona Oeste",
+  "agua fria": "Zona Norte", "vila suzana": "Zona Sul", "vila dom pedro i": "Zona Leste",
+  "vila monumento": "Zona Leste", "vila gumercindo": "Zona Sul", "vila santana": "Zona Norte",
+  "vila brasil": "Zona Leste", "vila dalmacia": "Zona Leste", "vila sabrina": "Zona Norte",
+  "vila moreira": "Zona Leste", "vila penteado": "Zona Norte", "vila helena": "Zona Leste",
+  "vila bertioga": "Zona Leste", "vila lourdes": "Zona Leste", "vila norma": "Zona Leste",
+  "vila alpina": "Zona Leste", "vila cruzeiro": "Zona Sul", "vila indiana": "Zona Sul",
+  "vila cordeiro": "Zona Sul", "vila hamburguesa": "Zona Oeste",
+  "chacara california": "Zona Oeste", "conj res jose bonifacio": "Zona Leste",
+  "colonia": "Zona Leste", "paraiso do morumbi": "Zona Sul", "vila moraes": "Zona Sul",
+  "sl 717": "Zona Leste", "praia grande": "Outros",
 };
 
 function getZone(address: string): string {
@@ -111,20 +123,28 @@ function getZone(address: string): string {
 function getBairro(address: string): string {
   const match = address.match(/-\s*([^,]+),\s*S[aã]o\s*Paulo/i);
   if (!match) return "";
-  const bairro = match[1]
-    .replace(/^\d+\s*-\s*/, "")
-    .replace(/^\d+\s*/, "")
-    .replace(/^sala\s*\d+\s*-?\s*/i, "")
-    .replace(/^conj\w*\s*\d+\s*-?\s*/i, "")
-    .replace(/^cj\w*\s*\d+\s*-?\s*/i, "")
-    .replace(/^\d+[a-z]?\s*(andar|andares?)\s*-?\s*/i, "")
-    .replace(/^bloco\s+\w+\s*-?\s*/i, "")
-    .replace(/^room\s*\d+\s*-?\s*/i, "")
-    .replace(/^ap\s*\d+\s*/i, "")
-    .replace(/^cs\s*\d+\s*/i, "")
-    .replace(/^terreo:?\s*/i, "")
-    .trim();
-  return bairro || "";
+  let bairro = match[1];
+  // Remove prefixos comuns
+  bairro = bairro.replace(/^\d+\s*-\s*/, "");
+  bairro = bairro.replace(/^\d+\s*/, "");
+  bairro = bairro.replace(/^sala\s*\d+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^conj\w*\.?\s*\d+[\/\d\w]*\s*-?\s*/i, "");
+  bairro = bairro.replace(/^cj\w*\.?\s*\d+[\/\d\w]*\s*-?\s*/i, "");
+  bairro = bairro.replace(/^\d+[a-z]?\s*(andar|andares?)\s*-?\s*/i, "");
+  bairro = bairro.replace(/^bloco\s+\w+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^room\s*\d+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^ap\s*\d+\s*/i, "");
+  bairro = bairro.replace(/^cs\s*\d+\s*/i, "");
+  bairro = bairro.replace(/^terreo:?\s*/i, "");
+  bairro = bairro.replace(/^sl\.?\s*\d+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^sobreloja\s*-?\s*/i, "");
+  bairro = bairro.replace(/^sob\s*loja\s*\d*\s*-?\s*/i, "");
+  bairro = bairro.replace(/^loja\s*\d+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^casa\s*\d+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^piso\s*\w+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^filial\s*\w+\s*-?\s*/i, "");
+  bairro = bairro.replace(/^torre\s*\d+\s*-?\s*/i, "");
+  return bairro.trim();
 }
 
 export default function Dashboard() {
@@ -195,12 +215,19 @@ export default function Dashboard() {
   // Agrupamentos
   const neighborhoodCounts: Record<string, { count: number; zone: string }> = {};
   const zoneCounts: Record<string, number> = {};
+  const unclassifiedBairros = new Set<string>();
   leads.forEach(l => {
     const zone = getZone(l.address);
     const bairro = getBairro(l.address);
-    if (zone) zoneCounts[zone] = (zoneCounts[zone] || 0) + 1;
+    if (zone) {
+      zoneCounts[zone] = (zoneCounts[zone] || 0) + 1;
+    } else if (getBairro(l.address)) {
+      zoneCounts["Outros bairros"] = (zoneCounts["Outros bairros"] || 0) + 1;
+    } else {
+      zoneCounts["Outros"] = (zoneCounts["Outros"] || 0) + 1;
+    }
     if (bairro && bairro.length > 2) {
-      if (!neighborhoodCounts[bairro]) neighborhoodCounts[bairro] = { count: 0, zone };
+      if (!neighborhoodCounts[bairro]) neighborhoodCounts[bairro] = { count: 0, zone: zone || "Outros" };
       neighborhoodCounts[bairro].count++;
     }
   });
