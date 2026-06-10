@@ -52,6 +52,8 @@ interface Lead {
   score_urgencia?: number;
   categoria_demanda?: string;
   pilar?: string;
+  crm_notes?: string;
+  crm_response?: string;
 }
 
 interface Props {
@@ -75,12 +77,28 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
   const [returnDate, setReturnDate] = useState(lead.return_date || "");
   const [status, setStatus] = useState(lead.contact_status || "Aguardando Abordagem");
   const [saving, setSaving] = useState(false);
+  const [crmNotes, setCrmNotes] = useState(lead.crm_notes || "");
+  const [crmResponse, setCrmResponse] = useState(lead.crm_response || "");
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   // Estado para correção de fachada
   const [fachadaUrl, setFachadaUrl] = useState(lead.vision_image_url || "");
   const [fachadaInputVisible, setFachadaInputVisible] = useState(false);
   const [fachadaPreview, setFachadaPreview] = useState(lead.vision_image_url || "");
   const [fachadaError, setFachadaError] = useState(false);
+
+  useEffect(() => {
+    setNotes(lead.interaction_notes || "");
+    setReturnDate(lead.return_date || "");
+    setStatus(lead.contact_status || "Aguardando Abordagem");
+    setCrmNotes(lead.crm_notes || "");
+    setCrmResponse(lead.crm_response || "");
+    if (typeof window !== "undefined") {
+      try {
+        setCurrentUser(JSON.parse(localStorage.getItem("currentUser") || "{}"));
+      } catch {}
+    }
+  }, [lead]);
 
   // Normalização do telefone para WhatsApp
   const phoneRaw = lead.phone || lead.responsavel_contato || "";
@@ -107,6 +125,14 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
       };
       const res = await api.interaction(leadId, body);
       if (res.ok) {
+        // Salva CRM notes/resposta separadamente
+        if (crmNotes || crmResponse) {
+          await fetch(`http://localhost:8002/api/leads/${leadId}/crm-notes`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ crm_notes: crmNotes, crm_response: crmResponse }),
+          });
+        }
         onSave();
         onClose();
       } else {
@@ -449,6 +475,39 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                     rows={5}
                     className="w-full bg-slate-950 border border-white/10 focus:border-yellow-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed disabled:opacity-60 disabled:cursor-not-allowed"
                   />
+                </div>
+
+                {/* CRM: Notas para o Administrador */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <MessageSquare size={11} className="text-amber-400" /> Comunicado para o Administrador
+                  </label>
+                  <textarea
+                    value={crmNotes}
+                    onChange={(e) => setCrmNotes(e.target.value)}
+                    disabled={readOnly}
+                    placeholder="Ex: Preciso de autorizacao para enviar proposta... Cliente pediu urgencia... Valor negociado foi X..."
+                    rows={3}
+                    className="w-full bg-slate-950 border border-amber-500/20 focus:border-amber-400 rounded-[1.5rem] p-4 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed"
+                  />
+                </div>
+
+                {/* CRM: Resposta do Administrador */}
+                <div className="flex flex-col gap-2 p-3 bg-emerald-500/5 border border-emerald-500/20 rounded-2xl">
+                  <label className="text-[10px] font-black text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Check size={11} /> Resposta do Administrador
+                  </label>
+                  {readOnly ? (
+                    <p className="text-sm text-emerald-300 font-medium">{crm_response || "Aguardando resposta..."}</p>
+                  ) : (
+                    <textarea
+                      value={crmResponse}
+                      onChange={(e) => setCrmResponse(e.target.value)}
+                      placeholder="Resposta para o vendedor..."
+                      rows={2}
+                      className="w-full bg-slate-950 border border-emerald-500/20 focus:border-emerald-400 rounded-xl p-3 text-sm text-white outline-none placeholder-slate-600 transition-colors resize-none font-medium leading-relaxed"
+                    />
+                  )}
                 </div>
 
                 {/* Agendamento de Retorno */}
