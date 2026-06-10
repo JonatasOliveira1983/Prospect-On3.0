@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { ArrowRight, ShieldCheck, Award, Briefcase, Play } from "lucide-react";
 import Script from "next/script";
 
@@ -52,10 +53,16 @@ export default function HomeHero() {
         {/* Deep blue overall overlay */}
         <div className="absolute inset-0 bg-[#020617]" />
 
-        {/* Imagem de fundo - Ponte Estaiada SP */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 lg:opacity-40"
-          style={{ backgroundImage: "url('/AquivosOtto/img/ponte-estaiada.png')", backgroundPosition: "center 40%" }}
+        {/* Imagem de fundo - Ponte Estaiada SP (otimizada via Next.js Image) */}
+        <Image
+          src="/AquivosOtto/img/ponte-estaiada.png"
+          alt=""
+          fill
+          sizes="100vw"
+          priority
+          quality={75}
+          className="object-cover opacity-30 lg:opacity-40"
+          style={{ objectPosition: "center 40%" }}
         />
         {/* Escurecer por cima da imagem */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/70 via-[#020617]/40 to-[#020617]/90" />
