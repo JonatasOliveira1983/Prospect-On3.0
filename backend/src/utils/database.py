@@ -19,27 +19,43 @@ class Database:
         self.db_path = db_path
         self.is_postgres = False
         
-        # Se houver DATABASE_URL válida no ambiente, usamos PostgreSQL
         db_url = os.environ.get("DATABASE_URL")
-        if not self._is_valid_postgres_url(db_url):
-            os.makedirs(os.path.dirname(db_path), exist_ok=True)
-        else:
+        if self._is_valid_postgres_url(db_url):
             self.is_postgres = True
+        else:
+            os.makedirs(os.path.dirname(db_path), exist_ok=True)
             
-        self._create_tables()
+        try:
+            self._create_tables()
+        except Exception as e:
+            logger.error(f"DB: Falha ao criar tabelas: {e}")
+            self.is_postgres = False
 
     def _get_connection(self):
         db_url = os.environ.get("DATABASE_URL")
         if self._is_valid_postgres_url(db_url):
             try:
                 import psycopg2
-                conn = psycopg2.connect(db_url)
+                import urllib.parse
+                # Railway PostgreSQL precisa de sslmode via query string
+                parsed = urllib.parse.urlparse(db_url)
+                qs = dict(urllib.parse.parse_qsl(parsed.query))
+                if 'sslmode' not in qs:
+                    qs['sslmode'] = 'disable'
+                qs['connect_timeout'] = '10'
+                new_query = urllib.parse.urlencode(qs)
+                pg_url = urllib.parse.urlunparse(parsed._replace(query=new_query))
+                conn = psycopg2.connect(pg_url)
                 self.is_postgres = True
+                logger.info("DB: Conectado ao PostgreSQL com sucesso.")
                 return conn
             except ImportError:
                 logger.error("DB: DATABASE_URL detectada, mas 'psycopg2' não está instalado.")
+            except Exception as e:
+                logger.error(f"DB: Falha ao conectar PostgreSQL: {e}. Usando SQLite como fallback.")
         
         import sqlite3
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         self.is_postgres = False
         return sqlite3.connect(self.db_path)
 

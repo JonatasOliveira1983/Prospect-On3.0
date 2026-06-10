@@ -679,6 +679,11 @@ async def post_configuracoes(config: SystemConfigSchema):
         logger.error(f"Erro ao salvar configurações: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/health")
+async def health_check():
+    """Healthcheck simples para Railway."""
+    return {"status": "ok", "timestamp": datetime.now().isoformat()}
+
 @app.get("/api/system/health")
 async def get_health():
     """Retorna o status de saúde de todas as APIs e serviços."""
