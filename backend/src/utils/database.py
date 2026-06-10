@@ -184,13 +184,23 @@ class Database:
             else:
                 try:
                     cur = conn.cursor()
-                    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='leads_quentes' AND column_name='user_id'")
-                    if cur.fetchone():
-                        has_user_id = True
+                    # Verificar se a tabela existe antes de fazer qualquer alteracao
+                    cur.execute("SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'leads_quentes')")
+                    table_exists = cur.fetchone()[0]
+                    if table_exists:
+                        cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='leads_quentes' AND column_name='user_id'")
+                        if cur.fetchone():
+                            has_user_id = True
+                        else:
+                            cur.execute("ALTER TABLE leads_quentes RENAME TO leads_quentes_old")
                     else:
-                        cur.execute("ALTER TABLE leads_quentes RENAME TO leads_quentes_old")
-                except Exception:
-                    pass
+                        has_user_id = True  # Nao precisa fazer migracao se a tabela nao existe
+                except Exception as ex:
+                    logger.warning(f"DB: Erro ao verificar leads_quentes: {ex}")
+                    try:
+                        conn.rollback()
+                    except:
+                        pass
 
             self._run_query(conn, """
                 CREATE TABLE IF NOT EXISTS leads_quentes (
@@ -314,37 +324,70 @@ class Database:
             """)
             
             # 4. Tabela de Histórico de Buscas
-            self._run_query(conn, """
-                CREATE TABLE IF NOT EXISTS search_history (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    user_name TEXT NOT NULL,
-                    user_email TEXT NOT NULL,
-                    city TEXT NOT NULL,
-                    pilares TEXT NOT NULL,
-                    total_leads INTEGER NOT NULL,
-                    leads_a INTEGER DEFAULT 0,
-                    leads_b INTEGER DEFAULT 0,
-                    leads_c INTEGER DEFAULT 0,
-                    leads_json TEXT,
-                    searched_at TEXT NOT NULL,
-                    FOREIGN KEY (user_id) REFERENCES users(id)
-                )
-            """)
+            if self.is_postgres:
+                self._run_query(conn, """
+                    CREATE TABLE IF NOT EXISTS search_history (
+                        id SERIAL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        user_name VARCHAR(255) NOT NULL,
+                        user_email VARCHAR(255) NOT NULL,
+                        city VARCHAR(255) NOT NULL,
+                        pilares VARCHAR(255) NOT NULL,
+                        total_leads INTEGER NOT NULL,
+                        leads_a INTEGER DEFAULT 0,
+                        leads_b INTEGER DEFAULT 0,
+                        leads_c INTEGER DEFAULT 0,
+                        leads_json TEXT,
+                        searched_at VARCHAR(100) NOT NULL,
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+                """)
+            else:
+                self._run_query(conn, """
+                    CREATE TABLE IF NOT EXISTS search_history (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        user_name TEXT NOT NULL,
+                        user_email TEXT NOT NULL,
+                        city TEXT NOT NULL,
+                        pilares TEXT NOT NULL,
+                        total_leads INTEGER NOT NULL,
+                        leads_a INTEGER DEFAULT 0,
+                        leads_b INTEGER DEFAULT 0,
+                        leads_c INTEGER DEFAULT 0,
+                        leads_json TEXT,
+                        searched_at TEXT NOT NULL,
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+                """)
 
             # 5. Tabela de Mensagens do Chat por Lead
-            self._run_query(conn, """
-                CREATE TABLE IF NOT EXISTS lead_messages (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    lead_id TEXT NOT NULL,
-                    user_id INTEGER NOT NULL,
-                    user_name TEXT NOT NULL,
-                    message TEXT NOT NULL,
-                    created_at TEXT NOT NULL,
-                    is_read BOOLEAN DEFAULT 0,
-                    FOREIGN KEY (user_id) REFERENCES users(id)
-                )
-            """)
+            if self.is_postgres:
+                self._run_query(conn, """
+                    CREATE TABLE IF NOT EXISTS lead_messages (
+                        id SERIAL PRIMARY KEY,
+                        lead_id VARCHAR(255) NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        user_name VARCHAR(255) NOT NULL,
+                        message TEXT NOT NULL,
+                        created_at VARCHAR(100) NOT NULL,
+                        is_read BOOLEAN DEFAULT FALSE,
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+                """)
+            else:
+                self._run_query(conn, """
+                    CREATE TABLE IF NOT EXISTS lead_messages (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        lead_id TEXT NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        user_name TEXT NOT NULL,
+                        message TEXT NOT NULL,
+                        created_at TEXT NOT NULL,
+                        is_read BOOLEAN DEFAULT 0,
+                        FOREIGN KEY (user_id) REFERENCES users(id)
+                    )
+                """)
             conn.commit()
 
     def save_interaction(self, lead_id, notes, return_date, contact_status='Aguardando Abordagem', email_sent_at=None, vision_image_url=None, user_id=None):
