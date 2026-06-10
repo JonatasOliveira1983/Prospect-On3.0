@@ -183,18 +183,18 @@ export default function Dashboard() {
       </div>
 
       {/* COBERTURA POR REGIÃO */}
-      {sortedRegions.length > 1 && (
-        <div className="mb-4 p-3 bg-slate-900/40 border border-white/5 rounded-xl">
-          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">Cobertura por Região</span>
-          <div className="flex flex-wrap gap-2">
-            {sortedRegions.map(([region, count]) => (
-              <span key={region} className="px-2.5 py-1 rounded-full bg-slate-800 border border-white/5 text-[10px] font-bold text-slate-300">
-                {region}: <span className="text-white">{count}</span>
-              </span>
-            ))}
-          </div>
+      <div className="mb-4 p-3 bg-slate-900/40 border border-white/5 rounded-xl">
+        <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">
+          Cobertura por Região · {sortedRegions.length} {sortedRegions.length === 1 ? 'região' : 'regiões'}
+        </span>
+        <div className="flex flex-wrap gap-2">
+          {sortedRegions.map(([region, count]) => (
+            <span key={region} className="px-2.5 py-1 rounded-full bg-slate-800 border border-white/5 text-[10px] font-bold text-slate-300">
+              {region}: <span className="text-white">{count}</span>
+            </span>
+          ))}
         </div>
-      )}
+      </div>
 
       {/* FILTROS + AÇÕES */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
