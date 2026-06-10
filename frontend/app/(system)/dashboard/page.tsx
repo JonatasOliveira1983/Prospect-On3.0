@@ -54,7 +54,7 @@ export default function Dashboard() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [importLoading, setImportLoading] = useState(false);
   const [importMessage, setImportMessage] = useState("");
-  const [sortBy, setSortBy] = useState<"recent" | "score">("recent");
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchLeads = useCallback(async () => {
     try {
@@ -82,6 +82,15 @@ export default function Dashboard() {
   useEffect(() => {
     fetchLeads();
     fetchStats();
+    if (typeof window !== "undefined") {
+      const userJson = localStorage.getItem("currentUser");
+      if (userJson) {
+        try {
+          const user = JSON.parse(userJson);
+          setIsAdmin(user.role === "admin");
+        } catch (e) {}
+      }
+    }
   }, [fetchLeads, fetchStats]);
 
   const handleImport = async () => {
@@ -125,21 +134,22 @@ export default function Dashboard() {
     return true;
   });
 
-  // Ordenação
-  const sortedLeads = [...filteredLeads].sort((a, b) => {
-    if (sortBy === "recent") {
-      const da = a.created_at || "";
-      const db = b.created_at || "";
-      return db.localeCompare(da);
-    }
-    return (b.score || 0) - (a.score || 0);
-  });
+  const sortedLeads = filteredLeads;
 
   // Métricas
   const totalLeads = leads.length;
   const availableLeads = leads.filter(l => !l.is_favorite && l.contact_status === "Aguardando Abordagem").length;
   const myFavorites = leads.filter(l => l.is_favorite).length;
   const inContact = leads.filter(l => l.contact_status === "Contato Iniciado").length;
+
+  // Agrupa por região
+  const regionCounts: Record<string, number> = {};
+  leads.forEach(l => {
+    const source = l.source || "SP";
+    const region = source.replace("Apify — ", "").replace("Apify Google Maps — ", "");
+    regionCounts[region] = (regionCounts[region] || 0) + 1;
+  });
+  const sortedRegions = Object.entries(regionCounts).sort((a, b) => b[1] - a[1]);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-6 lg:p-8">
@@ -172,6 +182,20 @@ export default function Dashboard() {
         <MetricCard icon={<Phone size={16} />} value={inContact} label="Em Contato" color="text-blue-400" />
       </div>
 
+      {/* COBERTURA POR REGIÃO */}
+      {sortedRegions.length > 1 && (
+        <div className="mb-4 p-3 bg-slate-900/40 border border-white/5 rounded-xl">
+          <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">Cobertura por Região</span>
+          <div className="flex flex-wrap gap-2">
+            {sortedRegions.map(([region, count]) => (
+              <span key={region} className="px-2.5 py-1 rounded-full bg-slate-800 border border-white/5 text-[10px] font-bold text-slate-300">
+                {region}: <span className="text-white">{count}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* FILTROS + AÇÕES */}
       <div className="flex flex-col lg:flex-row gap-4 mb-4">
         <div className="flex-1 relative">
@@ -185,27 +209,20 @@ export default function Dashboard() {
           />
         </div>
 
-        <select
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as "recent" | "score")}
-          className="bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-400/50"
-        >
-          <option value="recent">Mais Recentes</option>
-          <option value="score">Maior Score</option>
-        </select>
-
-        <button
-          onClick={handleImport}
-          disabled={importLoading}
-          className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
-            importLoading
-              ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-              : "bg-blue-500 hover:bg-blue-400 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]"
-          }`}
-        >
-          {importLoading ? <Loader2 className="animate-spin" size={14} /> : <CloudDownload size={14} />}
-          Importar Leads
-        </button>
+        {isAdmin && (
+          <button
+            onClick={handleImport}
+            disabled={importLoading}
+            className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
+              importLoading
+                ? "bg-slate-800 text-slate-600 cursor-not-allowed"
+                : "bg-blue-500 hover:bg-blue-400 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]"
+            }`}
+          >
+            {importLoading ? <Loader2 className="animate-spin" size={14} /> : <CloudDownload size={14} />}
+            Importar Leads
+          </button>
+        )}
       </div>
 
       {importMessage && (
