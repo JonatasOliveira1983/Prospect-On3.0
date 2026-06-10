@@ -3,7 +3,7 @@ import Sidebar from "../components/Sidebar";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Target, Users, User, Settings } from "lucide-react";
+import { LayoutDashboard, Target, Users, User, Settings, FileText } from "lucide-react";
 
 export default function SystemLayout({
   children,
@@ -79,6 +79,10 @@ export default function SystemLayout({
         <Link href="/leads-quentes" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/leads-quentes" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
           <Target size={20} />
           <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Elite</span>
+        </Link>
+        <Link href="/documentos" className={`p-2.5 min-h-[44px] transition-all flex flex-col items-center justify-center ${pathname === "/documentos" ? "text-yellow-400 scale-105" : "text-slate-400 hover:text-yellow-400 active:scale-90"}`}>
+          <FileText size={20} />
+          <span className="text-[9px] font-black mt-0.5 tracking-tighter uppercase">Docs</span>
         </Link>
         {isAdmin && (
           <>

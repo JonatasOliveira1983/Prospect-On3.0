@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Target, Users, User, LogOut, Bell } from "lucide-react";
+import { LayoutDashboard, Target, Users, User, LogOut, Bell, FileText } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -48,6 +48,7 @@ export default function Sidebar() {
   const menuItems = [
     { icon: LayoutDashboard, label: "Cockpit", href: "/dashboard" },
     { icon: Target, label: "Leads Elite", href: "/leads-quentes" },
+    { icon: FileText, label: "Documentos", href: "/documentos" },
     ...(isAdmin ? [
       { icon: Users, label: "Usuários", href: "/usuarios" },
     ] : []),

@@ -1015,6 +1015,93 @@ async def websocket_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         manager_ws.disconnect(websocket)
 
+# ── Documentos / Arquivos ──
+import os
+import shutil
+from fastapi.responses import FileResponse
+from fastapi import UploadFile, File as FastAPIFile
+
+DOCS_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "AquivosOtto", "documentos")
+
+@app.get("/api/documents")
+async def list_documents():
+    """Lista todos os documentos da pasta."""
+    try:
+        if not os.path.exists(DOCS_DIR):
+            os.makedirs(DOCS_DIR, exist_ok=True)
+            return []
+        files = []
+        for f in os.listdir(DOCS_DIR):
+            fp = os.path.join(DOCS_DIR, f)
+            if os.path.isfile(fp):
+                stat = os.stat(fp)
+                files.append({
+                    "name": f,
+                    "size": stat.st_size,
+                    "modified": stat.st_mtime,
+                    "url": f"/AquivosOtto/documentos/{f}",
+                })
+        files.sort(key=lambda x: x["modified"], reverse=True)
+        return files
+    except Exception as e:
+        logger.error(f"API: Erro ao listar documentos: {e}")
+        return []
+
+@app.post("/api/documents/upload")
+async def upload_document(request: Request, x_user_id: str = Header(None)):
+    """Upload de documento (admin only)."""
+    try:
+        uid = int(x_user_id) if x_user_id else None
+        if not uid:
+            raise HTTPException(status_code=401)
+        user = db.get_user_by_id(uid)
+        if not user or user["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Somente administradores")
+
+        form = await request.form()
+        file = form.get("file")
+        if not file:
+            raise HTTPException(status_code=400, detail="Nenhum arquivo enviado")
+
+        if not os.path.exists(DOCS_DIR):
+            os.makedirs(DOCS_DIR, exist_ok=True)
+
+        filename = file.filename
+        filepath = os.path.join(DOCS_DIR, filename)
+        with open(filepath, "wb") as f:
+            content = await file.read()
+            f.write(content)
+
+        return {"success": True, "message": f"Arquivo '{filename}' enviado"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"API: Erro upload documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/documents/{filename}")
+async def delete_document(filename: str, x_user_id: str = Header(None)):
+    """Deleta um documento (admin only)."""
+    try:
+        uid = int(x_user_id) if x_user_id else None
+        if not uid:
+            raise HTTPException(status_code=401)
+        user = db.get_user_by_id(uid)
+        if not user or user["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Somente administradores")
+
+        filepath = os.path.join(DOCS_DIR, filename)
+        if not os.path.exists(filepath):
+            raise HTTPException(status_code=404, detail="Arquivo nao encontrado")
+
+        os.remove(filepath)
+        return {"success": True, "message": f"Arquivo '{filename}' removido"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"API: Erro deletar documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8002)
