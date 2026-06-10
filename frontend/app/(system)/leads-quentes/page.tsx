@@ -1,5 +1,5 @@
 "use client";
-import { api } from '@/lib/api';
+import { api, BACKEND } from '@/lib/api';
 
 import { useEffect, useState } from "react";
 import {
@@ -112,7 +112,7 @@ export default function LeadsQuentes() {
     e.preventDefault();
     if (!newLead.name.trim()) { setFormMsg("Nome e obrigatorio"); return; }
     try {
-      const resp = await fetch("http://localhost:8002/api/leads/import", {
+      const resp = await fetch(`${BACKEND}/api/leads/import`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -133,11 +133,11 @@ export default function LeadsQuentes() {
         setShowForm(false);
         // Aguarda o lead aparecer no banco e favorita
         setTimeout(async () => {
-          const allLeadsResp = await fetch("http://localhost:8002/api/leads");
+          const allLeadsResp = await fetch(`${BACKEND}/api/leads`);
           const allLeads = await allLeadsResp.json();
           const created = allLeads.find((l: any) => l.name === newLead.name.trim());
           if (created?.id) {
-            await fetch(`http://localhost:8002/api/leads/${created.id}/favorite`, {
+            await fetch(`${BACKEND}/api/leads/${created.id}/favorite`, {
               method: "POST",
               headers: { "Content-Type": "application/json", "X-User-Id": currentUser?.id || "1" },
               body: JSON.stringify({ is_favorite: true }),

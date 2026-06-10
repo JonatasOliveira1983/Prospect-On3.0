@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { Send, Trash2, MessageSquare } from "lucide-react";
+import { BACKEND } from "@/lib/api";
 
 interface Message {
   id: number;
@@ -26,7 +27,7 @@ export default function ChatPanel({ leadId, currentUser, isReadOnly }: Props) {
 
   async function loadMessages() {
     try {
-      const r = await fetch(`http://localhost:8002/api/leads/${leadId}/messages`, {
+      const r = await fetch(`${BACKEND}/api/leads/${leadId}/messages`, {
         headers: { "X-User-Id": String(currentUser.id) },
       });
       const d = await r.json();
@@ -48,7 +49,7 @@ export default function ChatPanel({ leadId, currentUser, isReadOnly }: Props) {
     if (!newMsg.trim() || sending) return;
     setSending(true);
     try {
-      await fetch(`http://localhost:8002/api/leads/${leadId}/messages`, {
+      await fetch(`${BACKEND}/api/leads/${leadId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-User-Id": String(currentUser.id) },
         body: JSON.stringify({ message: newMsg.trim(), user_name: currentUser.name }),
@@ -62,7 +63,7 @@ export default function ChatPanel({ leadId, currentUser, isReadOnly }: Props) {
   async function handleDelete(msgId: number) {
     if (!confirm("Deletar esta mensagem?")) return;
     try {
-      await fetch(`http://localhost:8002/api/leads/${leadId}/messages/${msgId}`, {
+      await fetch(`${BACKEND}/api/leads/${leadId}/messages/${msgId}`, {
         method: "DELETE",
         headers: { "X-User-Id": String(currentUser.id) },
       });

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { FileText, Download, Trash2, Upload, Eye, Printer, Search, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { BACKEND } from "@/lib/api";
 
 interface DocFile {
   name: string;
@@ -49,7 +50,7 @@ export default function DocumentosPage() {
   async function fetchDocs() {
     setLoading(true);
     try {
-      const r = await fetch("http://localhost:8002/api/documents");
+      const r = await fetch(`${BACKEND}/api/documents`);
       const data = await r.json();
       if (Array.isArray(data)) setDocs(data);
     } catch {}
@@ -63,7 +64,7 @@ export default function DocumentosPage() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      await fetch("http://localhost:8002/api/documents/upload", {
+      await fetch(`${BACKEND}/api/documents/upload`, {
         method: "POST",
         headers: { "X-User-Id": String(currentUser?.id || "") },
         body: formData,
@@ -79,7 +80,7 @@ export default function DocumentosPage() {
   async function handleDelete(name: string) {
     if (!confirm(`Deletar "${name}"?`)) return;
     try {
-      await fetch(`http://localhost:8002/api/documents/${encodeURIComponent(name)}`, {
+      await fetch(`${BACKEND}/api/documents/${encodeURIComponent(name)}`, {
         method: "DELETE",
         headers: { "X-User-Id": String(currentUser?.id || "") },
       });

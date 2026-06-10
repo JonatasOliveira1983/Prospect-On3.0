@@ -4,6 +4,8 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { LayoutDashboard, Target, Users, User, LogOut, Bell, FileText } from "lucide-react";
 
+import { BACKEND } from "@/lib/api";
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -26,7 +28,7 @@ export default function Sidebar() {
     if (!currentUser) return;
     const poll = async () => {
       try {
-        const r = await fetch(`http://localhost:8002/api/messages/unread`, {
+        const r = await fetch(`${BACKEND}/api/messages/unread`, {
           headers: { "X-User-Id": String(currentUser.id) }
         });
         const d = await r.json();
