@@ -110,8 +110,8 @@ export default function NeighborhoodInteractive() {
       </div>
 
       {/* Play Area Wrapper with Touch Scroll for Mobile */}
-      <div className="w-full overflow-x-auto scrollbar-none pb-4 -mx-4 px-4 md:mx-0 md:px-0">
-        <div className="min-w-[430px] md:min-w-0 relative w-full min-h-[280px] flex items-end justify-center gap-2.5 lg:gap-4 px-2 py-4 select-none">
+      <div className="w-full overflow-x-auto scrollbar-none -mx-4 px-4 md:mx-0 md:px-0 md:overflow-visible">
+        <div className="scale-[0.82] sm:scale-100 origin-center min-w-[360px] md:min-w-0 relative w-full min-h-[280px] flex items-end justify-center gap-2 lg:gap-4 px-1 py-4 select-none">
         
         {/* Helper Pointer */}
         {!hasClicked && (
@@ -400,22 +400,22 @@ export default function NeighborhoodInteractive() {
       </div>
 
       {/* Celebration Panel (Triggers when 4/4 buildings are painted) */}
-      <div className={`w-full overflow-hidden transition-all duration-500 ease-in-out ${
-        showCelebration ? "max-h-[300px] opacity-100 mt-6" : "max-h-0 opacity-0 pointer-events-none"
+      <div className={`w-full overflow-y-auto transition-all duration-500 ease-in-out ${
+        showCelebration ? "max-h-[400px] opacity-100 mt-4" : "max-h-0 opacity-0 pointer-events-none"
       }`}>
-        <div className="w-full p-5 lg:p-6 rounded-2xl bg-slate-900 border border-emerald-500/30 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
-          <div className="flex items-start gap-4 flex-col sm:flex-row text-left">
-            <div className="p-3 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
-              <ShieldCheck size={28} className="animate-[float_3s_ease-in-out_infinite]" />
+        <div className="w-full p-4 lg:p-6 rounded-2xl bg-slate-900 border border-emerald-500/30 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 lg:gap-6 shadow-[0_0_30px_rgba(16,185,129,0.15)]">
+          <div className="flex items-start gap-3 flex-col sm:flex-row text-left">
+            <div className="p-2.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+              <ShieldCheck size={22} className="animate-[float_3s_ease-in-out_infinite]" />
             </div>
             <div>
-              <h3 className="text-lg lg:text-xl font-bold text-white tracking-tight">
+              <h3 className="text-base lg:text-xl font-bold text-white tracking-tight">
                 Quadra Totalmente Revitalizada
               </h3>
-              <p className="text-xs lg:text-sm text-slate-300 mt-2 max-w-xl leading-relaxed">
+              <p className="text-[11px] lg:text-sm text-slate-300 mt-1.5 max-w-xl leading-relaxed">
                 Todas as fachadas foram restauradas com o padrão de engenharia e acabamento Otto Pinturas. O valor patrimonial do condomínio e do bairro foi reestabelecido.
               </p>
-              <div className="inline-block mt-3 px-3 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-wider">
+              <div className="inline-block mt-2 px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-wider">
                 Vistoria Técnica Cortesia Garantida
               </div>
             </div>
@@ -423,7 +423,7 @@ export default function NeighborhoodInteractive() {
 
           <a 
             href="#orcamento" 
-            className="w-full lg:w-auto px-8 py-3.5 rounded-full bg-otto-yellow hover:bg-otto-yellow/90 text-otto-blue text-center font-black tracking-wide text-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(250,204,21,0.4)] active:scale-95 whitespace-nowrap flex items-center justify-center gap-2"
+            className="w-full lg:w-auto px-6 py-3 rounded-full bg-otto-yellow hover:bg-otto-yellow/90 text-otto-blue text-center font-black tracking-wide text-xs lg:text-sm transition-all duration-300 hover:shadow-[0_0_15px_rgba(250,204,21,0.4)] active:scale-95 whitespace-nowrap flex items-center justify-center gap-2 min-h-[44px]"
           >
             Agendar Minha Vistoria
             <ArrowRight size={16} />

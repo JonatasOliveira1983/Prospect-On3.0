@@ -15,7 +15,7 @@ export default function Home() {
         <HomeHero />
 
         {/* Interactive Skyline Simulator */}
-        <div id="simulador" className="py-20 bg-slate-950 border-b border-white/5 relative z-10">
+        <div id="simulador" className="py-12 lg:py-20 bg-slate-950 border-b border-white/5 relative z-10">
           <div className="container mx-auto px-6 lg:px-8 max-w-4xl">
             <div className="text-center max-w-2xl mx-auto mb-12">
               <span className="text-xs font-black text-otto-yellow uppercase tracking-[0.2em] block mb-3">

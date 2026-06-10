@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { ArrowRight, ShieldCheck, Award, Briefcase, Play } from "lucide-react";
+import { ArrowRight, ShieldCheck, Award, Briefcase } from "lucide-react";
 import Script from "next/script";
 
 export default function HomeHero() {
@@ -147,14 +147,6 @@ export default function HomeHero() {
               >
                 Garantir Minha Vistoria
                 <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-              </a>
-              
-              <a 
-                href="#simulador"
-                className="group px-6 py-4 rounded-full bg-white/5 hover:bg-white/10 text-white font-black text-sm border border-white/10 transition-all duration-300 active:scale-95 flex items-center justify-center gap-2 w-full sm:w-auto"
-              >
-                <Play size={14} className="fill-white" />
-                Ver Simulador
               </a>
             </div>
 
