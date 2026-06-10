@@ -105,14 +105,10 @@ class ApifyClient:
             "includePopularTimes": "no",
             "includeQuestionsAndAnswers": "no",
             "includePeopleAlsoSearch": "no",
-            "scrapeReviewerName": False,
-            "scrapeReviewerId": False,
-            "scrapeReviewerUrl": False,
-            "scrapeResponseFromOwnerText": False,
-            "scrapeDescription": True,
-            "scrapeCategory": True,
-            "scrapeAdditionalInfo": True,
-            "scrapeServiceOptions": True,
+            "proxyConfiguration": {
+                "useApifyProxy": True,
+                "apifyProxyGroups": ["BUYPROXIES94952"],
+            },
             "debug": False,
         }
 
