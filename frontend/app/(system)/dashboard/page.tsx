@@ -124,27 +124,12 @@ function getBairro(address: string): string {
   const match = address.match(/-\s*([^,]+),\s*S[aã]o\s*Paulo/i);
   if (!match) return "";
   let bairro = match[1];
-  // Remove prefixos comuns
-  bairro = bairro.replace(/^\d+\s*-\s*/, "");
+  // Pega o texto apos o ultimo ' - ' (ex: \"9 andar - Bela Vista\" -> \"Bela Vista\")
+  const parts = bairro.split("-");
+  bairro = parts[parts.length - 1].trim();
+  // Remove numeros soltos no inicio
   bairro = bairro.replace(/^\d+\s*/, "");
-  bairro = bairro.replace(/^sala\s*\d+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^conj\w*\.?\s*\d+[\/\d\w]*\s*-?\s*/i, "");
-  bairro = bairro.replace(/^cj\w*\.?\s*\d+[\/\d\w]*\s*-?\s*/i, "");
-  bairro = bairro.replace(/^\d+[a-z]?\s*(andar|andares?)\s*-?\s*/i, "");
-  bairro = bairro.replace(/^bloco\s+\w+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^room\s*\d+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^ap\s*\d+\s*/i, "");
-  bairro = bairro.replace(/^cs\s*\d+\s*/i, "");
-  bairro = bairro.replace(/^terreo:?\s*/i, "");
-  bairro = bairro.replace(/^sl\.?\s*\d+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^sobreloja\s*-?\s*/i, "");
-  bairro = bairro.replace(/^sob\s*loja\s*\d*\s*-?\s*/i, "");
-  bairro = bairro.replace(/^loja\s*\d+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^casa\s*\d+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^piso\s*\w+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^filial\s*\w+\s*-?\s*/i, "");
-  bairro = bairro.replace(/^torre\s*\d+\s*-?\s*/i, "");
-  return bairro.trim();
+  return bairro || "";
 }
 
 export default function Dashboard() {
