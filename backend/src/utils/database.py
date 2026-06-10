@@ -1002,7 +1002,7 @@ class Database:
             if user_id is not None:
                 if self.is_postgres:
                     cur.execute(
-                        "UPDATE lead_messages SET is_read = 1 WHERE lead_id = %s AND user_id != %s AND is_read = 0",
+                        "UPDATE lead_messages SET is_read = TRUE WHERE lead_id = %s AND user_id != %s AND is_read = FALSE",
                         (lead_id, user_id)
                     )
                 else:
@@ -1026,12 +1026,12 @@ class Database:
             if self.is_postgres:
                 cur = conn.cursor()
                 cur.execute(
-                    "INSERT INTO lead_messages (lead_id, user_id, user_name, message, created_at) VALUES (%s, %s, %s, %s, %s)",
+                    "INSERT INTO lead_messages (lead_id, user_id, user_name, message, created_at, is_read) VALUES (%s, %s, %s, %s, %s, FALSE)",
                     (lead_id, user_id, user_name, message, now)
                 )
             else:
                 conn.execute(
-                    "INSERT INTO lead_messages (lead_id, user_id, user_name, message, created_at) VALUES (?, ?, ?, ?, ?)",
+                    "INSERT INTO lead_messages (lead_id, user_id, user_name, message, created_at, is_read) VALUES (?, ?, ?, ?, ?, 0)",
                     (lead_id, user_id, user_name, message, now)
                 )
             conn.commit()
@@ -1063,21 +1063,41 @@ class Database:
         """Conta mensagens nao lidas para o usuario. Admin conta todas, vendedor so seus leads favoritos."""
         try:
             conn = self._get_connection()
+            is_read_filter = "FALSE" if self.is_postgres else "0"
             if role == "admin":
                 # Admin vê mensagens de todos os leads
-                cursor = conn.execute(
-                    "SELECT COUNT(*) FROM lead_messages WHERE user_id != ? AND is_read = 0",
-                    (user_id,)
-                )
+                if self.is_postgres:
+                    cur = conn.cursor()
+                    cur.execute(
+                        f"SELECT COUNT(*) FROM lead_messages WHERE user_id != %s AND is_read = {is_read_filter}",
+                        (user_id,)
+                    )
+                    count = cur.fetchone()[0]
+                else:
+                    cursor = conn.execute(
+                        f"SELECT COUNT(*) FROM lead_messages WHERE user_id != ? AND is_read = {is_read_filter}",
+                        (user_id,)
+                    )
+                    count = cursor.fetchone()[0]
             else:
                 # Vendedor so ve mensagens dos seus leads favoritos
-                cursor = conn.execute(
-                    """SELECT COUNT(*) FROM lead_messages m
-                       INNER JOIN leads_quentes lq ON m.lead_id = lq.id AND lq.user_id = ?
-                       WHERE m.user_id != ? AND m.is_read = 0""",
-                    (user_id, user_id)
-                )
-            count = cursor.fetchone()[0]
+                if self.is_postgres:
+                    cur = conn.cursor()
+                    cur.execute(
+                        f"""SELECT COUNT(*) FROM lead_messages m
+                           INNER JOIN leads_quentes lq ON m.lead_id = lq.id AND lq.user_id = %s
+                           WHERE m.user_id != %s AND m.is_read = {is_read_filter}""",
+                        (user_id, user_id)
+                    )
+                    count = cur.fetchone()[0]
+                else:
+                    cursor = conn.execute(
+                        f"""SELECT COUNT(*) FROM lead_messages m
+                           INNER JOIN leads_quentes lq ON m.lead_id = lq.id AND lq.user_id = ?
+                           WHERE m.user_id != ? AND m.is_read = {is_read_filter}""",
+                        (user_id, user_id)
+                    )
+                    count = cursor.fetchone()[0]
             conn.close()
             return count
         except Exception as e:
