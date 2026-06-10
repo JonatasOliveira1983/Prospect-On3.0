@@ -927,7 +927,8 @@ async def update_crm_notes(lead_id: str, x_user_id: str = Header(None)):
         body = await request.json()
         notes = body.get("crm_notes", "")
         response = body.get("crm_response", "")
-        db.update_crm_notes(lead_id, notes, response)
+        uid = int(x_user_id) if x_user_id else None
+        db.update_crm_notes(lead_id, notes, response, user_id=uid)
         return {"success": True, "message": "CRM atualizado"}
     except Exception as e:
         logger.error(f"API: Erro CRM: {e}")

@@ -144,7 +144,11 @@ class Database:
                     link_fonte TEXT,
                     score_urgencia INTEGER DEFAULT 0,
                     categoria_demanda TEXT,
-                    pilar TEXT DEFAULT 'A'
+                    pilar TEXT DEFAULT 'A',
+                    crm_notes TEXT,
+                    crm_response TEXT,
+                    created_at TEXT,
+                    updated_at TEXT
                 )
             """)
             
@@ -212,6 +216,10 @@ class Database:
                     score_urgencia INTEGER DEFAULT 0,
                     categoria_demanda TEXT,
                     pilar TEXT DEFAULT 'A',
+                    crm_notes TEXT,
+                    crm_response TEXT,
+                    created_at TEXT,
+                    updated_at TEXT,
                     PRIMARY KEY (id, user_id),
                     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
                 )
@@ -254,7 +262,11 @@ class Database:
                     ("link_fonte", "TEXT"),
                     ("score_urgencia", "INTEGER DEFAULT 0"),
                     ("categoria_demanda", "TEXT"),
-                    ("pilar", "TEXT DEFAULT 'A'")
+                    ("pilar", "TEXT DEFAULT 'A'"),
+                    ("crm_notes", "TEXT"),
+                    ("crm_response", "TEXT"),
+                    ("created_at", "TEXT"),
+                    ("updated_at", "TEXT")
                 ]
                 for col, col_type in cols:
                     try:
@@ -584,6 +596,10 @@ class Database:
                                COALESCE(lq.return_date, l.return_date) as return_date,
                                COALESCE(lq.contact_status, l.contact_status) as contact_status,
                                COALESCE(lq.email_sent_at, l.email_sent_at) as email_sent_at,
+                               COALESCE(lq.crm_notes, l.crm_notes) as crm_notes,
+                               COALESCE(lq.crm_response, l.crm_response) as crm_response,
+                               COALESCE(lq.created_at, l.created_at) as created_at,
+                               COALESCE(lq.updated_at, l.updated_at) as updated_at,
                                lq_other.user_id as reserved_by_user_id,
                                u_other.name as reserved_by_name,
                                u_other.email as reserved_by_email
@@ -832,7 +848,7 @@ class Database:
             logger.error(f"DB: Erro ao deletar lead: {e}")
             return False
 
-    def update_crm_notes(self, lead_id: str, notes: str, response: str = ""):
+    def update_crm_notes(self, lead_id: str, notes: str, response: str = "", user_id: int = None):
         """Atualiza notas do CRM e resposta do admin em ambas tabelas."""
         try:
             conn = self._get_connection()
@@ -841,30 +857,42 @@ class Database:
                     "UPDATE leads SET crm_notes = ?, crm_response = ? WHERE id = ?",
                     (notes, response, lead_id)
                 )
-                conn.execute(
-                    "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ?",
-                    (notes, response, lead_id)
-                )
+                if user_id is not None:
+                    conn.execute(
+                        "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ? AND user_id = ?",
+                        (notes, response, lead_id, user_id)
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ?",
+                        (notes, response, lead_id)
+                    )
             else:
                 conn.execute(
                     "UPDATE leads SET crm_notes = ? WHERE id = ?",
                     (notes, lead_id)
                 )
-                conn.execute(
-                    "UPDATE leads_quentes SET crm_notes = ? WHERE id = ?",
-                    (notes, lead_id)
-                )
+                if user_id is not None:
+                    conn.execute(
+                        "UPDATE leads_quentes SET crm_notes = ? WHERE id = ? AND user_id = ?",
+                        (notes, lead_id, user_id)
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE leads_quentes SET crm_notes = ? WHERE id = ?",
+                        (notes, lead_id)
+                    )
             conn.commit()
             conn.close()
         except Exception as e:
             logger.error(f"DB: Erro ao atualizar CRM: {e}")
 
     def count_pending_crm(self) -> int:
-        """Conta leads com notas pendentes sem resposta."""
+        """Conta leads com notas pendentes sem resposta (em ambas tabelas)."""
         try:
             conn = self._get_connection()
             cursor = conn.execute(
-                "SELECT COUNT(*) FROM leads WHERE crm_notes IS NOT NULL AND crm_notes != '' AND (crm_response IS NULL OR crm_response = '')"
+                "SELECT COUNT(DISTINCT lq.id) FROM leads_quentes lq WHERE lq.crm_notes IS NOT NULL AND lq.crm_notes != '' AND (lq.crm_response IS NULL OR lq.crm_response = '')"
             )
             count = cursor.fetchone()[0]
             conn.close()

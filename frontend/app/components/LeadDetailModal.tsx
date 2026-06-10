@@ -121,7 +121,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
       if (readOnly && currentUser?.role === 'admin') {
         await fetch(`http://localhost:8002/api/leads/${leadId}/crm-notes`, {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-User-Id": String(currentUser?.id || "") },
           body: JSON.stringify({ crm_notes: crmNotes, crm_response: crmResponse }),
         });
         onSave();
@@ -141,7 +141,7 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
         if (crmNotes || crmResponse) {
           await fetch(`http://localhost:8002/api/leads/${leadId}/crm-notes`, {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "X-User-Id": String(currentUser?.id || "") },
             body: JSON.stringify({ crm_notes: crmNotes, crm_response: crmResponse }),
           });
         }
