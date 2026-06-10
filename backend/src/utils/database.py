@@ -578,7 +578,12 @@ class Database:
                     uid = user_id or lead_data.get('user_id')
                     if uid is None:
                         # Obter id de joao.ottopinturas@gmail.com
-                        uid_row = conn.execute("SELECT id FROM users WHERE email = 'joao.ottopinturas@gmail.com'").fetchone()
+                        if self.is_postgres:
+                            cur = conn.cursor()
+                            cur.execute("SELECT id FROM users WHERE email = 'joao.ottopinturas@gmail.com'")
+                            uid_row = cur.fetchone()
+                        else:
+                            uid_row = conn.execute("SELECT id FROM users WHERE email = 'joao.ottopinturas@gmail.com'").fetchone()
                         uid = uid_row[0] if uid_row else 1
 
                     self._run_query(conn, f"""
@@ -620,7 +625,7 @@ class Database:
                         lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
                         lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
                         lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma'),
-                        lead_data.get('pilar', 'A'), 1 if fav_status else 0,
+                        lead_data.get('pilar', 'A'), True if fav_status else False,
                         lead_data.get('interaction_notes', ''), lead_data.get('return_date', ''),
                         lead_data.get('contact_status', 'Aguardando Abordagem'), lead_data.get('email_sent_at')
                     ))
@@ -663,7 +668,7 @@ class Database:
                         lead_data.get('intencao_ativa', False) or lead_data.get('intencao_ativa', 0), 
                         lead_data.get('resumo_sinal', 'N/D'), lead_data.get('link_fonte', 'N/D'), 
                         lead_data.get('score_urgencia', 0), lead_data.get('categoria_demanda', 'nenhuma'),
-                        lead_data.get('pilar', 'A'), 1 if fav_status else 0
+                        lead_data.get('pilar', 'A'), True if fav_status else False
                     ))
                 conn.commit()
         except Exception as e:
