@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Lock, User, ArrowRight, LogIn, X } from "lucide-react";
@@ -55,9 +56,9 @@ export default function HomeHeader() {
   return (
     <header className="w-full py-4 px-6 md:px-8 flex justify-between items-center bg-slate-950/85 border-b border-white/5 sticky top-0 z-50 shadow-2xl backdrop-blur-md">
       {/* Brand logo only - standalone and enlarged, no border square or text */}
-      <div 
+      <Link 
+        href="/"
         className="cursor-pointer select-none active:scale-95 transition-transform shrink-0" 
-        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       >
         <Image 
           src="/AquivosOtto/Logo/Img001 logo Otto.png"
@@ -67,7 +68,7 @@ export default function HomeHeader() {
           className="object-contain hover:scale-105 transition-transform duration-300"
           priority
         />
-      </div>
+      </Link>
 
       {/* Desktop Login Form (hidden on mobile) */}
       <form onSubmit={handleLogin} className="hidden md:flex items-center gap-3">
