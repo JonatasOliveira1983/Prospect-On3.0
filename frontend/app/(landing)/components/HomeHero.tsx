@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { ArrowRight, ShieldCheck, Award, Briefcase, Play } from "lucide-react";
 import Script from "next/script";
-import BuildingsBackground from "./BuildingsBackground";
 
 export default function HomeHero() {
   const [splineUrl, setSplineUrl] = useState<string>("https://prod.spline.design/p9DEvpgdmtwGsA57/scene.splinecode");
@@ -55,11 +54,11 @@ export default function HomeHero() {
 
         {/* Imagem de fundo - Ponte Estaiada SP */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 lg:opacity-40"
           style={{ backgroundImage: "url('/AquivosOtto/img/ponte-estaiada.jpg')", backgroundPosition: "center 40%" }}
         />
         {/* Escurecer por cima da imagem */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/80 via-[#020617]/60 to-[#020617]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/70 via-[#020617]/40 to-[#020617]/90" />
         
         {/* Neon Cyan Glow behind the center-right (for the 3D element) */}
         <div className="absolute top-[20%] right-[10%] lg:right-[15%] w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-cyan-500/10 blur-[120px] mix-blend-screen" />
@@ -70,9 +69,6 @@ export default function HomeHero() {
         {/* Subtle grid lines for high-tech architectural drafting feel */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
       </div>
-
-      {/* 3 Prédios Espelhados no Fundo */}
-      <BuildingsBackground />
 
       {/* Spline 3D Scene rendered dynamically for high performance */}
       <div className="absolute top-[12%] lg:top-[5%] right-0 w-full lg:w-[50%] h-[400px] lg:h-[650px] z-0 overflow-hidden opacity-90 pointer-events-auto">
@@ -93,86 +89,13 @@ export default function HomeHero() {
               <div className="absolute bottom-0 right-0 w-[140px] h-[45px] bg-[#020617] z-20 pointer-events-none select-none" />
             </>
           ) : (
-            /* Blueprint de Prédios Futuristas 3D Holográfico como Fallback leve e responsivo */
+            /* Fallback leve para mobile - apenas glows sutis */
             <div className="w-full h-full flex items-center justify-center relative select-none">
-              <div className="absolute w-[280px] h-[280px] lg:w-[450px] lg:h-[450px] rounded-full border border-cyan-500/5 animate-[spin_100s_linear_infinite] flex items-center justify-center pointer-events-none">
-                <div className="w-[80%] h-[80%] rounded-full border border-dashed border-otto-yellow/5 animate-[spin_60s_linear_infinite_reverse]" />
-              </div>
-              <svg viewBox="0 0 400 400" className="w-[75%] h-[75%] text-cyan-400 opacity-55 drop-shadow-[0_0_15px_rgba(34,211,238,0.15)] animate-pulse pointer-events-none" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M 200 80 L 270 120 L 270 280 L 200 320 L 130 280 L 130 120 Z" stroke="currentColor" strokeWidth="1.2" strokeDasharray="3 3" />
-                <path d="M 200 80 L 200 320" stroke="currentColor" strokeWidth="1.2" />
-                <path d="M 130 120 L 200 160 L 270 120" stroke="currentColor" strokeWidth="1.2" />
-                {Array.from({ length: 9 }).map((_, i) => {
-                  const y = 120 + i * 20;
-                  return (
-                    <g key={i}>
-                      <path d={`M 130 ${y} L 200 ${y + 40} L 270 ${y}`} stroke="currentColor" strokeWidth="0.8" opacity="0.2" />
-                    </g>
-                  );
-                })}
-                <path d="M 100 160 L 130 180 L 130 300 L 100 280 Z" stroke="#eab308" strokeWidth="1" opacity="0.3" />
-                <path d="M 70 180 L 100 200 L 100 300 L 70 280 Z" stroke="#eab308" strokeWidth="1" opacity="0.2" />
-                <path d="M 270 180 L 300 160 L 300 280 L 270 300 Z" stroke="#eab308" strokeWidth="1" opacity="0.3" />
-                <path d="M 300 200 L 330 180 L 330 280 L 300 300 Z" stroke="#eab308" strokeWidth="1" opacity="0.2" />
-                <line x1="200" y1="320" x2="350" y2="400" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.15" />
-                <line x1="200" y1="320" x2="50" y2="400" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.15" />
-                <line x1="200" y1="320" x2="200" y2="380" stroke="currentColor" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.15" />
-                <text x="210" y="95" fill="currentColor" className="text-[10px] font-mono tracking-widest uppercase opacity-60" stroke="none">OTTO 3D ENGINE</text>
-                <text x="210" y="110" fill="#eab308" className="text-[8px] font-mono tracking-widest uppercase opacity-50" stroke="none">STATUS: READY</text>
-              </svg>
+              <div className="absolute w-[200px] h-[200px] lg:w-[400px] lg:h-[400px] rounded-full border border-cyan-500/10 animate-[spin_100s_linear_infinite] pointer-events-none" />
+              <div className="absolute w-[150px] h-[150px] lg:w-[300px] lg:h-[300px] rounded-full border border-otto-yellow/5 animate-[spin_60s_linear_infinite_reverse] pointer-events-none" />
             </div>
           )}
         </div>
-      </div>
-
-      {/* Elegante blueprint de prédios no fundo do texto (Lado Esquerdo) */}
-      <div className="absolute bottom-0 left-0 w-full lg:w-[55%] h-[60%] lg:h-[75%] z-0 pointer-events-none opacity-45 lg:opacity-60 mix-blend-screen select-none overflow-hidden">
-        <svg viewBox="0 0 800 600" preserveAspectRatio="xMinYMax slice" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full h-full text-cyan-400/25">
-          {/* Building 1 (Modernist Slanted Top) */}
-          <path d="M50 600V200L180 120V600" stroke="currentColor" strokeWidth="1.5" strokeDasharray="4 4" />
-          <line x1="80" y1="240" x2="150" y2="240" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="80" y1="300" x2="150" y2="300" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="80" y1="360" x2="150" y2="360" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="80" y1="420" x2="150" y2="420" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="80" y1="480" x2="150" y2="480" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="80" y1="540" x2="150" y2="540" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-
-          {/* Building 2 (Tall Central Spire Tower) */}
-          <path d="M220 600V100H230V60H235V100H245V600" stroke="currentColor" strokeWidth="1.5" />
-          <line x1="220" y1="150" x2="245" y2="150" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-          <line x1="220" y1="210" x2="245" y2="210" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-          <line x1="220" y1="270" x2="245" y2="270" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-          <line x1="220" y1="330" x2="245" y2="330" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-          <line x1="220" y1="390" x2="245" y2="390" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-          <line x1="220" y1="450" x2="245" y2="450" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-          <line x1="220" y1="510" x2="245" y2="510" stroke="currentColor" strokeWidth="1" opacity="0.4" />
-
-          {/* Building 3 (Corporate Box Grid) */}
-          <rect x="280" y="240" width="150" height="360" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3" />
-          <line x1="315" y1="240" x2="315" y2="600" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="350" y1="240" x2="350" y2="600" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="385" y1="240" x2="385" y2="600" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="280" y1="290" x2="430" y2="290" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="280" y1="340" x2="430" y2="340" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="280" y1="390" x2="430" y2="390" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="280" y1="440" x2="430" y2="440" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="280" y1="490" x2="430" y2="490" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="280" y1="540" x2="430" y2="540" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-
-          {/* Building 4 (Sleek Diagonal Glass Facade) */}
-          <path d="M460 600V300L550 380V600" stroke="currentColor" strokeWidth="1.5" />
-          <line x1="460" y1="350" x2="550" y2="430" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="460" y1="400" x2="550" y2="480" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="460" y1="450" x2="550" y2="530" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-          <line x1="460" y1="500" x2="550" y2="580" stroke="currentColor" strokeWidth="1" opacity="0.3" />
-
-          {/* Building 5 (Small Silhouette Block) */}
-          <rect x="580" y="400" width="90" height="200" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
-          <line x1="580" y1="440" x2="670" y2="440" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="580" y1="480" x2="670" y2="480" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="580" y1="520" x2="670" y2="520" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-          <line x1="580" y1="560" x2="670" y2="560" stroke="currentColor" strokeWidth="1" opacity="0.2" />
-        </svg>
       </div>
 
       <div className="relative z-10 container mx-auto px-6 lg:px-8 w-full flex flex-col justify-between min-h-[70vh]">
