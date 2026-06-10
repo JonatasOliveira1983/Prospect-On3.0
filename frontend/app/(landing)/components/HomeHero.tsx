@@ -172,7 +172,7 @@ export default function HomeHero() {
             Líder Nacional em Fachadas
           </div>
           <div className="text-white/40 text-[10px] lg:text-xs font-bold tracking-widest uppercase border-l border-white/10 pl-4">
-            Engenharia & Solidez Predial
+            Pintura Predial de Grande Porte
           </div>
         </div>
 
@@ -190,9 +190,9 @@ export default function HomeHero() {
                 OTTO PINTURAS DE GRANDE PORTE
               </span>
               <h1 className="text-5xl md:text-7xl lg:text-[7.5rem] xl:text-[9.5rem] font-black text-white leading-[0.9] tracking-tighter uppercase relative">
-                engenharia
+                pinturas de
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-otto-yellow">
-                  predial
+                  grande porte
                 </span>
               </h1>
             </div>

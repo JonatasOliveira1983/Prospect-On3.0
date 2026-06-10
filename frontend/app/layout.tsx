@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Prospect-On 3.0 | Otto Pinturas",
-  description: "Especializados em Pinturas de Grande Porte e Motor Sniper",
+  description: "OTTO Pinturas de Grande Porte — Especialistas em Pintura Predial",
 };
 
 export default function RootLayout({
