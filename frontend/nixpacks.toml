@@ -1,0 +1,15 @@
+# Nixpacks configuration for Next.js frontend
+[phases.setup]
+nixPkgs = ["nodejs-20", "npm"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[phases.start]
+cmd = "npm run start"
+
+[variables]
+NODE_ENV = "production"
