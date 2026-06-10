@@ -832,6 +832,38 @@ class Database:
             logger.error(f"DB: Erro ao deletar lead: {e}")
             return False
 
+    def update_crm_notes(self, lead_id: str, notes: str, response: str = ""):
+        """Atualiza notas do CRM e resposta do admin."""
+        try:
+            conn = self._get_connection()
+            if response:
+                conn.execute(
+                    "UPDATE leads SET crm_notes = ?, crm_response = ? WHERE id = ?",
+                    (notes, response, lead_id)
+                )
+            else:
+                conn.execute(
+                    "UPDATE leads SET crm_notes = ? WHERE id = ?",
+                    (notes, lead_id)
+                )
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logger.error(f"DB: Erro ao atualizar CRM: {e}")
+
+    def count_pending_crm(self) -> int:
+        """Conta leads com notas pendentes sem resposta."""
+        try:
+            conn = self._get_connection()
+            cursor = conn.execute(
+                "SELECT COUNT(*) FROM leads WHERE crm_notes IS NOT NULL AND crm_notes != '' AND (crm_response IS NULL OR crm_response = '')"
+            )
+            count = cursor.fetchone()[0]
+            conn.close()
+            return count
+        except Exception as e:
+            return 0
+
     def import_from_json(self, json_path):
         if not os.path.exists(json_path):
             return

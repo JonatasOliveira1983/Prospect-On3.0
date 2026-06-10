@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Header
+from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -919,6 +919,35 @@ async def apify_import(city: str = "all", categories: str = "all", max_per: int 
         "message": f"Importação iniciada para {stats['regions']} regiões x {stats['categories']} categorias. Estimativa: ~{stats['estimated_leads']} leads.",
         "stats": stats,
     }
+
+@app.put("/api/leads/{lead_id}/crm-notes")
+async def update_crm_notes(lead_id: str, x_user_id: str = Header(None)):
+    """Salva notas do CRM e resposta do admin."""
+    try:
+        body = await request.json()
+        notes = body.get("crm_notes", "")
+        response = body.get("crm_response", "")
+        db.update_crm_notes(lead_id, notes, response)
+        return {"success": True, "message": "CRM atualizado"}
+    except Exception as e:
+        logger.error(f"API: Erro CRM: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/admin/pending-responses")
+async def get_pending_responses(x_user_id: str = Header(None)):
+    """Retorna contagem de leads com notas pendentes de resposta."""
+    try:
+        if not x_user_id:
+            raise HTTPException(status_code=401)
+        user = db.get_user_by_id(int(x_user_id))
+        if not user or user['role'] != 'admin':
+            raise HTTPException(status_code=403)
+        count = db.count_pending_crm()
+        return {"success": True, "pending": count}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {"success": True, "pending": 0}
 
 @app.websocket("/ws/logs")
 async def websocket_endpoint(websocket: WebSocket):

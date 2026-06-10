@@ -6,7 +6,13 @@ import {
   Flame,
   Loader2,
   ShieldAlert,
-  ArrowLeft
+  ArrowLeft,
+  Plus,
+  X,
+  Phone,
+  Mail,
+  MapPin,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import LeadTable from "../../components/LeadTable";
@@ -38,6 +44,10 @@ export default function LeadsQuentes() {
   // Parâmetros de Vendedor
   const [sellerId, setSellerId] = useState<string | null>(null);
   const [sellerName, setSellerName] = useState<string>("");
+
+  const [showForm, setShowForm] = useState(false);
+  const [newLead, setNewLead] = useState({ name: "", phone: "", email: "", address: "", notes: "" });
+  const [formMsg, setFormMsg] = useState("");
 
   useEffect(() => {
     // Ler dados de sessão
@@ -98,6 +108,37 @@ export default function LeadsQuentes() {
     }
   }, [sellerId]);
 
+  async function handleCreateLead(e: React.FormEvent) {
+    e.preventDefault();
+    if (!newLead.name.trim()) { setFormMsg("Nome e obrigatorio"); return; }
+    try {
+      const resp = await fetch("http://localhost:8002/api/leads/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          leads: [{
+            name: newLead.name.trim(),
+            phone: newLead.phone.trim() || "N/D",
+            email: newLead.email.trim() || "N/D",
+            address: newLead.address.trim() || "Sao Paulo, SP",
+            notes: newLead.notes.trim(),
+            source: "Cadastro Manual",
+          }],
+        }),
+      });
+      const data = await resp.json();
+      if (data.success) {
+        setFormMsg("Lead cadastrado!");
+        setNewLead({ name: "", phone: "", email: "", address: "", notes: "" });
+        setShowForm(false);
+        fetchLeads();
+      }
+    } catch (e) {
+      setFormMsg("Erro de conexao");
+    }
+    setTimeout(() => setFormMsg(""), 5000);
+  }
+
   const isReadOnly = !!sellerId && currentUser?.role === "admin";
 
   return (
@@ -145,6 +186,47 @@ export default function LeadsQuentes() {
           )}
         </p>
       </header>
+
+      <div className="flex items-center gap-4">
+        {!showForm ? (
+          <button onClick={() => setShowForm(true)} className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold rounded-xl flex items-center gap-2 transition-colors">
+            <Plus size={14} /> Cadastrar Lead Manual
+          </button>
+        ) : (
+          <button onClick={() => setShowForm(false)} className="px-4 py-2 bg-slate-800 text-slate-400 text-xs font-bold rounded-xl flex items-center gap-2">
+            <X size={14} /> Fechar
+          </button>
+        )}
+        {formMsg && <span className={`text-xs font-bold ${formMsg.includes("Erro") ? "text-red-400" : "text-emerald-400"}`}>{formMsg}</span>}
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleCreateLead} className="bg-slate-900/50 border border-white/5 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Nome *</label>
+            <input type="text" value={newLead.name} onChange={e => setNewLead({...newLead, name: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-400/50 outline-none" placeholder="Nome do condominio ou empresa" />
+          </div>
+          <div>
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Telefone</label>
+            <input type="text" value={newLead.phone} onChange={e => setNewLead({...newLead, phone: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-400/50 outline-none" placeholder="(11) 99999-9999" />
+          </div>
+          <div>
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Email</label>
+            <input type="email" value={newLead.email} onChange={e => setNewLead({...newLead, email: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-400/50 outline-none" placeholder="email@exemplo.com" />
+          </div>
+          <div>
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Endereco</label>
+            <input type="text" value={newLead.address} onChange={e => setNewLead({...newLead, address: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-400/50 outline-none" placeholder="Rua, numero - Bairro, Cidade" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-wider block mb-1">Observacoes</label>
+            <textarea value={newLead.notes} onChange={e => setNewLead({...newLead, notes: e.target.value})} className="w-full bg-slate-950 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:border-blue-400/50 outline-none h-20 resize-none" placeholder="Detalhes sobre o lead..." />
+          </div>
+          <div className="sm:col-span-2">
+            <button type="submit" className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-black uppercase tracking-wider rounded-xl transition-colors">Salvar Lead</button>
+          </div>
+        </form>
+      )}
 
       {/* Main Content Area */}
       <div className="bg-slate-950/40 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-6 lg:p-10 shadow-2xl relative overflow-hidden flex-1">

@@ -2,23 +2,41 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Target, Users, User, LogOut } from "lucide-react";
+import { LayoutDashboard, Target, Users, User, LogOut, Bell } from "lucide-react";
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     const userJson = localStorage.getItem("currentUser");
     if (userJson) {
       try {
-        setCurrentUser(JSON.parse(userJson));
+        const user = JSON.parse(userJson);
+        setCurrentUser(user);
       } catch (e) {
-        console.error("Erro ao parsear currentUser", e);
+        console.error(e);
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (currentUser?.role !== "admin") return;
+    const poll = async () => {
+      try {
+        const r = await fetch(`http://localhost:8002/api/admin/pending-responses`, {
+          headers: { "X-User-Id": String(currentUser.id) }
+        });
+        const d = await r.json();
+        setPendingCount(d.pending || 0);
+      } catch (e) {}
+    };
+    poll();
+    const iv = setInterval(poll, 15000);
+    return () => clearInterval(iv);
+  }, [currentUser]);
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser");
@@ -65,6 +83,16 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {isAdmin && pendingCount > 0 && (
+        <div className="mb-4 p-3 bg-rose-500/10 border border-rose-400/20 rounded-xl animate-pulse">
+          <div className="flex items-center gap-2 text-rose-400 text-xs font-bold">
+            <Bell size={14} />
+            {pendingCount} lead{pendingCount > 1 ? 's' : ''} com nota pendente
+          </div>
+          <p className="text-[9px] text-rose-400/60 mt-1">Os vendedores aguardam sua resposta</p>
+        </div>
+      )}
 
       <div className="mt-auto space-y-4 pt-6 border-t border-yellow-400/10">
         <button
