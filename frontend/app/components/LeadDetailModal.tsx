@@ -114,9 +114,21 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
   }
 
   async function handleSave() {
-    if (readOnly) return;
+    if (readOnly && currentUser?.role !== 'admin') return;
     setSaving(true);
     try {
+      // Se for admin respondendo em modo leitura, só salva CRM
+      if (readOnly && currentUser?.role === 'admin') {
+        await fetch(`http://localhost:8002/api/leads/${leadId}/crm-notes`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ crm_notes: crmNotes, crm_response: crmResponse }),
+        });
+        onSave();
+        onClose();
+        setSaving(false);
+        return;
+      }
       const body = {
         notes,
         return_date: returnDate || null,
@@ -525,26 +537,26 @@ export default function LeadDetailModal({ lead, isOpen, onClose, onSave, readOnl
                 </div>
               </div>
 
-              {/* Botão Salvar ou Aviso de Somente Leitura */}
-              {readOnly ? (
-                <div className="w-full bg-slate-950 border border-white/5 text-slate-400 font-bold p-4 rounded-2xl text-center text-xs uppercase tracking-widest mt-auto">
-                  Apenas visualização do Gestor
-                </div>
-              ) : (
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-yellow-400/10 mt-auto"
-                >
-                  {saving ? (
-                    <>
-                      <Loader2 className="animate-spin" size={16} />
-                      <span className="uppercase tracking-widest text-xs">Salvando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save size={16} />
-                      <span className="uppercase tracking-widest text-xs">Salvar Registro no CRM</span>
+               {/* Botão Salvar ou Aviso de Somente Leitura */}
+               {readOnly && currentUser?.role !== 'admin' ? (
+                 <div className="w-full bg-slate-950 border border-white/5 text-slate-400 font-bold p-4 rounded-2xl text-center text-xs uppercase tracking-widest mt-auto">
+                   Apenas visualização
+                 </div>
+               ) : (
+                 <button
+                   onClick={handleSave}
+                   disabled={saving}
+                   className="w-full bg-yellow-400 hover:bg-yellow-300 disabled:bg-slate-800 disabled:text-slate-600 text-slate-900 font-black py-4 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-[0.98] shadow-lg shadow-yellow-400/10 mt-auto"
+                 >
+                   {saving ? (
+                     <>
+                       <Loader2 className="animate-spin" size={16} />
+                       <span className="uppercase tracking-widest text-xs">Salvando...</span>
+                     </>
+                   ) : (
+                     <>
+                       <Save size={16} />
+                       <span className="uppercase tracking-widest text-xs">{readOnly ? 'Responder ao Vendedor' : 'Salvar Registro no CRM'}</span>
                     </>
                   )}
                 </button>
