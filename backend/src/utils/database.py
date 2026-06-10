@@ -833,7 +833,7 @@ class Database:
             return False
 
     def update_crm_notes(self, lead_id: str, notes: str, response: str = ""):
-        """Atualiza notas do CRM e resposta do admin."""
+        """Atualiza notas do CRM e resposta do admin em ambas tabelas."""
         try:
             conn = self._get_connection()
             if response:
@@ -841,9 +841,17 @@ class Database:
                     "UPDATE leads SET crm_notes = ?, crm_response = ? WHERE id = ?",
                     (notes, response, lead_id)
                 )
+                conn.execute(
+                    "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ?",
+                    (notes, response, lead_id)
+                )
             else:
                 conn.execute(
                     "UPDATE leads SET crm_notes = ? WHERE id = ?",
+                    (notes, lead_id)
+                )
+                conn.execute(
+                    "UPDATE leads_quentes SET crm_notes = ? WHERE id = ?",
                     (notes, lead_id)
                 )
             conn.commit()
