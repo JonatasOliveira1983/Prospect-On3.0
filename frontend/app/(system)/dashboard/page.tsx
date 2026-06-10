@@ -126,23 +126,13 @@ const SP_BAIRRO_ZONA: Record<string, string> = {
 };
 
 function getZone(address: string): string {
-  const match = address.match(/-\s*([^,]+),\s*S[aã]o\s*Paulo/i);
-  if (!match) return "";
-  const bairro = match[1]
-    .toLowerCase()
-    .replace(/^\d+\s*-\s*/, "")
-    .replace(/^\d+[a-z]?\s*(andar|andares?)\s*-?\s*/i, "")
-    .replace(/^sala\s*\d+\s*-?\s*/i, "")
-    .replace(/^conj\w*\s*\d+\s*-?\s*/i, "")
-    .replace(/^cj\w*\s*\d+\s*-?\s*/i, "")
-    .replace(/^bloco\s+\w+\s*-?\s*/i, "")
-    .replace(/^room\s*\d+\s*-?\s*/i, "")
-    .replace(/^\d+\s*/, "")
-    .replace(/^-\s*/, "")
-    .replace(/^\d+$/, "")
+  const bairro = getBairro(address);
+  if (!bairro) return "";
+  const normalized = bairro.toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9 ]/g, "")
     .trim();
-  if (!bairro || bairro.length < 3) return "";
-  return SP_BAIRRO_ZONA[bairro] || "";
+  return SP_BAIRRO_ZONA[normalized] || "";
 }
 
 function getBairro(address: string): string {
@@ -225,17 +215,10 @@ export default function Dashboard() {
   // Agrupamentos
   const neighborhoodCounts: Record<string, { count: number; zone: string }> = {};
   const zoneCounts: Record<string, number> = {};
-  const unclassifiedBairros = new Set<string>();
   leads.forEach(l => {
-    const zone = getZone(l.address);
+    const zone = getZone(l.address) || "Outros";
+    zoneCounts[zone] = (zoneCounts[zone] || 0) + 1;
     const bairro = getBairro(l.address);
-    if (zone) {
-      zoneCounts[zone] = (zoneCounts[zone] || 0) + 1;
-    } else if (getBairro(l.address)) {
-      zoneCounts["Outros bairros"] = (zoneCounts["Outros bairros"] || 0) + 1;
-    } else {
-      zoneCounts["Outros"] = (zoneCounts["Outros"] || 0) + 1;
-    }
     if (bairro && bairro.length > 2) {
       if (!neighborhoodCounts[bairro]) neighborhoodCounts[bairro] = { count: 0, zone: zone || "Outros" };
       neighborhoodCounts[bairro].count++;
