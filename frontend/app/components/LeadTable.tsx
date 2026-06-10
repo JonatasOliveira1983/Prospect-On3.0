@@ -16,7 +16,8 @@ import {
   Building,
   ScrollText,
   Briefcase,
-  Lock
+  Lock,
+  User
 } from "lucide-react";
 import LeadDetailModal from "./LeadDetailModal";
 
@@ -151,6 +152,13 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap mb-1">
                       <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
+                      
+                      {/* Destaque para leads cadastrados manualmente */}
+                      {(lead.source || "").includes("Cadastro Manual") && (
+                        <span className="bg-purple-500/15 border border-purple-400/30 text-purple-300 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                          <User size={8} /> Lead Personalizado
+                        </span>
+                      )}
                       
                       {/* Badge de Categoria */}
                       <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
