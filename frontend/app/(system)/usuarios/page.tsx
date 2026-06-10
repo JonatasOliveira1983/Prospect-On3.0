@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Users, UserPlus, Trash2, Mail, Phone, FileText, Lock, ExternalLink, CheckCircle, AlertCircle, ShieldAlert } from "lucide-react";
-import { BACKEND } from "../../../lib/api";
+import { BACKEND, api } from "../../../lib/api";
 import Link from "next/link";
 
 export default function UsuariosAdminPage() {
@@ -67,7 +67,7 @@ export default function UsuariosAdminPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-User-Id": currentUser.id.toString(),
+          "X-User-Id": String(currentUser.id),
         },
         body: JSON.stringify({
           name: name.trim(),
@@ -79,29 +79,22 @@ export default function UsuariosAdminPage() {
         }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.detail || "Erro ao cadastrar novo vendedor.");
+        setErrorMsg(data.detail || `Erro ${res.status}: ${JSON.stringify(data)}`);
+        return;
       }
 
-      const data = await res.json();
       if (data.success) {
-        setSuccessMsg("Vendedor comercial cadastrado com sucesso!");
-        // Limpar campos
-        setName("");
-        setEmail("");
-        setPassword("");
-        setPhone("");
-        setDocument("");
+        setSuccessMsg("Vendedor cadastrado com sucesso!");
+        setName(""); setEmail(""); setPassword(""); setPhone(""); setDocument("");
         setRole("vendedor");
-        
-        // Recarregar lista
         fetchUsers(currentUser.id);
-        
         setTimeout(() => setSuccessMsg(""), 4000);
       }
     } catch (err: any) {
-      setErrorMsg(err.message || "Falha ao conectar no servidor.");
+      setErrorMsg(err.message || String(err) || "Falha ao conectar no servidor.");
     } finally {
       setActionLoading(false);
     }
