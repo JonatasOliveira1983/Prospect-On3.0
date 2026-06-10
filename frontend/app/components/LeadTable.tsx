@@ -154,7 +154,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                       <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
                       
                       {/* Destaque para leads cadastrados manualmente */}
-                      {(lead.source || "").includes("Cadastro Manual") && (
+                      {(lead.source || "").includes("Manual") && (
                         <span className="bg-purple-500/15 border border-purple-400/30 text-purple-300 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
                           <User size={8} /> Lead Personalizado
                         </span>
