@@ -185,11 +185,8 @@ export default function HomeHero() {
 
             
             {/* Monumental Overlapping Text */}
-            <div className="relative mb-6 lg:mb-8 select-none">
-              <span className="block text-[10px] lg:text-xs font-black text-otto-yellow uppercase tracking-[0.25em] mb-2">
-                OTTO PINTURAS DE GRANDE PORTE
-              </span>
-              <h1 className="text-5xl md:text-7xl lg:text-[7.5rem] xl:text-[9.5rem] font-black text-white leading-[0.9] tracking-tighter uppercase relative">
+            <div className="relative mb-4 lg:mb-6 select-none">
+              <h1 className="text-4xl md:text-6xl lg:text-[5.5rem] xl:text-[7rem] font-black text-white leading-[0.95] tracking-tighter uppercase relative">
                 pinturas de
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-otto-yellow">
                   grande porte
