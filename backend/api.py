@@ -638,7 +638,7 @@ def load_system_config():
         "motor_mapas": "Google Maps (Playwright Stealth)",
         "motor_ia": "DeepSeek Chat",
         "delay_stealth": "2.0s – 3.5s (aleatório)",
-        "pilares_ativos": "A (Condomínios) · B (Obras de Grande Porte) · C (Editais Públicos)",
+        "pilares_ativos": "A (Condomínios) · B (Obras de Grande Porte)",
         "pilar_varredura": "Todos"
     }
 
@@ -820,6 +820,41 @@ async def get_search_history(x_user_id: str = Header(None)):
         raise
     except Exception as e:
         logger.error(f"API: Erro ao buscar histórico: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/search-history/{entry_id}")
+async def delete_search_history(entry_id: int, x_user_id: str = Header(None)):
+    """Deleta uma entrada do histórico de buscas."""
+    try:
+        if not x_user_id:
+            raise HTTPException(status_code=401, detail="Não autenticado")
+        try:
+            user = db.get_user_by_id(int(x_user_id))
+        except:
+            user = db.get_user_by_email(x_user_id)
+        if not user:
+            raise HTTPException(status_code=401, detail="Usuário não encontrado")
+        
+        success = db.delete_search_history(entry_id, user_id=user['id'] if user['role'] != 'admin' else None)
+        if success:
+            return {"success": True, "message": "Entrada removida"}
+        raise HTTPException(status_code=404, detail="Entrada não encontrada ou sem permissão")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"API: Erro ao deletar histórico: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/leads/{lead_id}")
+async def delete_lead(lead_id: str, x_user_id: str = Header(None)):
+    """Deleta um lead do banco de dados."""
+    try:
+        success = db.delete_lead(lead_id)
+        if success:
+            return {"success": True, "message": "Lead removido"}
+        raise HTTPException(status_code=404, detail="Lead não encontrado")
+    except Exception as e:
+        logger.error(f"API: Erro ao deletar lead {lead_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/contacts/search")

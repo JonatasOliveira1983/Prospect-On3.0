@@ -46,7 +46,7 @@ export default function Configuracoes() {
     motor_mapas: "Google Maps (Playwright Stealth)",
     motor_ia: "DeepSeek Chat",
     delay_stealth: "2.0s – 3.5s (aleatório)",
-    pilares_ativos: "A (Condomínios) · B (Obras de Grande Porte) · C (Editais Públicos)"
+    pilares_ativos: "A (Condomínios) · B (Obras de Grande Porte)"
   });
 
   useEffect(() => {

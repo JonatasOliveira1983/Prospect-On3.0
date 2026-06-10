@@ -805,6 +805,33 @@ class Database:
             logger.error(f"DB: Erro ao buscar histórico: {e}")
             return []
 
+    def delete_search_history(self, entry_id: int, user_id: int = None) -> bool:
+        """Deleta uma entrada do histórico. Admin pode deletar qualquer, user só as próprias."""
+        try:
+            conn = self._get_connection()
+            if user_id:
+                conn.execute("DELETE FROM search_history WHERE id = ? AND user_id = ?", (entry_id, user_id))
+            else:
+                conn.execute("DELETE FROM search_history WHERE id = ?", (entry_id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao deletar histórico: {e}")
+            return False
+
+    def delete_lead(self, lead_id: str) -> bool:
+        """Deleta um lead do banco."""
+        try:
+            conn = self._get_connection()
+            conn.execute("DELETE FROM leads WHERE id = ?", (lead_id,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logger.error(f"DB: Erro ao deletar lead: {e}")
+            return False
+
     def import_from_json(self, json_path):
         if not os.path.exists(json_path):
             return

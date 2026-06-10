@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Users, UserPlus, Trash2, Mail, Phone, FileText, Lock, Eye, EyeOff, ExternalLink, CheckCircle, AlertCircle, ShieldAlert } from "lucide-react";
+import { Users, UserPlus, Trash2, Mail, Phone, FileText, Lock, ExternalLink, CheckCircle, AlertCircle, ShieldAlert } from "lucide-react";
 import { BACKEND } from "../../../lib/api";
 import Link from "next/link";
 
@@ -20,9 +20,6 @@ export default function UsuariosAdminPage() {
   const [role, setRole] = useState("vendedor");
   const [phone, setPhone] = useState("");
   const [document, setDocument] = useState("");
-
-  // Toggle de exibição de senhas individuais por ID
-  const [showPasswords, setShowPasswords] = useState<{ [key: number]: boolean }>({});
 
   useEffect(() => {
     const userJson = localStorage.getItem("currentUser");
@@ -148,14 +145,6 @@ export default function UsuariosAdminPage() {
       setActionLoading(false);
     }
   };
-
-  const togglePasswordVisibility = (id: number) => {
-    setShowPasswords((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
   if (!currentUser) return null;
 
   return (
@@ -300,7 +289,7 @@ export default function UsuariosAdminPage() {
                 <tbody className="divide-y divide-white/5 text-xs">
                   {users.map((u) => {
                     const isSelf = u.id === currentUser.id;
-                    const isShowPassword = !!showPasswords[u.id];
+                    const isShowPassword = true;
 
                     return (
                       <tr key={u.id} className="hover:bg-white/[0.02] transition-all group">
@@ -340,16 +329,9 @@ export default function UsuariosAdminPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <Lock size={12} className="text-slate-500" />
-                            <span className="font-black text-slate-200 tracking-wider">
-                              {isShowPassword ? u.password : "••••••••"}
+                            <span className="font-black text-yellow-400 tracking-wider">
+                              {u.password}
                             </span>
-                            <button
-                              onClick={() => togglePasswordVisibility(u.id)}
-                              className="text-slate-500 hover:text-white transition-colors"
-                              title={isShowPassword ? "Ocultar Senha" : "Mostrar Senha"}
-                            >
-                              {isShowPassword ? <EyeOff size={13} /> : <Eye size={13} />}
-                            </button>
                           </div>
                         </td>
 

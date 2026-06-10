@@ -8,6 +8,7 @@ import {
   Search,
   Loader2,
   MapPin,
+  Trash2,
   Layers,
   Calendar,
   User,
@@ -95,6 +96,16 @@ export default function HistoricoBuscasPage() {
 
   const toggleExpand = (id: number) => {
     setExpandedId(expandedId === id ? null : id);
+  };
+
+  const handleDeleteEntry = async (entryId: number) => {
+    if (!confirm("Remover esta entrada do historico?")) return;
+    try {
+      await api.deleteSearchHistory(entryId);
+      loadHistory();
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const getPilarIcon = (pilar: string) => {
@@ -255,12 +266,21 @@ export default function HistoricoBuscasPage() {
                       </div>
                     </div>
                   </div>
-                  <motion.div
-                    animate={{ rotate: expandedId === entry.id ? 90 : 0 }}
-                    transition={{ duration: 0.2 }}
-                  >
-                    <ChevronRight size={20} className="text-slate-400" />
-                  </motion.div>
+                  <div className="flex items-center gap-2">
+                    <motion.div
+                      animate={{ rotate: expandedId === entry.id ? 90 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronRight size={20} className="text-slate-400" />
+                    </motion.div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleDeleteEntry(entry.id); }}
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-500 hover:text-red-400 transition-colors"
+                      title="Remover entrada"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </button>
 
                 {/* Detalhes expandidos */}

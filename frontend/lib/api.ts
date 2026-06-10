@@ -59,6 +59,12 @@ export const api = {
     fetch(`${BACKEND}/api/search-history`, { cache: 'no-store', headers: { ...getUserIdHeader() } }),
   apifyImport: (city: string = "Sao Paulo, SP, Brasil", categories: string = "all") =>
     fetch(`${BACKEND}/api/apify/import?city=${encodeURIComponent(city)}&categories=${encodeURIComponent(categories)}`, { method: 'POST', headers: { ...getUserIdHeader() } }),
+  apifyStats: () =>
+    fetch(`${BACKEND}/api/apify/stats`, { cache: 'no-store' }),
+  deleteSearchHistory: (entryId: number) =>
+    fetch(`${BACKEND}/api/search-history/${entryId}`, { method: 'DELETE', headers: { ...getUserIdHeader() } }),
+  deleteLead: (leadId: string) =>
+    fetch(`${BACKEND}/api/leads/${leadId}`, { method: 'DELETE', headers: { ...getUserIdHeader() } }),
   leadsQuentes: (userId?: string | number) => {
     const url = userId 
       ? `${BACKEND}/api/admin/users/${userId}/leads-quentes` 
