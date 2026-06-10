@@ -62,7 +62,7 @@ export default function SystemLayout({
         <Sidebar />
         <main className="flex-1 flex flex-col min-h-screen lg:ml-72 transition-all duration-300">
           {/* Mobile Top Header */}
-          <header className="lg:hidden sticky top-0 z-40 w-full flex items-center justify-between px-4 py-3 bg-slate-950/90 backdrop-blur-xl border-b border-yellow-400/20 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+          <header className="lg:hidden sticky top-0 z-40 w-full flex items-center px-4 py-3 bg-slate-950/90 backdrop-blur-xl border-b border-yellow-400/20 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
             <Link href="/" className="flex items-center">
               <img 
                 src="/AquivosOtto/Logo/Img001 logo Otto.png" 
@@ -70,13 +70,6 @@ export default function SystemLayout({
                 className="h-10 w-auto object-contain"
               />
             </Link>
-            <button
-              onClick={handleLogout}
-              className="p-2.5 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl text-red-400 hover:bg-red-500/10 active:scale-90 transition-all"
-              title="Sair"
-            >
-              <LogOut size={20} />
-            </button>
           </header>
 
           <div className="flex-1 p-4 lg:p-10 pb-24 lg:pb-10">
