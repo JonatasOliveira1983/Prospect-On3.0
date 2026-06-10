@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import LeadTable from "../../components/LeadTable";
 import {
   Loader2,
@@ -11,8 +11,7 @@ import {
   RefreshCw,
   Database,
   Users,
-  Building2,
-  MapPin,
+  X,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -29,15 +28,6 @@ interface Lead {
   contact_status: string;
   is_favorite: number;
   created_at?: string;
-  updated_at?: string;
-}
-
-interface ImportStats {
-  regions: number;
-  categories: number;
-  estimated_leads: number;
-  regions_list: string[];
-  categories_list: string[];
 }
 
 const STATUS_FILTERS = [
@@ -47,6 +37,96 @@ const STATUS_FILTERS = [
   { key: 'favorites', label: 'Meus Favoritos' },
 ];
 
+const SP_BAIRRO_ZONA: Record<string, string> = {
+  "aclimacao": "Zona Sul", "alto da boa vista": "Zona Sul", "alto da lapa": "Zona Oeste",
+  "alto da mooca": "Zona Leste", "alto de pinheiros": "Zona Oeste", "anhangabau": "Centro",
+  "aricanduva": "Zona Leste", "artur alvim": "Zona Leste", "barra funda": "Zona Oeste",
+  "bela vista": "Centro", "belenzinho": "Zona Leste", "bom retiro": "Centro",
+  "bosque da saude": "Zona Sul", "bras": "Zona Leste", "brasilandia": "Zona Norte",
+  "brooklin": "Zona Sul", "butanta": "Zona Oeste", "cambuci": "Centro",
+  "campo belo": "Zona Sul", "campo grande": "Zona Sul", "campo limpo": "Zona Sul",
+  "cangaiba": "Zona Leste", "carandiru": "Zona Norte", "casa verde": "Zona Norte",
+  "caxingui": "Zona Oeste", "centro historico": "Centro", "cerqueira cesar": "Centro",
+  "chacara belenzinho": "Zona Leste", "chacara flora": "Zona Sul", "chacara inglesa": "Zona Sul",
+  "chacara mafalda": "Zona Sul", "cidade dutra": "Zona Sul", "cidade lider": "Zona Leste",
+  "cidade mae do ceu": "Zona Leste", "cidade moncoes": "Zona Sul", "cidade patriarca": "Zona Leste",
+  "cidade sao francisco": "Zona Leste", "cidade tiradentes": "Zona Leste", "city america": "Zona Norte",
+  "consolacao": "Centro", "cursino": "Zona Sul", "ermelino matarazzo": "Zona Leste",
+  "freguesia do o": "Zona Norte", "granja julieta": "Zona Sul", "guaianases": "Zona Leste",
+  "higienopolis": "Centro", "ibirapuera": "Zona Sul", "imirim": "Zona Norte",
+  "indianopolis": "Zona Sul", "interlagos": "Zona Sul", "ipiranga": "Zona Sul",
+  "itaberaba": "Zona Norte", "itaim bibi": "Zona Sul", "itaim paulista": "Zona Leste",
+  "itaquera": "Zona Leste", "jabaquara": "Zona Sul", "jacana": "Zona Norte",
+  "jaguara": "Zona Oeste", "jaguare": "Zona Oeste", "jaragua": "Zona Norte",
+  "jardim america": "Zona Sul", "jardim am": "Zona Sul", "jardim bonfiglioli": "Zona Oeste",
+  "jardim europa": "Zona Sul", "jardim paulista": "Zona Sul", "jardim paulistano": "Zona Sul",
+  "jardim sao paulo": "Zona Norte", "jardim sapopemba": "Zona Leste", "jardins": "Zona Sul",
+  "lapa": "Zona Oeste", "liberdade": "Centro", "limao": "Zona Norte",
+  "mandaqui": "Zona Norte", "mirandopolis": "Zona Sul", "moema": "Zona Sul",
+  "mooca": "Zona Leste", "morumbi": "Zona Sul", "parada inglesa": "Zona Norte",
+  "paraiso": "Zona Sul", "pari": "Centro", "parque artur alvim": "Zona Leste",
+  "parque boturussu": "Zona Leste", "parque da mooca": "Zona Leste", "parque imperial": "Zona Sul",
+  "parque mandaqui": "Zona Norte", "parque novo mundo": "Zona Norte", "parque sao jorge": "Zona Leste",
+  "parque sao lucas": "Zona Leste", "paulista": "Centro", "penha": "Zona Leste",
+  "penha de franca": "Zona Leste", "perdizes": "Zona Oeste", "pinheiros": "Zona Oeste",
+  "piqueri": "Zona Norte", "pirituba": "Zona Norte", "planalto paulista": "Zona Sul",
+  "pompeia": "Zona Oeste", "republica": "Centro", "rio pequeno": "Zona Oeste",
+  "sacoma": "Zona Sul", "santa cecilia": "Centro", "santa teresinha": "Zona Norte",
+  "santana": "Zona Norte", "santo amaro": "Zona Sul", "saude": "Zona Sul",
+  "se": "Centro", "socorro": "Zona Sul", "sumarezinho": "Zona Oeste",
+  "sao joao climaco": "Zona Sul", "sao judas": "Zona Sul", "sao miguel paulista": "Zona Leste",
+  "tatuape": "Zona Leste", "tucuruvi": "Zona Norte", "vila andrade": "Zona Sul",
+  "vila buarque": "Centro", "vila carrao": "Zona Leste", "vila clementino": "Zona Sul",
+  "vila cordeiro": "Zona Sul", "vila da saude": "Zona Sul", "vila formosa": "Zona Leste",
+  "vila gomes cardim": "Zona Leste", "vila guarani": "Zona Sul", "vila guilherme": "Zona Norte",
+  "vila hamburguesa": "Zona Oeste", "vila leopoldina": "Zona Oeste", "vila madalena": "Zona Oeste",
+  "vila maria": "Zona Norte", "vila mariana": "Zona Sul", "vila mascote": "Zona Sul",
+  "vila matilde": "Zona Leste", "vila medeiros": "Zona Norte", "vila monte alegre": "Zona Sul",
+  "vila nova cachoeirinha": "Zona Norte", "vila nova conceicao": "Zona Sul", "vila olimpia": "Zona Sul",
+  "vila prudente": "Zona Leste", "vila reg feijo": "Zona Leste", "vila romana": "Zona Oeste",
+  "vila santa catarina": "Zona Sul", "vila socorro": "Zona Sul", "vila sonia": "Zona Oeste",
+  "vila zelina": "Zona Leste",
+};
+
+function getZone(address: string): string {
+  const match = address.match(/-\s*([^,]+),\s*S[aã]o\s*Paulo/i);
+  if (!match) return "";
+  const bairro = match[1]
+    .toLowerCase()
+    .replace(/^\d+\s*-\s*/, "")
+    .replace(/^\d+[a-z]?\s*(andar|andares?)\s*-?\s*/i, "")
+    .replace(/^sala\s*\d+\s*-?\s*/i, "")
+    .replace(/^conj\w*\s*\d+\s*-?\s*/i, "")
+    .replace(/^cj\w*\s*\d+\s*-?\s*/i, "")
+    .replace(/^bloco\s+\w+\s*-?\s*/i, "")
+    .replace(/^room\s*\d+\s*-?\s*/i, "")
+    .replace(/^\d+\s*/, "")
+    .replace(/^-\s*/, "")
+    .replace(/^\d+$/, "")
+    .trim();
+  if (!bairro || bairro.length < 3) return "";
+  return SP_BAIRRO_ZONA[bairro] || "";
+}
+
+function getBairro(address: string): string {
+  const match = address.match(/-\s*([^,]+),\s*S[aã]o\s*Paulo/i);
+  if (!match) return "";
+  const bairro = match[1]
+    .replace(/^\d+\s*-\s*/, "")
+    .replace(/^\d+\s*/, "")
+    .replace(/^sala\s*\d+\s*-?\s*/i, "")
+    .replace(/^conj\w*\s*\d+\s*-?\s*/i, "")
+    .replace(/^cj\w*\s*\d+\s*-?\s*/i, "")
+    .replace(/^\d+[a-z]?\s*(andar|andares?)\s*-?\s*/i, "")
+    .replace(/^bloco\s+\w+\s*-?\s*/i, "")
+    .replace(/^room\s*\d+\s*-?\s*/i, "")
+    .replace(/^ap\s*\d+\s*/i, "")
+    .replace(/^cs\s*\d+\s*/i, "")
+    .replace(/^terreo:?\s*/i, "")
+    .trim();
+  return bairro || "";
+}
+
 export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,68 +135,43 @@ export default function Dashboard() {
   const [importLoading, setImportLoading] = useState(false);
   const [importMessage, setImportMessage] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [zoneFilter, setZoneFilter] = useState<string | null>(null);
+  const [bairroFilter, setBairroFilter] = useState<string | null>(null);
 
   const fetchLeads = useCallback(async () => {
     try {
       const resp = await api.leads();
-      const data: Lead[] = await resp.json();
-      setLeads(data);
+      setLeads(await resp.json());
     } catch (e) {
-      console.error("Erro ao buscar leads:", e);
+      console.error(e);
     }
     setLoading(false);
   }, []);
 
-  const fetchStats = useCallback(async () => {
-    try {
-      const resp = await fetch(`http://localhost:8002/api/apify/stats`);
-      const data = await resp.json();
-      if (data.success) {
-        setImportStats(data.import_stats);
-      }
-    } catch (e) {
-      // Silencioso
-    }
-  }, []);
-
   useEffect(() => {
     fetchLeads();
-    fetchStats();
     if (typeof window !== "undefined") {
-      const userJson = localStorage.getItem("currentUser");
-      if (userJson) {
-        try {
-          const user = JSON.parse(userJson);
-          setIsAdmin(user.role === "admin");
-        } catch (e) {}
-      }
+      try {
+        const u = JSON.parse(localStorage.getItem("currentUser") || "{}");
+        setIsAdmin(u.role === "admin");
+      } catch (e) {}
     }
-  }, [fetchLeads, fetchStats]);
+  }, [fetchLeads]);
 
   const handleImport = async () => {
     setImportLoading(true);
-    setImportMessage("Iniciando importação...");
+    setImportMessage("Iniciando...");
     try {
       const resp = await api.apifyImport();
       const data = await resp.json();
-      if (data.success) {
-        setImportMessage(data.message);
-        await fetchStats();
-        // Poll por novos leads a cada 30s
-        const pollInterval = setInterval(async () => {
-          const r = await api.leads();
-          const newLeads: Lead[] = await r.json();
-          setLeads(newLeads);
-          await fetchStats();
-        }, 30000);
-
-        // Para de poll após 15 min
-        setTimeout(() => clearInterval(pollInterval), 900000);
-      } else {
-        setImportMessage("Erro na importação");
-      }
+      setImportMessage(data.success ? data.message : "Erro");
+      const iv = setInterval(async () => {
+        const r = await api.leads();
+        setLeads(await r.json());
+      }, 30000);
+      setTimeout(() => clearInterval(iv), 900000);
     } catch (e) {
-      setImportMessage("Erro de conexão");
+      setImportMessage("Erro de conexao");
     }
     setImportLoading(false);
     setTimeout(() => setImportMessage(""), 8000);
@@ -126,45 +181,46 @@ export default function Dashboard() {
   const filteredLeads = leads.filter((lead) => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      const text = `${lead.name} ${lead.address} ${lead.phone} ${lead.source}`.toLowerCase();
-      if (!text.includes(q)) return false;
+      if (!`${lead.name} ${lead.address} ${lead.phone} ${lead.source}`.toLowerCase().includes(q)) return false;
     }
     if (statusFilter === "favorites" && !lead.is_favorite) return false;
     if (statusFilter !== "all" && statusFilter !== "favorites" && lead.contact_status !== statusFilter) return false;
+    // Filtro por zona
+    if (zoneFilter && getZone(lead.address) !== zoneFilter) return false;
+    // Filtro por bairro
+    if (bairroFilter && getBairro(lead.address) !== bairroFilter) return false;
     return true;
   });
 
-  const sortedLeads = filteredLeads;
+  // Agrupamentos
+  const neighborhoodCounts: Record<string, { count: number; zone: string }> = {};
+  const zoneCounts: Record<string, number> = {};
+  leads.forEach(l => {
+    const zone = getZone(l.address);
+    const bairro = getBairro(l.address);
+    if (zone) zoneCounts[zone] = (zoneCounts[zone] || 0) + 1;
+    if (bairro && bairro.length > 2) {
+      if (!neighborhoodCounts[bairro]) neighborhoodCounts[bairro] = { count: 0, zone };
+      neighborhoodCounts[bairro].count++;
+    }
+  });
 
-  // Métricas
+  const sortedZones = Object.entries(zoneCounts).sort((a, b) => b[1] - a[1]);
+  const topBairros = Object.entries(neighborhoodCounts)
+    .map(([name, data]) => ({ name, ...data }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 16);
+  const bairrosPorZona = topBairros.reduce((acc, b) => {
+    const z = b.zone || "Outros";
+    if (!acc[z]) acc[z] = [];
+    acc[z].push(b);
+    return acc;
+  }, {} as Record<string, typeof topBairros>);
+
   const totalLeads = leads.length;
   const availableLeads = leads.filter(l => !l.is_favorite && l.contact_status === "Aguardando Abordagem").length;
   const myFavorites = leads.filter(l => l.is_favorite).length;
   const inContact = leads.filter(l => l.contact_status === "Contato Iniciado").length;
-
-  // Agrupa por região
-  const regionCounts: Record<string, number> = {};
-  leads.forEach(l => {
-    const source = l.source || "SP";
-    const region = source.replace("Apify — ", "").replace("Apify Google Maps — ", "");
-    regionCounts[region] = (regionCounts[region] || 0) + 1;
-  });
-  const sortedRegions = Object.entries(regionCounts).sort((a, b) => b[1] - a[1]);
-
-  const neighborhoodCounts: Record<string, number> = {};
-  leads.forEach(l => {
-    const addr = l.address || "";
-    const match = addr.match(/-\s*([^,]+),\s*S[aã]o\s*Paulo/i);
-    if (match) {
-      const bairro = match[1].replace(/^\d+\s*-\s*/, "").replace(/^\d+\s*/, "").trim();
-      if (bairro && bairro.length > 2 && !bairro.match(/^\d/)) {
-        neighborhoodCounts[bairro] = (neighborhoodCounts[bairro] || 0) + 1;
-      }
-    }
-  });
-  const topNeighborhoods = Object.entries(neighborhoodCounts)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 12);
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-6 lg:p-8">
@@ -197,23 +253,60 @@ export default function Dashboard() {
         <MetricCard icon={<Phone size={16} />} value={inContact} label="Em Contato" color="text-blue-400" />
       </div>
 
-      {/* COBERTURA POR REGIÃO */}
+      {/* COBERTURA HIERÁRQUICA */}
       <div className="mb-4 p-3 bg-slate-900/40 border border-white/5 rounded-xl">
         <span className="text-[8px] font-black text-slate-500 uppercase tracking-widest block mb-2">
-          Cobertura · {sortedRegions.length} {sortedRegions.length === 1 ? 'região' : 'regiões'} · {Object.keys(neighborhoodCounts).length} bairros
+          Cobertura · {sortedZones.length} zonas · {Object.keys(neighborhoodCounts).length} bairros
         </span>
-        <div className="flex flex-wrap gap-2">
-          {sortedRegions.map(([region, count]) => (
-            <span key={region} className="px-2.5 py-1 rounded-full bg-slate-800 border border-white/5 text-[10px] font-bold text-slate-300">
-              {region}: <span className="text-white">{count}</span>
-            </span>
+
+        {/* Zonas (clicáveis para filtrar) */}
+        <div className="flex flex-wrap gap-2 mb-3">
+          <button
+            onClick={() => { setZoneFilter(null); setBairroFilter(null); }}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${!zoneFilter ? 'bg-white/10 border-white/30 text-white' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
+          >
+            SP: {totalLeads}
+          </button>
+          {sortedZones.map(([zone, count]) => (
+            <button
+              key={zone}
+              onClick={() => { setZoneFilter(zoneFilter === zone ? null : zone); setBairroFilter(null); }}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${zoneFilter === zone ? 'bg-white/10 border-white/40 text-white' : 'bg-slate-800 border-white/5 text-slate-400 hover:border-white/20'}`}
+            >
+              {zone}: <span className={zoneFilter === zone ? 'text-white' : 'text-slate-300'}>{count}</span>
+            </button>
           ))}
-          {topNeighborhoods.slice(0, 8).map(([bairro, count]) => (
-            <span key={bairro} className="px-2.5 py-1 rounded-full bg-slate-800 border border-blue-500/10 text-[10px] font-bold text-blue-400">
-              {bairro}: <span className="text-blue-300">{count}</span>
-            </span>
-          ))}
+          {(zoneFilter || bairroFilter) && (
+            <button
+              onClick={() => { setZoneFilter(null); setBairroFilter(null); }}
+              className="px-2.5 py-1 rounded-full bg-rose-500/10 border border-rose-400/30 text-rose-400 text-[10px] font-bold flex items-center gap-1"
+            >
+              <X size={10} /> Limpar
+            </button>
+          )}
         </div>
+
+        {/* Bairros por zona (se zona selecionada) */}
+        {zoneFilter && bairrosPorZona[zoneFilter] && (
+          <div className="flex flex-wrap gap-1.5 pl-2 border-l border-white/10">
+            <span className="text-[8px] text-slate-500 w-full mb-1">Bairros em {zoneFilter}:</span>
+            {bairrosPorZona[zoneFilter].slice(0, 12).map((b) => (
+              <button
+                key={b.name}
+                onClick={() => setBairroFilter(bairroFilter === b.name ? null : b.name)}
+                className={`px-2 py-0.5 rounded-full text-[9px] font-bold border transition-all ${bairroFilter === b.name ? 'bg-blue-500/20 border-blue-400/40 text-blue-400' : 'bg-slate-800 border-blue-500/10 text-blue-400/70 hover:border-blue-400/20'}`}
+              >
+                {b.name}: {b.count}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {bairroFilter && (
+          <div className="mt-1 text-[9px] text-amber-400 font-bold">
+            Filtrado: {bairroFilter} — {filteredLeads.length} leads
+          </div>
+        )}
       </div>
 
       {/* FILTROS + AÇÕES */}
@@ -228,15 +321,12 @@ export default function Dashboard() {
             className="w-full bg-slate-900 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-400/50 transition-colors"
           />
         </div>
-
         {isAdmin && (
           <button
             onClick={handleImport}
             disabled={importLoading}
             className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 transition-all whitespace-nowrap ${
-              importLoading
-                ? "bg-slate-800 text-slate-600 cursor-not-allowed"
-                : "bg-blue-500 hover:bg-blue-400 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]"
+              importLoading ? "bg-slate-800 text-slate-600 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-400 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]"
             }`}
           >
             {importLoading ? <Loader2 className="animate-spin" size={14} /> : <CloudDownload size={14} />}
@@ -246,9 +336,7 @@ export default function Dashboard() {
       </div>
 
       {importMessage && (
-        <div className={`mb-4 px-4 py-2 rounded-xl text-xs font-bold ${
-          importMessage.includes("Erro") ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"
-        }`}>
+        <div className={`mb-4 px-4 py-2 rounded-xl text-xs font-bold ${importMessage.includes("Erro") ? "bg-red-500/10 text-red-400" : "bg-emerald-500/10 text-emerald-400"}`}>
           {importMessage}
         </div>
       )}
@@ -260,9 +348,7 @@ export default function Dashboard() {
             key={f.key}
             onClick={() => setStatusFilter(f.key)}
             className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-              statusFilter === f.key
-                ? "bg-amber-500/20 border-amber-400/40 text-amber-400"
-                : "bg-slate-900 border-white/10 text-slate-400 hover:border-white/20"
+              statusFilter === f.key ? "bg-amber-500/20 border-amber-400/40 text-amber-400" : "bg-slate-900 border-white/10 text-slate-400 hover:border-white/20"
             }`}
           >
             {f.label}
@@ -276,17 +362,14 @@ export default function Dashboard() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="animate-spin text-blue-400" size={32} />
           </div>
-        ) : sortedLeads.length === 0 ? (
+        ) : filteredLeads.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-500">
             <Database size={48} className="mb-4 opacity-30" />
             <p className="text-sm font-bold">Nenhum lead encontrado</p>
-            <p className="text-xs mt-1">Clique em "Importar Leads" para começar</p>
+            <p className="text-xs mt-1">Ajuste os filtros ou clique em "Importar Leads"</p>
           </div>
         ) : (
-          <LeadTable
-            leads={sortedLeads}
-            onLeadUpdate={fetchLeads}
-          />
+          <LeadTable leads={filteredLeads} onSave={fetchLeads} />
         )}
       </div>
     </div>
@@ -296,7 +379,7 @@ export default function Dashboard() {
 function MetricCard({ icon, value, label, color }: { icon: React.ReactNode; value: number; label: string; color: string }) {
   return (
     <div className="bg-slate-900/60 border border-white/5 rounded-xl p-3 flex flex-col gap-1">
-      <div className={`${color}`}>{icon}</div>
+      <div className={color}>{icon}</div>
       <span className={`text-xl font-black font-mono ${color}`}>{value.toLocaleString()}</span>
       <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{label}</span>
     </div>
