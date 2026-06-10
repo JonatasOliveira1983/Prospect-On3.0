@@ -52,6 +52,14 @@ export default function HomeHero() {
       <div className="absolute inset-0 w-full h-full pointer-events-none">
         {/* Deep blue overall overlay */}
         <div className="absolute inset-0 bg-[#020617]" />
+
+        {/* Imagem de fundo - Ponte Estaiada SP */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+          style={{ backgroundImage: "url('/AquivosOtto/img/ponte-estaiada.jpg')", backgroundPosition: "center 40%" }}
+        />
+        {/* Escurecer por cima da imagem */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/80 via-[#020617]/60 to-[#020617]/95" />
         
         {/* Neon Cyan Glow behind the center-right (for the 3D element) */}
         <div className="absolute top-[20%] right-[10%] lg:right-[15%] w-[400px] h-[400px] lg:w-[600px] lg:h-[600px] rounded-full bg-cyan-500/10 blur-[120px] mix-blend-screen" />
