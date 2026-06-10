@@ -921,7 +921,7 @@ async def apify_import(city: str = "all", categories: str = "all", max_per: int 
     }
 
 @app.put("/api/leads/{lead_id}/crm-notes")
-async def update_crm_notes(lead_id: str, x_user_id: str = Header(None)):
+async def update_crm_notes(lead_id: str, request: Request, x_user_id: str = Header(None)):
     """Salva notas do CRM e resposta do admin."""
     try:
         body = await request.json()

@@ -274,6 +274,19 @@ class Database:
                     except sqlite3.OperationalError:
                         pass
 
+                # Migracao leads_quentes: adicionar colunas faltantes
+                lq_cols = [
+                    ("crm_notes", "TEXT"),
+                    ("crm_response", "TEXT"),
+                    ("created_at", "TEXT"),
+                    ("updated_at", "TEXT"),
+                ]
+                for col, col_type in lq_cols:
+                    try:
+                        conn.execute(f"ALTER TABLE leads_quentes ADD COLUMN {col} {col_type}")
+                    except sqlite3.OperationalError:
+                        pass
+
             # 3. Tabela de estatísticas de uso (IA)
             self._run_query(conn, """
                 CREATE TABLE IF NOT EXISTS usage_stats (
@@ -852,47 +865,36 @@ class Database:
         """Atualiza notas do CRM e resposta do admin em ambas tabelas."""
         try:
             conn = self._get_connection()
-            if response:
-                conn.execute(
-                    "UPDATE leads SET crm_notes = ?, crm_response = ? WHERE id = ?",
-                    (notes, response, lead_id)
-                )
-                if user_id is not None:
-                    conn.execute(
-                        "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ? AND user_id = ?",
-                        (notes, response, lead_id, user_id)
-                    )
-                else:
-                    conn.execute(
-                        "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ?",
-                        (notes, response, lead_id)
-                    )
-            else:
-                conn.execute(
-                    "UPDATE leads SET crm_notes = ? WHERE id = ?",
-                    (notes, lead_id)
-                )
-                if user_id is not None:
-                    conn.execute(
-                        "UPDATE leads_quentes SET crm_notes = ? WHERE id = ? AND user_id = ?",
-                        (notes, lead_id, user_id)
-                    )
-                else:
-                    conn.execute(
-                        "UPDATE leads_quentes SET crm_notes = ? WHERE id = ?",
-                        (notes, lead_id)
-                    )
+            # Sempre salva na tabela leads principal
+            conn.execute(
+                "UPDATE leads SET crm_notes = ?, crm_response = ? WHERE id = ?",
+                (notes, response, lead_id)
+            )
+            # Salva em TODAS as entradas leads_quentes para este lead
+            # (permite que admin responda e vendedor veja na pagina de favoritos)
+            conn.execute(
+                "UPDATE leads_quentes SET crm_notes = ?, crm_response = ? WHERE id = ?",
+                (notes, response, lead_id)
+            )
             conn.commit()
             conn.close()
         except Exception as e:
             logger.error(f"DB: Erro ao atualizar CRM: {e}")
 
     def count_pending_crm(self) -> int:
-        """Conta leads com notas pendentes sem resposta (em ambas tabelas)."""
+        """Conta leads com notas pendentes sem resposta (deduplicado entre tabelas)."""
         try:
             conn = self._get_connection()
             cursor = conn.execute(
-                "SELECT COUNT(DISTINCT lq.id) FROM leads_quentes lq WHERE lq.crm_notes IS NOT NULL AND lq.crm_notes != '' AND (lq.crm_response IS NULL OR lq.crm_response = '')"
+                """SELECT COUNT(*) FROM (
+                    SELECT l.id FROM leads l 
+                    WHERE l.crm_notes IS NOT NULL AND l.crm_notes != '' 
+                    AND (l.crm_response IS NULL OR l.crm_response = '')
+                    UNION
+                    SELECT lq.id FROM leads_quentes lq
+                    WHERE lq.crm_notes IS NOT NULL AND lq.crm_notes != '' 
+                    AND (lq.crm_response IS NULL OR lq.crm_response = '')
+                )"""
             )
             count = cursor.fetchone()[0]
             conn.close()
