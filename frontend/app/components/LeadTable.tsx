@@ -144,22 +144,10 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                     <div className="flex items-center gap-1.5 flex-wrap mb-1">
                       <span className="text-yellow-400 font-black text-[9px] uppercase tracking-widest">{lead.source || 'SNIPER TURBO'}</span>
                       
-                      {/* Badge do Pilar */}
-                      {(lead.pilar || 'A') === 'A' && (
-                        <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                          <Building2 size={8} /> Pilar A: Condomínios
-                        </span>
-                      )}
-                      {lead.pilar === 'B' && (
-                        <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                          <Building size={8} /> Pilar B: Grande Porte
-                          </span>
-                        )}
-                        {lead.pilar === 'C' && (
-                          <span className="bg-amber-500/10 text-amber-400 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border border-amber-500/20 flex items-center gap-1">
-                            <ScrollText size={8} /> Pilar C: Editais
-                          </span>
-                        )}
+                      {/* Badge de Categoria */}
+                      <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full flex items-center gap-1">
+                        <Building2 size={8} /> {lead.category === 'grande_porte' ? 'Grande Porte' : lead.category === 'pintura_predial' ? 'Pintura Predial' : 'Admin / Síndico'}
+                      </span>
 
                       {lead.intencao_ativa ? (
                         <span className="bg-rose-500/15 border border-rose-500/30 text-rose-400 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-full animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.3)] shrink-0">
@@ -306,17 +294,10 @@ export default function LeadTable({ leads, onSave, readOnly = false }: { leads: 
                         <div className="flex items-center gap-2 flex-wrap">
                           <h5 className="text-white font-black group-hover:text-yellow-400 transition-colors uppercase tracking-tight text-sm">{lead.name}</h5>
                           
-                          {/* Badge do Pilar */}
-                          {(lead.pilar || 'A') === 'A' && (
-                            <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
-                              <Building2 size={8} /> Pilar A: Condomínios
-                            </span>
-                          )}
-                          {lead.pilar === 'B' && (
-                            <span className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
-                              <Building size={8} /> Pilar B: Grande Porte
-                            </span>
-                          )}
+                          {/* Badge de Categoria */}
+                          <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full flex items-center gap-1 whitespace-nowrap">
+                            <Building2 size={8} /> {lead.category === 'grande_porte' ? 'Grande Porte' : lead.category === 'pintura_predial' ? 'Pintura Predial' : 'Admin / Síndico'}
+                          </span>
 
 
                           {lead.intencao_ativa ? (

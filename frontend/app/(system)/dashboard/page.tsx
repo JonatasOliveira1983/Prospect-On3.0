@@ -5,17 +5,14 @@ import LeadTable from "../../components/LeadTable";
 import {
   Loader2,
   Search,
-  Building2,
   Phone,
-  Mail,
   Star,
-  TrendingUp,
   CloudDownload,
-  Filter,
   RefreshCw,
   Database,
   Users,
-  CheckCircle2,
+  Building2,
+  MapPin,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -43,13 +40,6 @@ interface ImportStats {
   categories_list: string[];
 }
 
-const CATEGORY_FILTERS = [
-  { key: 'all', label: 'Todas as Categorias' },
-  { key: 'sindico_administradora', label: 'Admin. / Síndicos' },
-  { key: 'pintura_predial', label: 'Pintura Predial' },
-  { key: 'grande_porte', label: 'Facilities / Grande Porte' },
-];
-
 const STATUS_FILTERS = [
   { key: 'all', label: 'Todos os Status' },
   { key: 'Aguardando Abordagem', label: 'Aguardando' },
@@ -61,11 +51,9 @@ export default function Dashboard() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [importLoading, setImportLoading] = useState(false);
   const [importMessage, setImportMessage] = useState("");
-  const [importStats, setImportStats] = useState<ImportStats | null>(null);
   const [sortBy, setSortBy] = useState<"recent" | "score">("recent");
 
   const fetchLeads = useCallback(async () => {
@@ -127,15 +115,11 @@ export default function Dashboard() {
 
   // Filtros
   const filteredLeads = leads.filter((lead) => {
-    // Busca textual
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      const text = `${lead.name} ${lead.address} ${lead.phone} ${lead.email} ${lead.category}`.toLowerCase();
+      const text = `${lead.name} ${lead.address} ${lead.phone} ${lead.source}`.toLowerCase();
       if (!text.includes(q)) return false;
     }
-    // Categoria
-    if (categoryFilter !== "all" && lead.category !== categoryFilter) return false;
-    // Status / Favoritos
     if (statusFilter === "favorites" && !lead.is_favorite) return false;
     if (statusFilter !== "all" && statusFilter !== "favorites" && lead.contact_status !== statusFilter) return false;
     return true;
@@ -156,8 +140,6 @@ export default function Dashboard() {
   const availableLeads = leads.filter(l => !l.is_favorite && l.contact_status === "Aguardando Abordagem").length;
   const myFavorites = leads.filter(l => l.is_favorite).length;
   const inContact = leads.filter(l => l.contact_status === "Contato Iniciado").length;
-  const withPhone = leads.filter(l => l.phone && l.phone !== "N/D").length;
-  const withEmail = leads.filter(l => l.email && l.email !== "N/D").length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-6 lg:p-8">
@@ -165,15 +147,15 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tighter">
-            Leads de Pintura Predial
+            Administradoras e Síndicos
           </h1>
           <p className="text-xs text-slate-400 font-medium mt-1">
-            Grande São Paulo · {totalLeads} leads no banco
+            Grande São Paulo · {totalLeads} contatos no banco
           </p>
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => { fetchLeads(); fetchStats(); }}
+            onClick={() => fetchLeads()}
             className="px-4 py-2 rounded-xl bg-slate-800 border border-white/10 text-xs font-bold text-slate-400 hover:text-white flex items-center gap-2 transition-colors"
           >
             <RefreshCw size={14} />
@@ -183,24 +165,15 @@ export default function Dashboard() {
       </div>
 
       {/* MÉTRICAS */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         <MetricCard icon={<Database size={16} />} value={totalLeads} label="Total" color="text-white" />
         <MetricCard icon={<Users size={16} />} value={availableLeads} label="Disponíveis" color="text-emerald-400" />
         <MetricCard icon={<Star size={16} />} value={myFavorites} label="Favoritos" color="text-yellow-400" />
-        <MetricCard icon={<CheckCircle2 size={16} />} value={inContact} label="Em Contato" color="text-blue-400" />
-        <MetricCard icon={<Phone size={16} />} value={withPhone} label="c/ Telefone" color="text-green-400" />
-        <MetricCard icon={<Mail size={16} />} value={withEmail} label="c/ Email" color="text-purple-400" />
-        <MetricCard
-          icon={<TrendingUp size={16} />}
-          value={importStats?.estimated_leads || 0}
-          label="Podemos Baixar"
-          color="text-amber-400"
-        />
+        <MetricCard icon={<Phone size={16} />} value={inContact} label="Em Contato" color="text-blue-400" />
       </div>
 
       {/* FILTROS + AÇÕES */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-6">
-        {/* Busca */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-4">
         <div className="flex-1 relative">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input
@@ -212,7 +185,6 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Ordenação */}
         <select
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as "recent" | "score")}
@@ -222,7 +194,6 @@ export default function Dashboard() {
           <option value="score">Maior Score</option>
         </select>
 
-        {/* Importar */}
         <button
           onClick={handleImport}
           disabled={importLoading}
@@ -245,22 +216,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* FILTROS DE CATEGORIA */}
+      {/* FILTROS DE STATUS */}
       <div className="flex flex-wrap gap-2 mb-4">
-        {CATEGORY_FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setCategoryFilter(f.key)}
-            className={`px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
-              categoryFilter === f.key
-                ? "bg-blue-500/20 border-blue-400/40 text-blue-400"
-                : "bg-slate-900 border-white/10 text-slate-400 hover:border-white/20"
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-        <div className="w-px bg-white/10 mx-1" />
         {STATUS_FILTERS.map((f) => (
           <button
             key={f.key}
@@ -295,19 +252,6 @@ export default function Dashboard() {
           />
         )}
       </div>
-
-      {/* INFO DE IMPORTAÇÃO */}
-      {importStats && (
-        <div className="mt-6 p-4 bg-slate-900/50 border border-white/5 rounded-2xl">
-          <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Cobertura da Importação</h3>
-          <div className="flex flex-wrap gap-4 text-xs text-slate-400">
-            <span>{importStats.regions} regiões</span>
-            <span>{importStats.categories} categorias</span>
-            <span>~{importStats.estimated_leads} leads estimados</span>
-            <span>Regiões: {importStats.regions_list.join(', ')}</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
