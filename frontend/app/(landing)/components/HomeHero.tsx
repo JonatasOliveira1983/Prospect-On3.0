@@ -55,7 +55,7 @@ export default function HomeHero() {
         {/* Imagem de fundo - Ponte Estaiada SP */}
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30 lg:opacity-40"
-          style={{ backgroundImage: "url('/AquivosOtto/img/ponte-estaiada.jpg')", backgroundPosition: "center 40%" }}
+          style={{ backgroundImage: "url('/AquivosOtto/img/Gemini_Generated_Image_fn0jbkfn0jbkfn0j.png')", backgroundPosition: "center 40%" }}
         />
         {/* Escurecer por cima da imagem */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#020617]/70 via-[#020617]/40 to-[#020617]/90" />
