@@ -25,7 +25,8 @@ import {
   Play,
   Building2,
   ScrollText,
-  Briefcase
+  Briefcase,
+  CloudDownload
 } from 'lucide-react';
 import { api, WS_URL } from '@/lib/api';
 
@@ -74,6 +75,8 @@ export default function Dashboard() {
 
   // Estados do HUD Sniper Cyberpunk
   const [isScanning, setIsScanning] = useState(false);
+  const [apifyLoading, setApifyLoading] = useState(false);
+  const [apifyMessage, setApifyMessage] = useState("");
   const [scanLogs, setScanLogs] = useState<LogEntry[]>([]);
   const [currentLead, setCurrentLead] = useState<{
     name: string;
@@ -323,6 +326,25 @@ export default function Dashboard() {
       setIsScanning(false);
       wsRef.current?.close();
     }
+  }
+
+  async function handleApifyImport() {
+    setApifyLoading(true);
+    setApifyMessage("Importando leads do Google Maps via Apify...");
+    try {
+      const resp = await api.apifyImport();
+      const data = await resp.json();
+      if (data.success) {
+        setApifyMessage(`${data.imported} leads importados com sucesso!`);
+        await fetchLeads();
+      } else {
+        setApifyMessage(`Erro: ${data.message || 'Falha na importação'}`);
+      }
+    } catch (error) {
+      setApifyMessage(`Erro: ${error}`);
+    }
+    setApifyLoading(false);
+    setTimeout(() => setApifyMessage(""), 8000);
   }
 
   function handleCloseHUD() {
@@ -905,6 +927,27 @@ export default function Dashboard() {
                   ⚠ Ative ao menos 1 pilar para iniciar a varredura
                 </p>
               )}
+              
+              <div className="border-t border-white/5 pt-3 mt-1">
+                <p className="text-[7px] font-black uppercase tracking-widest text-slate-500 mb-1.5">Importação em Massa</p>
+                <button
+                  onClick={handleApifyImport}
+                  disabled={apifyLoading}
+                  className={`w-full font-black px-4 py-3 rounded-2xl flex items-center justify-center gap-2 transition-all transform active:scale-95 text-xs uppercase tracking-widest ${
+                    apifyLoading
+                      ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-400 text-white shadow-[0_8px_20px_rgba(59,130,246,0.25)]'
+                  }`}
+                >
+                  {apifyLoading ? <Loader2 className="animate-spin" size={14} /> : <CloudDownload size={14} />}
+                  Importar Leads via Apify
+                </button>
+                {apifyMessage && (
+                  <p className={`text-[9px] font-bold text-center mt-1.5 ${apifyMessage.includes('sucesso') ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {apifyMessage}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 

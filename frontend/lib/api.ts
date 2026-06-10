@@ -57,6 +57,8 @@ export const api = {
     fetch(`${BACKEND}/api/scan-pillars?city=${encodeURIComponent(city)}&pilares=${encodeURIComponent(pilares)}`, { cache: 'no-store', headers: { ...getUserIdHeader() } }),
   searchHistory: () =>
     fetch(`${BACKEND}/api/search-history`, { cache: 'no-store', headers: { ...getUserIdHeader() } }),
+  apifyImport: (city: string = "Sao Paulo, SP, Brasil", categories: string = "all") =>
+    fetch(`${BACKEND}/api/apify/import?city=${encodeURIComponent(city)}&categories=${encodeURIComponent(categories)}`, { method: 'POST', headers: { ...getUserIdHeader() } }),
   leadsQuentes: (userId?: string | number) => {
     const url = userId 
       ? `${BACKEND}/api/admin/users/${userId}/leads-quentes` 

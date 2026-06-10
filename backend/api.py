@@ -16,6 +16,7 @@ from src.agents.health_agent import HealthAgent
 from src.agents.extension_launcher import ExtensionLauncherAgent
 from src.agents.demand_scout_agent import DemandScoutAgent
 from src.agents.contact_miner import ContactMiner
+from src.utils.apify_client import ApifyClient, SEARCH_CONFIGS
 import threading
 import asyncio
 from datetime import datetime
@@ -29,6 +30,7 @@ health_monitor = HealthAgent()
 extension_launcher = ExtensionLauncherAgent()
 demand_scout = DemandScoutAgent(headless=True)
 contact_miner = ContactMiner(db=db)
+apify_client = ApifyClient()
 executor = ThreadPoolExecutor(max_workers=4)
 
 @app.on_event("startup")
@@ -843,6 +845,66 @@ async def search_contacts(city: str = "São Paulo", type: str = "administrators"
     except Exception as e:
         logger.error(f"API: Erro ao garimpar contatos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/apify/import")
+async def apify_import(city: str = "Sao Paulo, SP, Brasil", categories: str = "all", max_per: int = 200, x_user_id: str = Header(None)):
+    """
+    Importa leads do Google Maps via Apify (executa em background).
+    
+    city: Localização (ex: "Sao Paulo, SP, Brasil")
+    categories: Categorias separadas por vírgula ou "all"
+    max_per: Máximo de resultados por categoria
+    """
+    if categories == "all":
+        active_categories = list(SEARCH_CONFIGS.keys())
+    else:
+        active_categories = [c.strip() for c in categories.split(",") if c.strip() in SEARCH_CONFIGS]
+
+    if not active_categories:
+        raise HTTPException(status_code=400, detail="Nenhuma categoria válida informada")
+
+    logger.info(
+        f"API: Iniciando importação Apify para '{city}' "
+        f"nas categorias {active_categories}..."
+    )
+
+    def run_import_blocking():
+        import asyncio as _asyncio
+        loop = _asyncio.new_event_loop()
+        _asyncio.set_event_loop(loop)
+        imported = 0
+        skipped = 0
+
+        for cat_key in active_categories:
+            config = SEARCH_CONFIGS[cat_key]
+            logger.info(f"API Apify: Buscando '{config['search']}'...")
+
+            raw_results = apify_client.run_google_maps_search(
+                search=config["search"],
+                location=city,
+                max_results=max_per,
+            )
+
+            for raw in raw_results:
+                normalized = apify_client.normalize_lead(raw, category=config["category"])
+                if not normalized:
+                    skipped += 1
+                    continue
+                try:
+                    db.upsert_lead(normalized)
+                    imported += 1
+                except Exception as e:
+                    logger.warning(f"API Apify: Erro ao salvar: {e}")
+                    skipped += 1
+
+        logger.info(f"API Apify: {imported} importados, {skipped} ignorados")
+
+    executor.submit(run_import_blocking)
+
+    return {
+        "success": True,
+        "message": f"Importação iniciada em background para {len(active_categories)} categorias. Os leads aparecerão na tabela em alguns minutos."
+    }
 
 @app.websocket("/ws/logs")
 async def websocket_endpoint(websocket: WebSocket):
