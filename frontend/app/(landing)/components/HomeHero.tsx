@@ -128,7 +128,7 @@ export default function HomeHero() {
             
             {/* Monumental Overlapping Text */}
             <div className="relative mb-4 lg:mb-6 select-none">
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-[5.5rem] xl:text-[7rem] font-black text-white leading-[0.95] tracking-tighter uppercase relative">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-[5.5rem] xl:text-[7rem] font-black text-white leading-[0.95] tracking-tighter uppercase relative">
                 pinturas de
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-otto-yellow">
                   grande porte
@@ -136,7 +136,7 @@ export default function HomeHero() {
               </h1>
             </div>
 
-            <p className="text-sm lg:text-base xl:text-lg text-slate-300 max-w-lg font-light leading-relaxed mb-10 lg:mb-14">
+            <p className="text-sm sm:text-base lg:text-lg xl:text-xl text-slate-300 max-w-lg font-light leading-relaxed mb-10 lg:mb-14">
               Trazemos precisão técnica e acabamento premium para condomínios, indústrias e shoppings. O patrimônio do seu condomínio valorizado e assegurado com a máxima solidez de mercado.
             </p>
 
