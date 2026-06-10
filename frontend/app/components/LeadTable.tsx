@@ -45,6 +45,8 @@ interface Lead {
   score_urgencia?: number;
   categoria_demanda?: string;
   pilar?: string;
+  crm_notes?: string;
+  crm_response?: string;
   reserved_by_user_id?: number;
   reserved_by_name?: string;
   reserved_by_email?: string;
