@@ -50,6 +50,7 @@ interface Lead {
   reserved_by_user_id?: number;
   reserved_by_name?: string;
   reserved_by_email?: string;
+  has_chat_messages?: number;
 }
 
 const STATUS_DOT: Record<string, string> = {
@@ -215,11 +216,18 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
                 </button>
               </div>
 
-              <div className="flex items-center gap-2 bg-slate-900/60 p-2 rounded-xl border border-white/5">
-                <div className={`w-2 h-2 rounded-full ${dotClass}`} />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  {lead.contact_status || 'Aguardando Abordagem'}
-                </span>
+              <div className="flex items-center justify-between bg-slate-900/60 p-2 rounded-xl border border-white/5">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${dotClass}`} />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                    {lead.contact_status || 'Aguardando Abordagem'}
+                  </span>
+                </div>
+                {lead.has_chat_messages && lead.has_chat_messages > 0 ? (
+                  <span className="text-[10px] bg-yellow-400/10 text-yellow-400 px-1.5 py-0.5 rounded-full font-bold" title="Tem mensagem no chat">
+                    💬 {lead.has_chat_messages}
+                  </span>
+                ) : null}
               </div>
 
               <button
@@ -249,7 +257,7 @@ export default function LeadTable({ leads, onSave, onDelete, readOnly = false }:
             {paginatedLeads.map((lead, i) => {
               const isFav = favorites[lead.name] || false;
               const hasNotes = !!lead.interaction_notes;
-              const hasChat = !!(lead.crm_notes || lead.crm_response);
+              const hasChat = !!(lead.has_chat_messages && lead.has_chat_messages > 0);
               const phoneRaw = lead.phone || lead.responsavel_contato || "";
               const dotClass = STATUS_DOT[lead.contact_status || ''] || 'bg-slate-600';
 

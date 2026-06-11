@@ -693,7 +693,8 @@ class Database:
                                COALESCE(lq.updated_at, l.updated_at) as updated_at,
                                lq_other.user_id as reserved_by_user_id,
                                u_other.name as reserved_by_name,
-                               u_other.email as reserved_by_email
+                               u_other.email as reserved_by_email,
+                               (SELECT COUNT(*) FROM lead_messages lm WHERE lm.lead_id = l.id) as has_chat_messages
                         FROM leads l
                         LEFT JOIN leads_quentes lq ON l.id = lq.id AND lq.user_id = ?
                         LEFT JOIN leads_quentes lq_other ON l.id = lq_other.id AND lq_other.user_id != ?
@@ -702,10 +703,21 @@ class Database:
                     """
                     params = (user_id, user_id)
                 elif table == "leads_quentes" and user_id is not None:
-                    query = "SELECT *, 1 as is_favorite FROM leads_quentes WHERE user_id = ? ORDER BY score DESC, name ASC"
+                    query = """
+                        SELECT lq.*, 1 as is_favorite,
+                               (SELECT COUNT(*) FROM lead_messages lm WHERE lm.lead_id = lq.id) as has_chat_messages
+                        FROM leads_quentes lq 
+                        WHERE lq.user_id = ? 
+                        ORDER BY lq.score DESC, lq.name ASC
+                    """
                     params = (user_id,)
                 else:
-                    query = f"SELECT * FROM {table} ORDER BY score DESC, name ASC"
+                    query = f"""
+                        SELECT *, 
+                               (SELECT COUNT(*) FROM lead_messages lm WHERE lm.lead_id = id) as has_chat_messages
+                        FROM {table} 
+                        ORDER BY score DESC, name ASC
+                    """
                     params = ()
 
                 if self.is_postgres:
