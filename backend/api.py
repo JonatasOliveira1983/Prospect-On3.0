@@ -1026,16 +1026,17 @@ import shutil
 from fastapi.responses import FileResponse
 from fastapi import UploadFile, File as FastAPIFile
 
-DOCS_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "AquivosOtto", "documentos")
+DOCS_DIR = os.path.join(os.path.dirname(__file__), "static", "documentos")
 
 @app.get("/api/documents")
-async def list_documents():
+async def list_documents(request: Request):
     """Lista todos os documentos da pasta."""
     try:
         if not os.path.exists(DOCS_DIR):
             os.makedirs(DOCS_DIR, exist_ok=True)
             return []
         files = []
+        base_url = str(request.base_url).rstrip('/')
         for f in os.listdir(DOCS_DIR):
             fp = os.path.join(DOCS_DIR, f)
             if os.path.isfile(fp):
@@ -1044,7 +1045,7 @@ async def list_documents():
                     "name": f,
                     "size": stat.st_size,
                     "modified": stat.st_mtime,
-                    "url": f"/AquivosOtto/documentos/{f}",
+                    "url": f"{base_url}/static/documentos/{f}",
                 })
         files.sort(key=lambda x: x["modified"], reverse=True)
         return files
